@@ -1,0 +1,382 @@
+:root {
+  --fg: #1a1a1a;
+  --bg: #ffffff;
+  --muted: #5b6472;
+  --line: #d8dee7;
+  --accent: #1d4ed8;
+  --code: #f6f8fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1.25rem 4rem;
+  font:
+    16px/1.65 -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+main {
+  max-width: 60rem;
+  margin: 0 auto;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.7rem;
+  line-height: 1.25;
+}
+
+h2 {
+  margin: 2.5rem 0 0.75rem;
+  padding-bottom: 0.35rem;
+  font-size: 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
+
+h3 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.sub {
+  margin: 0 0 1.5rem;
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+ul,
+ol {
+  padding-left: 1.35rem;
+}
+
+li {
+  margin: 0.3rem 0;
+}
+
+nav.toc {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--code);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+nav.toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav.toc li {
+  margin: 0.2rem 0;
+}
+
+code {
+  padding: 0.12em 0.35em;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9em;
+  background: var(--code);
+  border-radius: 4px;
+}
+
+pre {
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  background: var(--code);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+pre code {
+  padding: 0;
+  background: none;
+}
+
+pre.formula {
+  margin: 1rem 0;
+  padding: 0.7rem 1rem;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
+figure {
+  margin: 1.25rem 0;
+}
+
+figure img {
+  max-width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.87rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.92rem;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--line);
+}
+
+th {
+  font-weight: 600;
+  background: var(--code);
+}
+
+.files a {
+  display: inline-block;
+  margin: 0 0.8rem 0.4rem 0;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  font-size: 0.87rem;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+@media print {
+  body {
+    padding: 0;
+  }
+
+  nav.toc,
+  .files {
+    display: none;
+  }
+
+  h2 {
+    page-break-after: avoid;
+  }
+
+  figure,
+  table,
+  pre {
+    page-break-inside: avoid;
+  }
+}
+
+.code .hll {
+  background-color: #ffffcc;
+}
+.code {
+  background: #ffffff;
+}
+.code .c {
+  color: #177500;
+}
+.code .err {
+  color: #000;
+}
+.code .k {
+  color: #a90d91;
+}
+.code .l {
+  color: #1c01ce;
+}
+.code .n {
+  color: #000;
+}
+.code .o {
+  color: #000;
+}
+.code .ch {
+  color: #177500;
+}
+.code .cm {
+  color: #177500;
+}
+.code .cp {
+  color: #633820;
+}
+.code .cpf {
+  color: #177500;
+}
+.code .c1 {
+  color: #177500;
+}
+.code .cs {
+  color: #177500;
+}
+.code .kc {
+  color: #a90d91;
+}
+.code .kd {
+  color: #a90d91;
+}
+.code .kn {
+  color: #a90d91;
+}
+.code .kp {
+  color: #a90d91;
+}
+.code .kr {
+  color: #a90d91;
+}
+.code .kt {
+  color: #a90d91;
+}
+.code .ld {
+  color: #1c01ce;
+}
+.code .m {
+  color: #1c01ce;
+}
+.code .s {
+  color: #c41a16;
+}
+.code .na {
+  color: #836c28;
+}
+.code .nb {
+  color: #a90d91;
+}
+.code .nc {
+  color: #3f6e75;
+}
+.code .no {
+  color: #000;
+}
+.code .nd {
+  color: #000;
+}
+.code .ni {
+  color: #000;
+}
+.code .ne {
+  color: #000;
+}
+.code .nf {
+  color: #000;
+}
+.code .nl {
+  color: #000;
+}
+.code .nn {
+  color: #000;
+}
+.code .nx {
+  color: #000;
+}
+.code .py {
+  color: #000;
+}
+.code .nt {
+  color: #000;
+}
+.code .nv {
+  color: #000;
+}
+.code .ow {
+  color: #000;
+}
+.code .mb {
+  color: #1c01ce;
+}
+.code .mf {
+  color: #1c01ce;
+}
+.code .mh {
+  color: #1c01ce;
+}
+.code .mi {
+  color: #1c01ce;
+}
+.code .mo {
+  color: #1c01ce;
+}
+.code .sa {
+  color: #c41a16;
+}
+.code .sb {
+  color: #c41a16;
+}
+.code .sc {
+  color: #2300ce;
+}
+.code .dl {
+  color: #c41a16;
+}
+.code .sd {
+  color: #c41a16;
+}
+.code .s2 {
+  color: #c41a16;
+}
+.code .se {
+  color: #c41a16;
+}
+.code .sh {
+  color: #c41a16;
+}
+.code .si {
+  color: #c41a16;
+}
+.code .sx {
+  color: #c41a16;
+}
+.code .sr {
+  color: #c41a16;
+}
+.code .s1 {
+  color: #c41a16;
+}
+.code .ss {
+  color: #c41a16;
+}
+.code .bp {
+  color: #5b269a;
+}
+.code .fm {
+  color: #000;
+}
+.code .vc {
+  color: #000;
+}
+.code .vg {
+  color: #000;
+}
+.code .vi {
+  color: #000;
+}
+.code .vm {
+  color: #000;
+}
+.code .il {
+  color: #1c01ce;
+}

@@ -1,0 +1,1407 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Лабораторна робота №7. Багатовимірні масиви</title>
+    <link rel="stylesheet" href="../report.css" />
+  </head>
+
+  <body>
+    <main>
+      <p class="files"><a href="../index.html">← До переліку лабораторних робіт</a></p>
+
+      <h1>Лабораторна робота №7. Багатовимірні масиви</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C17, gcc
+      </p>
+
+      <nav class="toc">
+        <ul>
+          <li><a href="#s-goal">1. Мета роботи</a></li>
+          <li><a href="#s-task">2. Умова задачі</a></li>
+          <li><a href="#s-analysis">3. Аналіз задачі та теоретичне обґрунтування</a></li>
+          <li><a href="#s-flowchart">4. Блок-схема алгоритму</a></li>
+          <li><a href="#s-code">5. Текст програми</a></li>
+          <li><a href="#s-results">6. Результати виконання роботи</a></li>
+          <li><a href="#s-validation">7. Аналіз достовірності результатів</a></li>
+          <li><a href="#s-conclusions">8. Висновки</a></li>
+        </ul>
+      </nav>
+
+      <section id="s-goal">
+        <h2>1. Мета роботи</h2>
+        <ul>
+          <li>
+            Ознайомитися з особливостями багатовимірних масивів та їх подання в оперативній пам'яті.
+          </li>
+          <li>Опанувати технологію доступу до елементів матриці за двома індексами.</li>
+          <li>
+            Навчитися розробляти алгоритми та програми із застосуванням типових операцій і матричної
+            алгебри.
+          </li>
+        </ul>
+      </section>
+
+      <section id="s-task">
+        <h2>2. Умова задачі</h2>
+        <h3>Завдання 1 (19.1) - базові операції обробки матриць</h3>
+        <p>
+          Створити матрицю, вимірність m &gt; 3 якої ввести з клавіатури. Передбачити меню вибору
+          способу створення матриці: введення з клавіатури або генерація псевдовипадкових додатних
+          та від'ємних чисел. Визначити найбільший за модулем елемент та його індекси серед
+          елементів, що розташовані в заштрихованій частині малюнку. Підрахувати суму елементів по
+          межі заштрихованої частини матриці. Вивести на екран вхідну матрицю, значення шуканого
+          елемента та його індекси, шукану суму елементів. Матриці виводити у табличному вигляді.
+        </p>
+        <figure>
+          <img src="pictures/shaded.png" alt="Рисунок до варіанта 19 (таблиця 7.1)" />
+          <figcaption>Рисунок до варіанта 19 (таблиця 7.1)</figcaption>
+        </figure>
+        <h3>Завдання 2 (19.2) - алгоритми матричної алгебри</h3>
+        <p>
+          Нехай n підприємств випускають m видів продукції. Матриця A = (a<sub>ij</sub>) задає
+          обсяги i-ої продукції на j-му підприємстві в першому кварталі, а матриця B =
+          (b<sub>ij</sub>) - у другому кварталі. Знайти: а) сумарний обсяг продукції за два квартали
+          по двох підприємствах; б) приріст або зменшення обсягів продукції за другий квартал
+          порівняно з першим за видами продукції та по підприємствах. Вимірності матриць ввести з
+          клавіатури, значення елементів матриць генерувати або вводити з клавіатури на вимогу
+          користувача. Вивести результати за пунктами а) та б) з відповідними повідомленнями.
+        </p>
+        <p>
+          <b>Вимоги до обох завдань:</b> передбачити вибір способу створення матриць - введення з
+          клавіатури або заповнення псевдовипадковими числами; для завдання 2 також передбачити
+          вибір режиму виведення результатів: або тільки кінцевий результат, або з проміжними
+          ітераціями.
+        </p>
+        <p>
+          <b>Обмеження умови:</b> забороняється використовувати STL, шаблон
+          <code>std::vector</code>, ітератори, контейнери, бібліотеки для роботи з матрицями. Крім
+          того, методичні вказівки зазначають: "Застосування покажчиків, динамічних масивів,
+          операторів <code>new</code>, <code>delete</code> в лабораторній роботі №7 НЕДОЦІЛЬНО і НЕ
+          СХВАЛЮЄТЬСЯ".
+        </p>
+      </section>
+
+      <section id="s-analysis">
+        <h2>3. Аналіз задачі та теоретичне обґрунтування</h2>
+        <h3>Завдання 1. Опис заштрихованої частини в термінах індексів</h3>
+        <p>
+          На рисунку заштриховано трикутник з вершиною в центрі квадрата й основою на правій
+          стороні; його сторони - відрізки обох діагоналей.
+        </p>
+        <p>
+          Головна діагональ задається рівнянням <code>i = j</code>, побічна -
+          <code>i + j = m - 1</code>. Праворуч від них лежать елементи з <code>j &gt; i</code> та
+          <code>j &gt; m - 1 - i</code>, тому сектор описується системою:
+        </p>
+        <pre class="formula">
+j ≥ i          (на головній діагоналі або праворуч від неї)
+j ≥ m - 1 - i  (на побічній діагоналі або праворуч від неї)</pre>
+        <p>
+          Нерівності нестрогі, бо сторони трикутника на рисунку суцільні. Для m = 5 сектор має
+          вигляд:
+        </p>
+        <pre class="formula">
+. . . . *
+. . . * *
+. . * * *
+. . . * *
+. . . . *</pre>
+        <p>
+          <b>Межа заштрихованої частини</b> - її контур: відрізки діагоналей (<code>i = j</code>,
+          <code>i + j = m - 1</code>) і права сторона (<code>j = m - 1</code>) в межах сектора. При
+          m = 4 усі шість елементів сектора лежать на межі; при m = 5 всередині сектора є один
+          елемент, що до межі не входить, при m = 6 - два.
+        </p>
+        <p>
+          Програма виводить розмітку матриці: елементи сектора позначено <code>*</code>, елементи
+          межі - <code>#</code>, тож її можна звірити з рисунком.
+        </p>
+        <p>
+          Найбільший за модулем елемент шукається строгою нерівністю, тому з кількох елементів з
+          однаковим модулем береться перший при обході рядками.
+        </p>
+        <h3>Завдання 2. Позначення</h3>
+        <p>
+          a<sub>ij</sub> - обсяг i-ї продукції на j-му підприємстві, тож
+          <b>рядок матриці відповідає виду продукції, стовпець - підприємству</b>; n - кількість
+          видів продукції, m - кількість підприємств. Перше речення умови позначає n підприємств і m
+          видів продукції, проте наступне речення задає a<sub>ij</sub> як обсяг i-ї продукції на
+          j-му підприємстві: за такої індексації рядком матриці є вид продукції. У програмі взято
+          позначення, узгоджене з індексацією матриці.
+        </p>
+        <p>Заголовки таблиць підписано словами ("Продукція 1", "Підприємство 2").</p>
+        <p>
+          Сумарний обсяг обчислюється для кожного з m підприємств; випадок двох підприємств з пункту
+          а) розглянуто в контрольному прикладі.
+        </p>
+        <h3>Завдання 2. Розрахункові формули</h3>
+        <p>
+          а) Сумарний обсяг за два квартали по кожному підприємству - сума по стовпцю обох матриць:
+        </p>
+        <pre class="formula">
+           n-1
+S(j)  =    Σ   ( a[i][j] + b[i][j] ),    j = 0 ... m-1
+          i=0</pre>
+        <p>
+          б) Приріст (зменшення) за другий квартал - сума різниць. За видами продукції це сума по
+          рядку, по підприємствах - сума по стовпцю:
+        </p>
+        <pre class="formula">
+                 m-1                                      n-1
+Δпродукція(i) =   Σ  ( b[i][j] - a[i][j] )     Δп-во(j) =   Σ  ( b[i][j] - a[i][j] )
+                 j=0                                      i=0</pre>
+        <p>
+          Знак результату визначає характер зміни: додатне значення - приріст, від'ємне - зменшення,
+          нуль - без змін; програма виводить і число, і словесну оцінку.
+        </p>
+        <p>
+          Накопичувані суми мають тип <code>long long</code> із запасом: найбільший можливий
+          підсумок 20·20·2·10⁶ = 8·10⁸ ще вміщується в <code>int</code>, але лише втричі менший за
+          його межу.
+        </p>
+        <h3>Завдання 2. Режим виведення результатів</h3>
+        <p>
+          У режимі з проміжними обчисленнями програма додатково виводить матриці A + B і B - A
+          (функції <code>addMatrices()</code> і <code>subtractMatrices()</code>): підсумки стовпців
+          A + B дають відповідь на пункт а), підсумки рядків і стовпців B - A - на пункт б).
+        </p>
+        <h3>Розміщення матриць у пам'яті</h3>
+        <p>
+          Динамічна пам'ять, як вимагають методичні вказівки, не застосовується: матриці оголошено
+          масивами сталого розміру (<code>int a[MAX_SIZE][MAX_SIZE]</code> у завданні 1,
+          <code>int a[MAX_ROWS][MAX_COLS]</code> у завданні 2), а фактична вимірність вводиться з
+          клавіатури.
+        </p>
+        <h3>Вирівнювання таблиць</h3>
+        <p>
+          Специфікатор <code>%-16s</code> рахує байти, а кирилична літера в UTF-8 займає два байти,
+          тому для вирівнювання таблиць написано функцію <code>printPadded()</code>, що рахує ширину
+          в символах.
+        </p>
+        <p>
+          Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
+          - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
+          Jersey. 2017. - 3015 p.
+        </p>
+      </section>
+
+      <section id="s-flowchart">
+        <h2>4. Блок-схема алгоритму</h2>
+        <figure>
+          <img
+            src="flowcharts/task1_algorithm.png"
+            alt="Рисунок 1 - Блок-схема головної функції main() завдання 1: пошук найбільшого за модулем елемента сектора та суми елементів по його межі"
+          />
+          <figcaption>
+            Рисунок 1 - Блок-схема головної функції main() завдання 1: пошук найбільшого за модулем
+            елемента сектора та суми елементів по його межі
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task2_algorithm.png"
+            alt="Рисунок 2 - Блок-схема головної функції main() завдання 2: обчислення сумарних обсягів і приросту за кварталами з вибором режиму виведення"
+          />
+          <figcaption>
+            Рисунок 2 - Блок-схема головної функції main() завдання 2: обчислення сумарних обсягів і
+            приросту за кварталами з вибором режиму виведення
+          </figcaption>
+        </figure>
+        <p>
+          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
+            >rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+        </p>
+      </section>
+
+      <section id="s-code">
+        <h2>5. Текст програми</h2>
+        <h3>Завдання 1 - task1.c</h3>
+        <p class="files"><a href="task1.c" download>Завантажити файл task1.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №7. Завдання 1. Варіант 19.</span>
+<span class="cm">  Тема: багатовимірні масиви, базові операції обробки матриць.</span>
+
+<span class="cm">  Умова (таблиця 7.1, завдання 19.1): створити матрицю, вимірність m &gt; 3 якої</span>
+<span class="cm">  ввести з клавіатури. Передбачити меню вибору способу створення матриці:</span>
+<span class="cm">  введення з клавіатури або генерація псевдовипадкових додатних та від'ємних</span>
+<span class="cm">  чисел. Визначити найбільший за модулем елемент та його індекси серед</span>
+<span class="cm">  елементів, що розташовані в заштрихованій частині малюнку. Підрахувати суму</span>
+<span class="cm">  елементів по межі заштрихованої частини матриці. Вивести на екран вхідну</span>
+<span class="cm">  матрицю, значення шуканого елемента та його індекси, шукану суму елементів.</span>
+<span class="cm">  Матриці виводити у табличному вигляді.</span>
+
+<span class="cm">  ОПИС ЗАШТРИХОВАНОЇ ЧАСТИНИ (рисунок до варіанта 19).</span>
+<span class="cm">      На рисунку заштриховано трикутник, вершина якого збігається з центром</span>
+<span class="cm">      квадрата, а основою є права сторона. Сторонами трикутника є відрізки</span>
+<span class="cm">      обох діагоналей квадрата. У термінах індексів квадратної матриці m x m</span>
+<span class="cm">      це "східний" сектор, утворений двома діагоналями:</span>
+
+<span class="cm">              j &gt;= i        (на головній діагоналі або праворуч від неї)</span>
+<span class="cm">              j &gt;= m-1-i    (на побічній діагоналі або праворуч від неї)</span>
+
+<span class="cm">      Приклад для m = 5 (позначено * - елементи заштрихованої частини):</span>
+
+<span class="cm">              . . . . *</span>
+<span class="cm">              . . . * *</span>
+<span class="cm">              . . * * *</span>
+<span class="cm">              . . . * *</span>
+<span class="cm">              . . . . *</span>
+
+<span class="cm">  МЕЖА ЗАШТРИХОВАНОЇ ЧАСТИНИ - це її контур: відрізки обох діагоналей</span>
+<span class="cm">  (i == j та i + j == m-1) і права сторона квадрата (j == m-1).</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL, std::vector, ітератори,</span>
+<span class="cm">  контейнери, бібліотеки для роботи з матрицями.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
+
+<span class="cm">/* Найбільша припустима вимірність матриці. Межа масиву в мові C має бути сталим виразом часу компіляції,</span>
+<span class="cm">   а змінна з модифікатором const ним не є, тому розмір задано директивою</span>
+<span class="cm">   препроцесора. */</span>
+<span class="cp">#define MAX_SIZE 20</span>
+
+<span class="cm">/* Найбільше за модулем значення елемента. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000000</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число із заданого діапазону з контролем введення.</span>
+
+<span class="cm">  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  inShadedPart - чи належить елемент заштрихованій частині матриці.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      i, j [вхідні] - індекси рядка та стовпця елемента;</span>
+<span class="cm">      m    [вхідний] - вимірність квадратної матриці.</span>
+<span class="cm">  Повертає : true - елемент належить "східному" сектору між діагоналями.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">inShadedPart</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  onShadedBorder - чи лежить елемент на межі заштрихованої частини.</span>
+
+<span class="cm">  Межу утворюють відрізки головної діагоналі (i == j), побічної діагоналі</span>
+<span class="cm">  (i + j == m-1) та права сторона матриці (j == m-1) - але лише ті їх точки,</span>
+<span class="cm">  що належать самому сектору.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      i, j [вхідні] - індекси елемента;</span>
+<span class="cm">      m    [вхідний] - вимірність матриці.</span>
+<span class="cm">  Повертає : true - елемент лежить на межі заштрихованої частини.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">onShadedBorder</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">inShadedPart</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printMatrix - вивести матрицю у табличному вигляді з нумерацією</span>
+<span class="cm">                рядків і стовпців.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      title [вхідний] - заголовок таблиці;</span>
+<span class="cm">      a     [вхідний] - матриця;</span>
+<span class="cm">      m     [вхідний] - вимірність матриці;</span>
+<span class="cm">      mark  [вхідний] - якщо true, елементи заштрихованої частини позначаються</span>
+<span class="cm">                        символом '*', а елементи її межі - символом '#'.</span>
+
+<span class="cm">  Параметр-матрицю оголошено без const: у C до редакції C23 масив</span>
+<span class="cm">  int a[N][M] неявно не перетворюється на const int (*)[M].</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printMatrix</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_SIZE</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">mark</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">%s (%d x %d):</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"      "</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%8d"</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"      "</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"--------"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%4d |"</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mark</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="kt">char</span><span class="w"> </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">onShadedBorder</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">))</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'#'</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">inShadedPart</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">))</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="n">flag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'*'</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="n">printf</span><span class="p">(</span><span class="s">"%7d%c"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">flag</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">printf</span><span class="p">(</span><span class="s">"%8d"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mark</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"      * - заштрихована частина,  # - її межа</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  findMaxByModulus - знайти найбільший за модулем елемент заштрихованої частини.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a   [вхідний]  - матриця;</span>
+<span class="cm">      m   [вхідний]  - вимірність матриці;</span>
+<span class="cm">      row [вихідний] - адреса змінної для індексу рядка знайденого елемента;</span>
+<span class="cm">      col [вихідний] - адреса змінної для індексу стовпця;</span>
+<span class="cm">      count [вихідний] - адреса лічильника елементів сектора.</span>
+<span class="cm">  Повертає : значення елемента з найбільшим модулем.</span>
+
+<span class="cm">  За наявності кількох елементів з однаковим модулем запам'ятовується перший</span>
+<span class="cm">  знайдений при обході рядками: порівняння виконується строгою нерівністю.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      maxAbs   - найбільше знайдене абсолютне значення;</span>
+<span class="cm">      maxValue - сам елемент з найбільшим модулем.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">findMaxByModulus</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_SIZE</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">row</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">col</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">count</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">maxAbs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">inShadedPart</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">count</span><span class="p">);</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">absValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">llabs</span><span class="p">((</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">absValue</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxAbs</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">maxAbs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">absValue</span><span class="p">;</span>
+<span class="w">                </span><span class="n">maxValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">                </span><span class="o">*</span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">                </span><span class="o">*</span><span class="n">col</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">maxValue</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  sumOnShadedBorder - сума елементів по межі заштрихованої частини матриці.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a     [вхідний]  - матриця;</span>
+<span class="cm">      m     [вхідний]  - вимірність матриці;</span>
+<span class="cm">      count [вихідний] - адреса лічильника елементів межі.</span>
+<span class="cm">  Повертає : суму елементів межі.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">sumOnShadedBorder</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_SIZE</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">count</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">onShadedBorder</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">                </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">count</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Створює матрицю, знаходить найбільший за модулем елемент</span>
+<span class="cm">  заштрихованої частини та суму елементів по її межі.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      a          - оброблювана матриця;</span>
+<span class="cm">      m          - вимірність матриці;</span>
+<span class="cm">      choice     - спосіб створення матриці;</span>
+<span class="cm">      low, high  - межі діапазону для генерації;</span>
+<span class="cm">      maxValue   - елемент з найбільшим модулем;</span>
+<span class="cm">      maxRow, maxCol - індекси знайденого елемента;</span>
+<span class="cm">      borderSum  - сума елементів по межі заштрихованої частини;</span>
+<span class="cm">      shadedCount, borderCount - кількості елементів сектора та його межі.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №7, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Пошук найбільшого за модулем елемента в заштрихованій частині</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"матриці та суми елементів по її межі</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть вимірність квадратної матриці m (4..20): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_SIZE</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">MAX_SIZE</span><span class="p">][</span><span class="n">MAX_SIZE</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Спосіб створення матриці:</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  1 - введення з клавіатури</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  2 - генерація псевдовипадкових додатних та від'ємних чисел</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть спосіб (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть елементи матриці по рядках (усього %d):</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span>
+<span class="w">                </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"  a[%d][%d] = "</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">);</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть нижню межу діапазону (від'ємну): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span>
+<span class="w">                     </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть верхню межу діапазону (додатну): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">srand</span><span class="p">((</span><span class="kt">unsigned</span><span class="p">)</span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+
+<span class="w">        </span><span class="cm">/* Масштабування rand() на діапазон замість rand() % range: стандарт гарантує</span>
+<span class="cm">           лише RAND_MAX &gt;= 32767, і для ширшого діапазону остача не охопила б</span>
+<span class="cm">           усіх значень. */</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)((</span><span class="kt">double</span><span class="p">)</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">RAND_MAX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span>
+<span class="w">                                      </span><span class="p">(</span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Вхідна матриця"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Розмітка заштрихованої частини"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxRow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">maxCol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">shadedCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">borderCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findMaxByModulus</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">maxRow</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">maxCol</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">shadedCount</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">borderSum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sumOnShadedBorder</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">borderCount</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результати</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Елементів у заштрихованій частині: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">shadedCount</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Найбільший за модулем елемент:     %d (модуль %lld)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">maxValue</span><span class="p">,</span>
+<span class="w">           </span><span class="n">llabs</span><span class="p">((</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">maxValue</span><span class="p">));</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Його індекси:                      рядок %d, стовпець %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">maxRow</span><span class="p">,</span>
+<span class="w">           </span><span class="n">maxCol</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Елементів на межі:                 %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">borderCount</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Сума елементів по межі:            %lld</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">borderSum</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+        <h3>Завдання 2 - task2.c</h3>
+        <p class="files"><a href="task2.c" download>Завантажити файл task2.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №7. Завдання 2. Варіант 19.</span>
+<span class="cm">  Тема: алгоритми матричної алгебри.</span>
+
+<span class="cm">  Умова (таблиця 7.1, завдання 19.2): нехай n підприємств випускають m видів</span>
+<span class="cm">  продукції. Матриця A = (a[i][j]), i = 1..n, j = 1..m задає обсяги i-ої</span>
+<span class="cm">  продукції на j-му підприємстві в першому кварталі, а матриця</span>
+<span class="cm">  B = (b[i][j]) - у другому кварталі. Знайти:</span>
+<span class="cm">    а) сумарний обсяг продукції за два квартали по двох підприємствах;</span>
+<span class="cm">    б) приріст або зменшення обсягів продукції за другий квартал порівняно</span>
+<span class="cm">       з першим за видами продукції та по підприємствах.</span>
+<span class="cm">  Вимірності матриць увести з клавіатури, значення елементів матриць</span>
+<span class="cm">  генерувати або вводити з клавіатури на вимогу користувача. Вивести</span>
+<span class="cm">  результати за пунктами а) та б) з відповідними повідомленнями.</span>
+
+<span class="cm">  Вимога до завдання 2: передбачити вибір режиму виведення результатів -</span>
+<span class="cm">  або тільки кінцевий результат, або з проміжними обчисленнями. Проміжними</span>
+<span class="cm">  результатами є матриця сумарних обсягів A + B і матриця змін B - A:</span>
+<span class="cm">  підсумки їх стовпців і рядків дають відповіді на пункти а) та б).</span>
+
+<span class="cm">  Позначення: a[i][j] - обсяг i-ї продукції на j-му підприємстві, тож рядок</span>
+<span class="cm">  матриці відповідає виду продукції, стовпець - підприємству; n - кількість</span>
+<span class="cm">  видів продукції, m - кількість підприємств.</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL, std::vector, ітератори,</span>
+<span class="cm">  контейнери, бібліотеки для роботи з матрицями.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
+
+<span class="cm">/* Найбільші припустимі вимірності матриць. Межа масиву в мові C має бути сталим виразом часу компіляції,</span>
+<span class="cm">   а змінна з модифікатором const ним не є, тому розмір задано директивою</span>
+<span class="cm">   препроцесора. */</span>
+<span class="cp">#define MAX_ROWS 20 </span><span class="cm">/* видів продукції   */</span>
+<span class="cp">#define MAX_COLS 20 </span><span class="cm">/* підприємств       */</span>
+
+<span class="cm">/* Найбільший обсяг випуску одного виду продукції на підприємстві. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_VOLUME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000000</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  utf8Width - ширина рядка в символах, а не в байтах.</span>
+
+<span class="cm">  У кодуванні UTF-8 кирилична літера займає два байти, тому специфікатор</span>
+<span class="cm">  формату виду %-16s, який рахує байти, вирівнює заголовки таблиць</span>
+<span class="cm">  неправильно. Функція рахує лише початкові байти символів: у продовжувальних</span>
+<span class="cm">  байтах старші біти дорівнюють 10 у двійковій системі.</span>
+
+<span class="cm">  Параметри: s [вхідний] - рядок у кодуванні UTF-8.</span>
+<span class="cm">  Повертає : кількість символів рядка.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">utf8Width</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">s</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Продовжувальний байт UTF-8 має вигляд 10xxxxxx: маска 0xC0 лишає</span>
+<span class="cm">           два старші біти, і якщо вони не дорівнюють 10, це початок символу. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">++</span><span class="n">width</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">width</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printPadded - вивести рядок, доповнивши його пропусками до заданої ширини.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      s     [вхідний] - рядок, що виводиться;</span>
+<span class="cm">      width [вхідний] - потрібна ширина поля в символах;</span>
+<span class="cm">      left  [вхідний] - true: вирівнювання ліворуч; false: праворуч.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      pad - кількість пропусків, які треба додати.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printPadded</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">left</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">pad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">utf8Width</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">left</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pad</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">putchar</span><span class="p">(</span><span class="sc">' '</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pad</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">putchar</span><span class="p">(</span><span class="sc">' '</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число із заданого діапазону з контролем введення.</span>
+
+<span class="cm">  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  fillMatrix - заповнити матрицю обсягів продукції.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a    [вихідний] - матриця, що заповнюється;</span>
+<span class="cm">      n    [вхідний]  - кількість рядків (видів продукції);</span>
+<span class="cm">      m    [вхідний]  - кількість стовпців (підприємств);</span>
+<span class="cm">      name [вхідний]  - назва матриці для запрошень;</span>
+<span class="cm">      byHand [вхідний] - true: введення з клавіатури; false: генерація;</span>
+<span class="cm">      low, high [вхідні] - межі діапазону для генерації.</span>
+<span class="cm">  Повертає : true - заповнено; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">fillMatrix</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">byHand</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span>
+<span class="w">                </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">byHand</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть обсяги для матриці %s; рядок - вид продукції, "</span>
+<span class="w">               </span><span class="s">"стовпець - підприємство:</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">               </span><span class="n">name</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">80</span><span class="p">];</span>
+<span class="w">                </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span>
+<span class="w">                         </span><span class="s">"  продукція %d, підприємство %d: "</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_VOLUME</span><span class="p">))</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Масштабування rand() на діапазон замість rand() % range: стандарт гарантує</span>
+<span class="cm">           лише RAND_MAX &gt;= 32767, і для ширшого діапазону остача не охопила б</span>
+<span class="cm">           усіх значень. */</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)((</span><span class="kt">double</span><span class="p">)</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">RAND_MAX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span>
+<span class="w">                                      </span><span class="p">(</span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printSeparator - вивести розділювальну лінію таблиці.</span>
+<span class="cm">  Параметри: width [вхідний] - довжина лінії в символах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printSeparator</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">putchar</span><span class="p">(</span><span class="sc">'-'</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printMatrix - вивести матрицю обсягів у табличному вигляді із заголовками</span>
+<span class="cm">                рядків (види продукції) та стовпців (підприємства).</span>
+
+<span class="cm">  Праворуч виводяться підсумки рядків, унизу - підсумки стовпців.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      title [вхідний] - заголовок таблиці;</span>
+<span class="cm">      a     [вхідний] - матриця;</span>
+<span class="cm">      n, m  [вхідні]  - кількість рядків і стовпців.</span>
+
+<span class="cm">  Параметр-матрицю оголошено без const: у C до редакції C23 масив</span>
+<span class="cm">  int a[N][M] неявно не перетворюється на const int (*)[M].</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printMatrix</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Продукція </span><span class="se">\\</span><span class="s"> П-во"</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%10d"</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Разом"</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printSeparator</span><span class="p">(</span><span class="mi">16</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">12</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Продукція %-6d"</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">rowTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%10d"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">            </span><span class="n">rowTotal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%12lld</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">rowTotal</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printSeparator</span><span class="p">(</span><span class="mi">16</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">12</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Разом"</span><span class="p">,</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">grandTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">columnTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">columnTotal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%10lld"</span><span class="p">,</span><span class="w"> </span><span class="n">columnTotal</span><span class="p">);</span>
+<span class="w">        </span><span class="n">grandTotal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">columnTotal</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%12lld</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">grandTotal</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  addMatrices - поелементна сума двох матриць: c[i][j] = a[i][j] + b[i][j].</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a, b [вхідні]   - доданки;</span>
+<span class="cm">      c    [вихідний] - результат;</span>
+<span class="cm">      n, m [вхідні]   - кількість рядків і стовпців.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">addMatrices</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  subtractMatrices - поелементна різниця двох матриць: c[i][j] = a[i][j] - b[i][j].</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a    [вхідний]  - зменшуване;</span>
+<span class="cm">      b    [вхідний]  - від'ємник;</span>
+<span class="cm">      c    [вихідний] - результат;</span>
+<span class="cm">      n, m [вхідні]   - кількість рядків і стовпців.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">subtractMatrices</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span>
+<span class="w">                      </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  reportTotalsByPlant - пункт а) умови: сумарний обсяг продукції за два квартали</span>
+<span class="cm">                        по кожному підприємству.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a, b [вхідні] - обсяги випуску за I та II квартали;</span>
+<span class="cm">      n    [вхідний] - кількість видів продукції (рядків);</span>
+<span class="cm">      m    [вхідний] - кількість підприємств (стовпців).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      totalByPlant - сумарний обсяг по кожному підприємству;</span>
+<span class="cm">      grandTotal   - підсумок по всіх підприємствах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">reportTotalsByPlant</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">totalByPlant</span><span class="p">[</span><span class="n">MAX_COLS</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">grandTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">totalByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">totalByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">grandTotal</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">totalByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"а) Сумарний обсяг продукції за два квартали по підприємствах</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Підприємство"</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Обсяг за I+II кв."</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  ------------------------------------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Підприємство %-5d%18lld</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">totalByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  ------------------------------------</span><span class="se">\n</span><span class="s">  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Разом"</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%18lld</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">grandTotal</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  reportChanges - пункт б) умови: приріст або зменшення обсягів за другий</span>
+<span class="cm">                  квартал порівняно з першим, за видами продукції та по</span>
+<span class="cm">                  підприємствах.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      a, b [вхідні] - обсяги випуску за I та II квартали;</span>
+<span class="cm">      n, m [вхідні] - кількість видів продукції та підприємств.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      deltaByProduct - зміна обсягу за кожним видом продукції;</span>
+<span class="cm">      deltaByPlant   - зміна обсягу по кожному підприємству.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">reportChanges</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[][</span><span class="n">MAX_COLS</span><span class="p">],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">MAX_ROWS</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">MAX_COLS</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"б) Приріст (+) або зменшення (-) обсягів за II квартал</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"   порівняно з I кварталом</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  За видами продукції:</span><span class="se">\n</span><span class="s">  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Вид продукції"</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Зміна обсягу"</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"   Оцінка</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  --------------------------------------------------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Продукція %-8d%+14lld   %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+<span class="w">               </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="o">?</span><span class="w"> </span><span class="s">"приріст"</span>
+<span class="w">               </span><span class="o">:</span><span class="w"> </span><span class="n">deltaByProduct</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">"зменшення"</span>
+<span class="w">                                       </span><span class="o">:</span><span class="w"> </span><span class="s">"без змін"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  По підприємствах:</span><span class="se">\n</span><span class="s">  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Підприємство"</span><span class="p">,</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Зміна обсягу"</span><span class="p">,</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"   Оцінка</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  --------------------------------------------------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Підприємство %-5d%+14lld   %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">],</span>
+<span class="w">               </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="o">?</span><span class="w"> </span><span class="s">"приріст"</span>
+<span class="w">               </span><span class="o">:</span><span class="w"> </span><span class="n">deltaByPlant</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">"зменшення"</span>
+<span class="w">                                     </span><span class="o">:</span><span class="w"> </span><span class="s">"без змін"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Читає обидві матриці обсягів, обчислює сумарні обсяги</span>
+<span class="cm">  за два квартали та приріст/зменшення за другий квартал.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      a, b       - обсяги продукції за перший та другий квартали;</span>
+<span class="cm">      sum, diff  - проміжні матриці A + B та B - A;</span>
+<span class="cm">      n, m       - кількість видів продукції та підприємств;</span>
+<span class="cm">      byHand     - спосіб задання елементів матриць;</span>
+<span class="cm">      low, high  - межі діапазону для генерації;</span>
+<span class="cm">      verbose    - режим виведення: true - з проміжними обчисленнями.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №7, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Обсяги випуску продукції за два квартали</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Рядок матриці - вид продукції, стовпець - підприємство.</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть кількість видів продукції n (1..20): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ROWS</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть кількість підприємств m (1..20):   "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COLS</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Спосіб задання обсягів:</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  1 - введення з клавіатури</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  2 - генерація псевдовипадкових чисел у заданому діапазоні</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть спосіб (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">byHand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">byHand</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть нижню межу обсягу: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_VOLUME</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть верхню межу обсягу: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_VOLUME</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">srand</span><span class="p">((</span><span class="kt">unsigned</span><span class="p">)</span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Режим виведення результатів:</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  1 - тільки кінцевий результат</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  2 - з проміжними обчисленнями</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть режим (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">verbose</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">MAX_ROWS</span><span class="p">][</span><span class="n">MAX_COLS</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">MAX_ROWS</span><span class="p">][</span><span class="n">MAX_COLS</span><span class="p">];</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">fillMatrix</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">"A (I квартал)"</span><span class="p">,</span><span class="w"> </span><span class="n">byHand</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">fillMatrix</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">"B (II квартал)"</span><span class="p">,</span><span class="w"> </span><span class="n">byHand</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Матриця A - обсяги випуску за I квартал"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Матриця B - обсяги випуску за II квартал"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="p">[</span><span class="n">MAX_ROWS</span><span class="p">][</span><span class="n">MAX_COLS</span><span class="p">];</span>
+<span class="w">        </span><span class="n">addMatrices</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Проміжний результат: матриця A + B (обсяги за два квартали)</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                    </span><span class="s">"(підсумки стовпців - сумарні обсяги по підприємствах)"</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">reportTotalsByPlant</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">diff</span><span class="p">[</span><span class="n">MAX_ROWS</span><span class="p">][</span><span class="n">MAX_COLS</span><span class="p">];</span>
+<span class="w">        </span><span class="n">subtractMatrices</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">diff</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printMatrix</span><span class="p">(</span><span class="s">"Проміжний результат: матриця B - A (зміна обсягів)</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                    </span><span class="s">"(підсумки рядків - зміна за видами продукції, "</span>
+<span class="w">                    </span><span class="s">"підсумки стовпців - по підприємствах)"</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">diff</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">reportChanges</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+      </section>
+
+      <section id="s-results">
+        <h2>6. Результати виконання роботи</h2>
+        <p>
+          Компіляція: <code>make</code> (<code>gcc -std=c17</code>, прапорці
+          <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+        </p>
+        <p>
+          Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+          програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін, що
+          не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+          прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+          посиланнями.
+        </p>
+        <figure>
+          <img
+            src="results/shot_task1_1.png"
+            alt="Екранна копія 1 - завдання 1: матриця 5 × 5 - розмітка сектора, найбільший за модулем елемент і сума по межі"
+          />
+          <figcaption>
+            Екранна копія 1 - завдання 1: матриця 5 × 5 - розмітка сектора, найбільший за модулем
+            елемент і сума по межі
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
+          <span class="muted">(повний протокол, 161 рядків)</span>
+        </p>
+        <figure>
+          <img
+            src="results/shot_task2_1.png"
+            alt="Екранна копія 2 (частина 1 з 2) - завдання 2: контрольний приклад у режимі з проміжними обчисленнями"
+          />
+          <figcaption>
+            Екранна копія 2 (частина 1 з 2) - завдання 2: контрольний приклад у режимі з проміжними
+            обчисленнями
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="results/shot_task2_2.png"
+            alt="Екранна копія 2 (частина 2 з 2) - завдання 2: контрольний приклад у режимі з проміжними обчисленнями"
+          />
+          <figcaption>
+            Екранна копія 2 (частина 2 з 2) - завдання 2: контрольний приклад у режимі з проміжними
+            обчисленнями
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task2.txt">Повний протокол виконання (task2.txt)</a>
+          <span class="muted">(повний протокол, 270 рядків)</span>
+        </p>
+      </section>
+
+      <section id="s-validation">
+        <h2>7. Аналіз достовірності результатів</h2>
+        <p>
+          Достовірність результатів перевірено ручним обходом матриці за формулами сектора, ручним
+          розрахунком сум і обчисленням на калькуляторі. Для кожної контрольної величини поруч із
+          розрахунком наведено результат програми.
+        </p>
+        <h3>Перевірка розрахунків на калькуляторі</h3>
+        <p>
+          Нижче наведено екранні копії обчислень у калькуляторі WolframAlpha; поруч із кожною -
+          результат програми.
+        </p>
+        <figure>
+          <img
+            src="results/calc_task1.png"
+            alt="Калькулятор: 5+9+10+13+15+19+20-99 (сума елементів по межі сектора 5×5)"
+          />
+          <figcaption>
+            Калькулятор: 5+9+10+13+15+19+20-99 (сума елементів по межі сектора 5×5)
+          </figcaption>
+        </figure>
+        <p>Калькулятор: <b>-8</b>; програма: <b>-8</b>. Значення збігаються.</p>
+        <h3>Завдання 1. Контрольний приклад m = 4</h3>
+        <p>
+          Матриця заповнена числами 1...16 по рядках. Заштрихована частина за виведеними формулами:
+        </p>
+        <pre class="formula">
+      j=0  j=1  j=2  j=3
+i=0    1    2    3    4*
+i=1    5    6    7*   8*
+i=2    9   10   11*  12*
+i=3   13   14   15   16*</pre>
+        <table>
+          <thead>
+            <tr>
+              <th>Величина</th>
+              <th>Ручний розрахунок</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Елементів у секторі</td>
+              <td>4, 7, 8, 11, 12, 16 - <b>6 елементів</b></td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>Найбільший за модулем</td>
+              <td><b>16</b>, індекси (3; 3)</td>
+              <td>16, рядок 3, стовпець 3</td>
+            </tr>
+            <tr>
+              <td>Елементів на межі</td>
+              <td>
+                При m = 4 сектор завширшки не більше двох елементів, тому всі 6 його елементів
+                лежать на межі
+              </td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>Сума по межі</td>
+              <td>4 + 7 + 8 + 11 + 12 + 16 = <b>58</b></td>
+              <td>58</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Завдання 1. Контрольний приклад m = 5</h3>
+        <p>
+          Матриця заповнена по рядках числами 1...24, а останній елемент дорівнює -99, щоб
+          перевірити пошук саме за модулем, а не за значенням.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Величина</th>
+              <th>Ручний розрахунок</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Елементів у секторі</td>
+              <td>
+                (0;4), (1;3), (1;4), (2;2), (2;3), (2;4), (3;3), (3;4), (4;4) - <b>9 елементів</b>
+              </td>
+              <td>9</td>
+            </tr>
+            <tr>
+              <td>Найбільший за модулем</td>
+              <td>серед 5, 9, 10, 13, 14, 15, 19, 20, -99 найбільший модуль має <b>-99</b></td>
+              <td>-99 (модуль 99), рядок 4, стовпець 4</td>
+            </tr>
+            <tr>
+              <td>Елементів на межі</td>
+              <td>усі, крім внутрішнього елемента 14 у позиції (2;3) - <b>8 елементів</b></td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>Сума по межі</td>
+              <td>5 + 9 + 10 + 13 + 15 + 19 + 20 - 99 = <b>-8</b></td>
+              <td>-8</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Від'ємний елемент -99 перевіряє, що порівняння виконується за модулем: за значенням
+          програма повернула б 20.
+        </p>
+        <h3>Завдання 2. Контрольний приклад</h3>
+        <p>
+          Три види продукції, два підприємства. I квартал: A = [[10, 20], [30, 40], [50, 60]]; II
+          квартал: B = [[15, 18], [30, 45], [50, 80]].
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Показник</th>
+              <th>Ручний розрахунок</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Обсяг за два квартали, підприємство 1</td>
+              <td>(10 + 30 + 50) + (15 + 30 + 50) = 90 + 95 = <b>185</b></td>
+              <td>185</td>
+            </tr>
+            <tr>
+              <td>Обсяг за два квартали, підприємство 2</td>
+              <td>(20 + 40 + 60) + (18 + 45 + 80) = 120 + 143 = <b>263</b></td>
+              <td>263</td>
+            </tr>
+            <tr>
+              <td>Разом</td>
+              <td>185 + 263 = <b>448</b></td>
+              <td>448</td>
+            </tr>
+            <tr>
+              <td>Зміна за продукцією 1</td>
+              <td>(15 - 10) + (18 - 20) = 5 - 2 = <b>+3</b></td>
+              <td>+3, приріст</td>
+            </tr>
+            <tr>
+              <td>Зміна за продукцією 2</td>
+              <td>(30 - 30) + (45 - 40) = 0 + 5 = <b>+5</b></td>
+              <td>+5, приріст</td>
+            </tr>
+            <tr>
+              <td>Зміна за продукцією 3</td>
+              <td>(50 - 50) + (80 - 60) = 0 + 20 = <b>+20</b></td>
+              <td>+20, приріст</td>
+            </tr>
+            <tr>
+              <td>Зміна по підприємству 1</td>
+              <td>(15 - 10) + (30 - 30) + (50 - 50) = <b>+5</b></td>
+              <td>+5, приріст</td>
+            </tr>
+            <tr>
+              <td>Зміна по підприємству 2</td>
+              <td>(18 - 20) + (45 - 40) + (80 - 60) = -2 + 5 + 20 = <b>+23</b></td>
+              <td>+23, приріст</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Сума змін за видами продукції (3 + 5 + 20 = 28) дорівнює сумі змін по підприємствах (5 +
+          23 = 28): це ті самі різниці, складені в іншому порядку.
+        </p>
+        <p>
+          У режимі з проміжними обчисленнями програма вивела матрицю A + B з підсумками стовпців 185
+          і 263 та матрицю B - A з підсумками рядків +3, +5, +20 і стовпців +5, +23 - ті самі
+          значення, що й у таблицях пунктів а) і б).
+        </p>
+        <p>
+          Окремим запуском (режим "тільки кінцевий результат") перевірено зменшення обсягів і
+          нульову різницю: програма виводить оцінки "зменшення" та "без змін".
+        </p>
+      </section>
+
+      <section id="s-conclusions">
+        <h2>8. Висновки</h2>
+        <ul>
+          <li>
+            Заштриховану частину матриці описано системою нерівностей через індекси; реалізовано
+            пошук найбільшого за модулем елемента сектора та суму елементів по його межі.
+          </li>
+          <li>
+            Реалізовано операції матричної алгебри: поелементні сума й різниця матриць,
+            підсумовування по рядках і стовпцях.
+          </li>
+          <li>
+            Реалізовано вибір режиму виведення: з проміжними обчисленнями програма виводить матриці
+            A + B і B - A.
+          </li>
+          <li>Дотримано обмежень умови: STL і динамічна пам'ять не використовуються.</li>
+          <li>Обидва завдання варіанта виконано в повному обсязі.</li>
+        </ul>
+      </section>
+
+      <footer>Одарчук Олексій, <a href="https://ishawyha.dev">ishawyha.dev</a></footer>
+    </main>
+  </body>
+</html>

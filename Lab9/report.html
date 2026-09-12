@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Лабораторна робота №9. Обробка рядків</title>
+    <link rel="stylesheet" href="../report.css" />
+  </head>
+
+  <body>
+    <main>
+      <p class="files"><a href="../index.html">← До переліку лабораторних робіт</a></p>
+
+      <h1>Лабораторна робота №9. Обробка рядків</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C17, gcc
+      </p>
+
+      <nav class="toc">
+        <ul>
+          <li><a href="#s-goal">1. Мета роботи</a></li>
+          <li><a href="#s-task">2. Умова задачі</a></li>
+          <li><a href="#s-analysis">3. Аналіз задачі та теоретичне обґрунтування</a></li>
+          <li><a href="#s-flowchart">4. Блок-схема алгоритму</a></li>
+          <li><a href="#s-code">5. Текст програми</a></li>
+          <li><a href="#s-results">6. Результати виконання роботи</a></li>
+          <li><a href="#s-validation">7. Аналіз достовірності результатів</a></li>
+          <li><a href="#s-conclusions">8. Висновки</a></li>
+        </ul>
+      </nav>
+
+      <section id="s-goal">
+        <h2>1. Мета роботи</h2>
+        <ul>
+          <li>Вивчити подання рядків у мові C: поточну та загальну довжину, ознаку кінця рядка.</li>
+          <li>Опанувати бібліотечні функції обробки рядків заголовного файла string.h.</li>
+          <li>Навчитися розробляти алгоритми обробки текстів, поданих масивами рядків.</li>
+        </ul>
+      </section>
+
+      <section id="s-task">
+        <h2>2. Умова задачі</h2>
+        <h3>Завдання 1 (19.1)</h3>
+        <p>
+          Увести з клавіатури рядок слів, які відділяються символами пропуску, комами, точками.
+          Слово є послідовністю символів без розділових символів усередині. Передбачити меню для
+          виконання таких дій:
+        </p>
+        <ul>
+          <li>
+            підрахувати кількість слів, які містять однакову кількість голосних і приголосних літер;
+          </li>
+          <li>вивести на екран усі слова, довжина яких менша заданої з клавіатури;</li>
+          <li>видалити всі слова, передостання літера яких голосна.</li>
+        </ul>
+        <h3>Завдання 2 (19.2)</h3>
+        <p>
+          Увести з клавіатури декілька рядків символів. У кожному рядку записаний арифметичний або
+          логічний вираз в інфіксній формі (звичайній). На екран вивести вираз у постфіксній формі.
+          У постфіксній формі символ операції записується справа від операндів, дужки не
+          застосовуються. Наприклад, вираз (a+b)/c, записаний в інфіксній формі, у постфіксній формі
+          матиме вигляд: a b + c /. Необхідно для кожного виразу в інфіксній формі вивести його
+          аналог у постфіксній формі.
+        </p>
+        <p><b>Контрольний тест з умови варіанта:</b></p>
+        <pre class="formula">
+Уведені рядки:    (a + b) / (c – d)
+                  (2*a – 3*d)*c + 2*b
+
+Отримані рядки:   a b + c d – /
+                  2 a * 3 d * – c * 2 b * +</pre>
+        <p>
+          <b>Обмеження умови:</b> забороняється використовувати STL, методи класу
+          <code>string</code>, ітератори, контейнери. Дозволено використовувати функції заголовних
+          файлів <code>string.h</code>, <code>ctype.h</code>, <code>stdlib.h</code>.
+        </p>
+      </section>
+
+      <section id="s-analysis">
+        <h2>3. Аналіз задачі та теоретичне обґрунтування</h2>
+        <h3>Завдання 1. Кодування UTF-8</h3>
+        <p>
+          Функції <code>ctype.h</code> (<code>isalpha</code>, <code>tolower</code> та інші) працюють
+          з окремими байтами, а в UTF-8 українська літера займає два байти, тому:
+        </p>
+        <ul>
+          <li>
+            <code>isalpha()</code> для кириличної літери дає хибний результат - вона розпадається на
+            два байти, жоден з яких літерою не є;
+          </li>
+          <li>
+            довжина слова, визначена як <code>strlen()</code>, була б удвічі більшою за кількість
+            літер;
+          </li>
+          <li>передостанню літеру побайтово визначити неможливо.</li>
+        </ul>
+        <p>
+          Тому реалізовано власне декодування UTF-8 у код символу та класифікацію літер за кодами.
+          Довжину послідовності задають старші біти першого байта:
+        </p>
+        <pre class="formula">
+0xxxxxxx - 1 байт  (латиниця, цифри, розділові знаки)
+110xxxxx - 2 байти (зокрема кирилиця)
+1110xxxx - 3 байти
+11110xxx - 4 байти
+10xxxxxx - продовжувальний байт</pre>
+        <p>
+          Декодер перевіряє кожен продовжувальний байт: неповна чи некоректна послідовність (інше
+          кодування, обрізане слово) дає окремий недійсний символ, тож розбір не виходить за кінець
+          рядка.
+        </p>
+        <p>
+          Функції <code>isLetterCode()</code> та <code>isVowelCode()</code> охоплюють латиницю й
+          кирилицю. Українські голосні: а, е, є, и, і, ї, о, у, ю, я. Літери <b>є, і, ї, ґ</b>
+          розташовані в Unicode поза блоком А...я (0x0454, 0x0456, 0x0457, 0x0491), тому
+          перевіряються окремо.
+        </p>
+        <p>
+          Функції <code>string.h</code> застосовуються там, де побайтова обробка коректна:
+          <code>strtok()</code> для розбиття на слова, <code>strcpy()</code> і
+          <code>strncpy()</code> для копіювання, <code>strchr()</code> для перевірки, чи вмістився
+          рядок у буфер.
+        </p>
+        <h3>Завдання 1. Функція strtok()</h3>
+        <p>
+          <code>strtok()</code> замінює розділові символи нульовими, тобто змінює рядок, тому розбір
+          виконується над копією. Між викликами функція зберігає стан: перший виклик отримує рядок,
+          наступні - <code>NULL</code>.
+        </p>
+        <h3>Завдання 1. Крайні випадки</h3>
+        <p>
+          Якщо у слові менше двох літер, передостанньої літери немає: слово не видаляється, і
+          програма повідомляє причину. Символи, що не є літерами, у підрахунках не враховуються.
+        </p>
+        <p>
+          Видалення реалізовано ущільненням масиву: слова, що лишаються, переписуються на початок за
+          один прохід.
+        </p>
+        <h3>Завдання 2. Алгоритм сортувальної станції</h3>
+        <p>
+          Використано алгоритм сортувальної станції (алгоритм Дейкстри): вираз переглядається зліва
+          направо зі стеком знаків операцій.
+        </p>
+        <ul>
+          <li>операнд одразу дописується до вихідного рядка;</li>
+          <li>відкривна дужка заноситься до стеку;</li>
+          <li>
+            закривна дужка виштовхує зі стеку всі операції до відкривної дужки; сама пара дужок у
+            результат не потрапляє;
+          </li>
+          <li>
+            знак операції виштовхує зі стеку всі операції з не меншим пріоритетом (операції
+            лівоасоціативні), після чого заноситься до стеку;
+          </li>
+          <li>після перегляду виразу зі стеку виштовхуються всі операції, що лишилися.</li>
+        </ul>
+        <p>
+          Тому постфіксна форма не потребує дужок. Трудомісткість лінійна: кожен символ
+          переглядається один раз, кожна операція потрапляє до стеку й виходить з нього один раз.
+        </p>
+        <p>
+          Умова припускає і логічні вирази, тому таблицю пріоритетів доповнено логічними операціями:
+        </p>
+        <pre class="formula">
+4  унарне заперечення         !
+3  множення, ділення, остача  *  /  %
+2  додавання, віднімання      +  -
+1  порівняння                 &lt;  &gt;
+0  логічні І та АБО           &amp;  |</pre>
+        <p>
+          Операнд - послідовність літер, цифр, символів підкреслення і крапки (імена змінних
+          <code>a</code>, <code>x1</code> і числа <code>2</code>, <code>3.5</code>); він
+          переписується цілком як одна лексема.
+        </p>
+        <h3>Завдання 2. Унарне заперечення та перевірка порядку лексем</h3>
+        <p>
+          Унарне заперечення <code>!</code> стоїть перед своїм операндом, тому заноситься до стеку
+          без виштовхування інших операцій і потрапляє до результату після операнда:
+          <code>!a &amp; b</code> -> <code>a ! b &amp;</code>, <code>!!a</code> ->
+          <code>a ! !</code>.
+        </p>
+        <p>
+          Програма відстежує, що має йти далі: операнд (або відкривна дужка чи <code>!</code>) або
+          знак бінарної операції (або закривна дужка). Так виявляються пропущені операнди (<code
+            >a + * b</code
+          >, <code>a +</code>) та пропущені знаки операцій (<code>a b</code>).
+        </p>
+        <p>
+          Контрольний тест в умові записано з тире "–", а не зі знаком "-", тому функція
+          <code>normalizeMinus()</code> замінює тире (U+2013) і знак мінус (U+2212) дефісом-мінусом;
+          інфіксна форма в протоколі виводиться вже з дефісом.
+        </p>
+        <p>
+          Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
+          - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
+          Jersey. 2017. - 3015 p.; Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest,
+          Clifford Stein Introduction to Algorithms, Third Edition 2009. - 960 p.
+        </p>
+      </section>
+
+      <section id="s-flowchart">
+        <h2>4. Блок-схема алгоритму</h2>
+        <figure>
+          <img
+            src="flowcharts/task1_countVowels.png"
+            alt="Рисунок 1 - Підрахунок голосних і приголосних літер слова з декодуванням UTF-8 (завдання 1)"
+          />
+          <figcaption>
+            Рисунок 1 - Підрахунок голосних і приголосних літер слова з декодуванням UTF-8 (завдання
+            1)
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task1_deleteWords.png"
+            alt="Рисунок 2 - Видалення слів, передостання літера яких голосна (завдання 1)"
+          />
+          <figcaption>
+            Рисунок 2 - Видалення слів, передостання літера яких голосна (завдання 1)
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task2_infixToPostfix.png"
+            alt="Рисунок 3 - Перетворення виразу з інфіксної форми в постфіксну (завдання 2)"
+          />
+          <figcaption>
+            Рисунок 3 - Перетворення виразу з інфіксної форми в постфіксну (завдання 2)
+          </figcaption>
+        </figure>
+        <p>
+          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
+            >rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+        </p>
+      </section>
+
+      <section id="s-code">
+        <h2>5. Текст програми</h2>
+        <h3>Завдання 1 - task1.c</h3>
+        <p class="files"><a href="task1.c" download>Завантажити файл task1.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №9. Завдання 1. Варіант 19.</span>
+<span class="cm">  Тема: обробка рядків на основі бібліотеки функцій string.h.</span>
+
+<span class="cm">  Умова (таблиця 9.2, завдання 19.1): увести з клавіатури рядок слів, які</span>
+<span class="cm">  відділяються символами пропуску, комами, точками. Слово є послідовністю</span>
+<span class="cm">  символів без розділових символів усередині. Передбачити меню для виконання</span>
+<span class="cm">  таких дій:</span>
+<span class="cm">    - підрахувати кількість слів, які містять однакову кількість голосних</span>
+<span class="cm">      і приголосних літер;</span>
+<span class="cm">    - вивести на екран усі слова, довжина яких менша заданої з клавіатури;</span>
+<span class="cm">    - видалити всі слова, передостання літера яких голосна.</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL, методи класу string,</span>
+<span class="cm">  ітератори тощо. Дозволено використовувати функції заголовних файлів</span>
+<span class="cm">  string.h, ctype.h, stdlib.h.</span>
+
+<span class="cm">  Кодування: у UTF-8 українська літера займає два байти, а функції ctype.h</span>
+<span class="cm">  (isalpha та інші) працюють з окремими байтами. Тому літери класифікуються</span>
+<span class="cm">  за кодами символів, які дає власне декодування UTF-8; функції string.h</span>
+<span class="cm">  (strtok, strcpy, strncpy, strchr) використовуються для побайтових дій.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+
+<span class="cm">/* Обмеження на розміри даних. Межа масиву в мові C має бути сталим виразом</span>
+<span class="cm">   часу компіляції, а змінна з модифікатором const ним не є, тому розміри</span>
+<span class="cm">   задано директивами препроцесора. */</span>
+<span class="cp">#define MAX_LINE 1024 </span><span class="cm">/* довжина вхідного рядка в байтах */</span>
+<span class="cp">#define MAX_WORDS 128 </span><span class="cm">/* кількість слів                  */</span>
+<span class="cp">#define MAX_WORD 64   </span><span class="cm">/* довжина одного слова у байтах   */</span>
+
+<span class="cm">/* Розділові символи, якими відділяються слова (за умовою варіанта). */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">DELIMITERS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">" </span><span class="se">\t\n</span><span class="s">,."</span><span class="p">;</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Робота з символами в кодуванні UTF-8</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  utf8Decode - визначити код символу та кількість байтів, які він займає.</span>
+
+<span class="cm">  У кодуванні UTF-8 старші біти першого байта задають довжину послідовності:</span>
+<span class="cm">      0xxxxxxx - 1 байт  (латиниця, цифри, розділові знаки);</span>
+<span class="cm">      110xxxxx - 2 байти (зокрема кирилиця);</span>
+<span class="cm">      1110xxxx - 3 байти;</span>
+<span class="cm">      11110xxx - 4 байти.</span>
+<span class="cm">  Продовжувальні байти мають вигляд 10xxxxxx і несуть по 6 значущих бітів.</span>
+
+<span class="cm">  Кожен продовжувальний байт перевіряється. Якщо послідовність неповна або</span>
+<span class="cm">  некоректна (зокрема обірвана завершальним нулем рядка), перший байт</span>
+<span class="cm">  вважається окремим недійсним символом U+FFFD. Тому функція ніколи не</span>
+<span class="cm">  "перестрибує" кінець рядка, навіть якщо текст уведено не в UTF-8.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      s     [вхідний]  - покажчик на початок символу;</span>
+<span class="cm">      bytes [вихідний] - адреса змінної для кількості байтів символу.</span>
+<span class="cm">  Повертає : код символу (кодову позицію Unicode) або 0xFFFD.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      p      - байти символу як беззнакові числа;</span>
+<span class="cm">      length - кількість байтів, яку задає перший байт;</span>
+<span class="cm">      code   - накопичуваний код символу.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="nf">utf8Decode</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">bytes</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">s</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cm">/* Маска лишає старші біти першого байта, решта бітів - початок коду. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x00</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 0xxxxxxx - однобайтовий символ */</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">code</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 110xxxxx: 5 значущих бітів */</span>
+<span class="w">        </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x1F</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 1110xxxx: 4 значущі біти */</span>
+<span class="w">        </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x0F</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF8</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 11110xxx: 3 значущі біти */</span>
+<span class="w">        </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x07</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* продовжувальний байт без початкового */</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mh">0xFFFD</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Кожен продовжувальний байт додає до коду шість молодших бітів. */</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">length</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">*</span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* послідовність обірвана */</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mh">0xFFFD</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x3F</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">length</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">code</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  toLowerCode - звести код літери до нижнього регістру.</span>
+
+<span class="cm">  Обробляються латиниця (A..Z), основна кирилиця (А..Я) та окремі українські</span>
+<span class="cm">  літери Є, І, Ї, Ґ, які в таблиці Unicode розташовані поза основним блоком.</span>
+
+<span class="cm">  Параметри: code [вхідний] - код символу.</span>
+<span class="cm">  Повертає : код відповідної малої літери або сам код, якщо він не є великою літерою.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="nf">toLowerCode</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="sc">'A'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">'Z'</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="cm">/* латиниця */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mh">0x0410</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">0x042F</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span><span class="w"> </span><span class="cm">/* А..Я     */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0404</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mh">0x0454</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Є -&gt; є   */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0406</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mh">0x0456</span><span class="p">;</span><span class="w"> </span><span class="cm">/* І -&gt; і   */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0407</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mh">0x0457</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Ї -&gt; ї   */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">code</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0490</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mh">0x0491</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Ґ -&gt; ґ   */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">code</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  isLetterCode - чи є символ літерою (латиниця або кирилиця).</span>
+
+<span class="cm">  Параметри: code [вхідний] - код символу.</span>
+<span class="cm">  Повертає : true - символ є літерою.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isLetterCode</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toLowerCode</span><span class="p">(</span><span class="n">code</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="sc">'a'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="sc">'z'</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="cm">/* латиниця        */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mh">0x0430</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">0x044F</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="cm">/* а..я            */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0454</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0456</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0457</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0491</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="cm">/* є, і, ї, ґ      */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  isVowelCode - чи є літера голосною.</span>
+
+<span class="cm">  Українські голосні: а, е, є, и, і, ї, о, у, ю, я.</span>
+<span class="cm">  Латинські голосні:  a, e, i, o, u, y.</span>
+
+<span class="cm">  Параметри: code [вхідний] - код символу.</span>
+<span class="cm">  Повертає : true - літера голосна.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isVowelCode</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toLowerCode</span><span class="p">(</span><span class="n">code</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Латинські голосні. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'a'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'e'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'i'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'o'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'u'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'y'</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Українські голосні: а(0430) е(0435) и(0438) о(043E) у(0443)</span>
+<span class="cm">                           ю(044E) я(044F) є(0454) і(0456) ї(0457). */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0430</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0435</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0438</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x043E</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0443</span><span class="w"> </span><span class="o">||</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x044E</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x044F</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0454</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0456</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x0457</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  charCount - кількість СИМВОЛІВ у рядку (не байтів).</span>
+
+<span class="cm">  Параметри: s [вхідний] - рядок у кодуванні UTF-8.</span>
+<span class="cm">  Повертає : кількість символів.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      count - лічильник символів;</span>
+<span class="cm">      bytes - довжина поточного символу в байтах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">charCount</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">utf8Decode</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bytes</span><span class="p">);</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printPadded - вивести рядок, доповнивши його пропусками до заданої ширини</span>
+<span class="cm">                в СИМВОЛАХ.</span>
+
+<span class="cm">  Специфікатор формату виду %-24s рахує байти, тому для тексту в кодуванні</span>
+<span class="cm">  UTF-8 він вирівнює таблиці неправильно. Ширина обчислюється функцією</span>
+<span class="cm">  charCount(), яка рахує саме символи.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      s     [вхідний] - рядок, що виводиться;</span>
+<span class="cm">      width [вхідний] - потрібна ширина поля в символах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printPadded</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">charCount</span><span class="p">(</span><span class="n">s</span><span class="p">);</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">putchar</span><span class="p">(</span><span class="sc">' '</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  countVowelsConsonants - підрахувати голосні та приголосні літери слова.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      word       [вхідний]  - слово;</span>
+<span class="cm">      vowels     [вихідний] - адреса лічильника голосних;</span>
+<span class="cm">      consonants [вихідний] - адреса лічильника приголосних.</span>
+
+<span class="cm">  Символи, які не є літерами (цифри, дефіси всередині слова), не враховуються</span>
+<span class="cm">  в жодному з лічильників.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">countVowelsConsonants</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">vowels</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">consonants</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="n">vowels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">consonants</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utf8Decode</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bytes</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isLetterCode</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isVowelCode</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">vowels</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">consonants</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  penultimateLetter - код передостанньої ЛІТЕРИ слова.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      word  [вхідний]  - слово;</span>
+<span class="cm">      found [вихідний] - адреса ознаки: true, якщо у слові щонайменше дві літери.</span>
+<span class="cm">  Повертає : код передостанньої літери або 0, якщо літер менше двох.</span>
+
+<span class="cm">  Літерами вважаються лише символи, які проходять перевірку isLetterCode(),</span>
+<span class="cm">  тому цифри та інші символи не спотворюють результат.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      last, prev - коди останньої та передостанньої знайдених літер;</span>
+<span class="cm">      total      - кількість знайдених літер.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="nf">penultimateLetter</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">word</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="o">*</span><span class="n">found</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">bytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utf8Decode</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bytes</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isLetterCode</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">prev</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">last</span><span class="p">;</span>
+<span class="w">        </span><span class="n">last</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">code</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="n">total</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">total</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="n">found</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">prev</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Робота зі списком слів</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/* Слова вхідного рядка та їх кількість. */</span>
+<span class="kt">char</span><span class="w"> </span><span class="n">g_words</span><span class="p">[</span><span class="n">MAX_WORDS</span><span class="p">][</span><span class="n">MAX_WORD</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  splitIntoWords - розібрати рядок на слова за розділовими символами.</span>
+
+<span class="cm">  Використано бібліотечну функцію strtok() з string.h. Особливість її</span>
+<span class="cm">  застосування: strtok ЗМІНЮЄ вхідний рядок, замінюючи розділові символи</span>
+<span class="cm">  нульовими, і зберігає внутрішній стан між викликами - тому перший виклик</span>
+<span class="cm">  отримує рядок, а наступні замість нього нульовий покажчик. Через це</span>
+<span class="cm">  розбір виконується над копією рядка, а не над оригіналом.</span>
+
+<span class="cm">  Параметри: line [вхідний] - вхідний рядок.</span>
+<span class="cm">  Повертає : кількість знайдених слів.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      buffer - робоча копія рядка, яку змінює strtok;</span>
+<span class="cm">      token  - покажчик на чергове слово;</span>
+<span class="cm">      count  - лічильник слів.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">splitIntoWords</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">line</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">MAX_LINE</span><span class="p">];</span>
+<span class="w">    </span><span class="n">strncpy</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_LINE</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">buffer</span><span class="p">[</span><span class="n">MAX_LINE</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strtok</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">DELIMITERS</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">token</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">MAX_WORDS</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">strncpy</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">count</span><span class="p">],</span><span class="w"> </span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_WORD</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">g_words</span><span class="p">[</span><span class="n">count</span><span class="p">][</span><span class="n">MAX_WORD</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span>
+<span class="w">        </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strtok</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">DELIMITERS</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printWords - вивести поточний список слів у табличному вигляді.</span>
+
+<span class="cm">  Параметри: title [вхідний] - заголовок таблиці.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printWords</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">title</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">%s (слів: %d)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">g_count</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  список порожній</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">vowels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">consonants</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">countVowelsConsonants</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">vowels</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">consonants</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %2d. "</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printPadded</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="mi">22</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">" довжина %2d, голосних %d, приголосних %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">charCount</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+<span class="w">               </span><span class="n">vowels</span><span class="p">,</span><span class="w"> </span><span class="n">consonants</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Команди меню</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdCountBalanced - підрахувати слова з однаковою кількістю голосних</span>
+<span class="cm">                     і приголосних літер.</span>
+<span class="cm">  Повертає : кількість таких слів.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">cmdCountBalanced</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Слова з однаковою кількістю голосних і приголосних:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">vowels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">consonants</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="n">countVowelsConsonants</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">vowels</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">consonants</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vowels</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">consonants</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %s (голосних %d = приголосних %d)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">vowels</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">consonants</span><span class="p">);</span>
+<span class="w">            </span><span class="o">++</span><span class="n">found</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  таких слів немає</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кількість слів з однаковою кількістю голосних і приголосних: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">found</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdShorterThan - вивести всі слова, довжина яких менша за задану.</span>
+
+<span class="cm">  Параметри: limit [вхідний] - гранична довжина у символах.</span>
+<span class="cm">  Повертає : кількість виведених слів.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">cmdShorterThan</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Слова, довжина яких менша за %d:</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">limit</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">charCount</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">limit</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %s (довжина %d)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">length</span><span class="p">);</span>
+<span class="w">            </span><span class="o">++</span><span class="n">found</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  таких слів немає</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">found</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdDeletePenultimateVowel - видалити всі слова, передостання літера яких</span>
+<span class="cm">                              голосна.</span>
+
+<span class="cm">  Видалення виконується ущільненням масиву: слова, що лишаються, послідовно</span>
+<span class="cm">  переписуються на початок, після чого кількість слів зменшується.</span>
+
+<span class="cm">  Повертає : кількість видалених слів.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      kept    - кількість слів, що лишилися;</span>
+<span class="cm">      removed - кількість видалених слів.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">cmdDeletePenultimateVowel</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">kept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">removed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Видалення слів, передостання літера яких голосна:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">penultimateLetter</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">found</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isVowelCode</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  видалено: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">            </span><span class="o">++</span><span class="n">removed</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">found</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  збережено: %s (літер менше двох, передостанньої немає)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">kept</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">strcpy</span><span class="p">(</span><span class="n">g_words</span><span class="p">[</span><span class="n">kept</span><span class="p">],</span><span class="w"> </span><span class="n">g_words</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="o">++</span><span class="n">kept</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">g_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">kept</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">removed</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  жодного слова не видалено</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">removed</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число із заданого діапазону.</span>
+
+<span class="cm">  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Читає рядок, розбиває його на слова та виконує команди меню.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      line   - вхідний рядок;</span>
+<span class="cm">      choice - обраний пункт меню;</span>
+<span class="cm">      limit  - гранична довжина слова для другої команди.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №9, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Обробка рядка слів</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Слова відділяються пропусками, комами та крапками.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть рядок: "</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">line</span><span class="p">[</span><span class="n">MAX_LINE</span><span class="p">];</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_LINE</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strchr</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Рядок довший за буфер: зайві символи відкидаються. */</span>
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">g_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">splitIntoWords</span><span class="p">(</span><span class="n">line</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">У введеному рядку немає жодного слова.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printWords</span><span class="p">(</span><span class="s">"Вхідний список слів"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Меню команд:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span>
+<span class="w">            </span><span class="s">"  1 - підрахувати слова з однаковою кількістю голосних і приголосних</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  2 - вивести слова, довжина яких менша заданої</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  3 - видалити слова, передостання літера яких голосна</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  4 - вивести поточний список слів</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  5 - вихід</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть команду (1..5): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано. Завершення роботи.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdCountBalanced</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">limit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть граничну довжину слова: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">limit</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_WORD</span><span class="p">))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">cmdShorterThan</span><span class="p">(</span><span class="n">limit</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">removed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cmdDeletePenultimateVowel</span><span class="p">();</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"Видалено слів: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">removed</span><span class="p">);</span>
+<span class="w">            </span><span class="n">printWords</span><span class="p">(</span><span class="s">"Список після видалення"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printWords</span><span class="p">(</span><span class="s">"Поточний список слів"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Завершення роботи.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+        <h3>Завдання 2 - task2.c</h3>
+        <p class="files"><a href="task2.c" download>Завантажити файл task2.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №9. Завдання 2. Варіант 19.</span>
+<span class="cm">  Тема: обробка текстів, поданих масивами рядків.</span>
+
+<span class="cm">  Умова (таблиця 9.2, завдання 19.2): увести з клавіатури декілька рядків</span>
+<span class="cm">  символів. У кожному рядку записаний арифметичний або логічний вираз</span>
+<span class="cm">  в інфіксній формі (звичайній). На екран вивести вираз у постфіксній формі.</span>
+<span class="cm">  У постфіксній формі символ операції записується справа від операндів,</span>
+<span class="cm">  дужки не застосовуються. Наприклад, вираз (a+b)/c, записаний в інфіксній</span>
+<span class="cm">  формі, у постфіксній формі матиме вигляд: a b + c /.</span>
+
+<span class="cm">  Контрольний тест з умови варіанта:</span>
+<span class="cm">      уведені рядки:   (a + b) / (c - d)</span>
+<span class="cm">                       (2*a - 3*d)*c + 2*b</span>
+<span class="cm">      отримані рядки:  a b + c d - /</span>
+<span class="cm">                       2 a * 3 d * - c * 2 b * +</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL, методи класу string,</span>
+<span class="cm">  ітератори, контейнери. Дозволено використовувати функції заголовних файлів</span>
+<span class="cm">  string.h, ctype.h, stdlib.h.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ctype.h&gt;</span>
+
+<span class="cm">/* Обмеження на розміри даних. Межа масиву в мові C має бути сталим виразом часу компіляції,</span>
+<span class="cm">   а змінна з модифікатором const ним не є, тому розмір задано директивою</span>
+<span class="cm">   препроцесора. */</span>
+<span class="cp">#define MAX_LINE 256  </span><span class="cm">/* довжина одного виразу        */</span>
+<span class="cp">#define MAX_LINES 32  </span><span class="cm">/* кількість виразів            */</span>
+<span class="cp">#define MAX_STACK 256 </span><span class="cm">/* глибина стеку операцій       */</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  precedence - пріоритет операції.</span>
+
+<span class="cm">  Що більше значення, то раніше виконується операція. Пріоритети звичайні</span>
+<span class="cm">  математичні, доповнені логічними операціями:</span>
+
+<span class="cm">      4  унарне заперечення            !</span>
+<span class="cm">      3  множення, ділення, остача     *  /  %</span>
+<span class="cm">      2  додавання, віднімання         +  -</span>
+<span class="cm">      1  порівняння                    &lt;  &gt;</span>
+<span class="cm">      0  логічні І та АБО              &amp;  |</span>
+
+<span class="cm">  Параметри: op [вхідний] - символ операції.</span>
+<span class="cm">  Повертає : пріоритет операції або -1, якщо символ операцією не є.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">precedence</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">op</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'!'</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'*'</span><span class="p">:</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'/'</span><span class="p">:</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'%'</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'+'</span><span class="p">:</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'-'</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'&lt;'</span><span class="p">:</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'&gt;'</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'&amp;'</span><span class="p">:</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="sc">'|'</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  isOperator - чи є символ знаком операції.</span>
+
+<span class="cm">  Параметри: c [вхідний] - символ.</span>
+<span class="cm">  Повертає : true - символ є операцією.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isOperator</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">precedence</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  isOperandChar - чи може символ входити до операнда.</span>
+
+<span class="cm">  Операндом вважається послідовність літер, цифр, символів підкреслення</span>
+<span class="cm">  і крапки: це охоплює як імена змінних (a, b, x1), так і числові сталі</span>
+<span class="cm">  (2, 35, 3.5).</span>
+
+<span class="cm">  Параметри: c [вхідний] - символ.</span>
+<span class="cm">  Повертає : true - символ належить операнду.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isOperandChar</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">isalnum</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'_'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'.'</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  normalizeMinus - замінити в рядку знаки "–" (тире) та "−" (мінус) на '-'.</span>
+
+<span class="cm">  Контрольний тест в умові варіанта записано з типографським тире</span>
+<span class="cm">  "(c – d)". У кодуванні UTF-8 тире U+2013 - це три байти E2 80 93,</span>
+<span class="cm">  знак мінус U+2212 - E2 88 92. Щоб вираз, скопійований з тексту умови,</span>
+<span class="cm">  розбирався так само, як набраний з клавіатури, ці знаки замінюються</span>
+<span class="cm">  звичайним дефісом-мінусом. Рядок при цьому лише коротшає.</span>
+
+<span class="cm">  Параметри: s [вхідний/вихідний] - рядок з виразом.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      read, write - позиції читання та запису в рядку;</span>
+<span class="cm">      b           - байти рядка, починаючи з позиції читання;</span>
+<span class="cm">      dash        - чи стоїть на позиції читання тире або знак мінус.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">normalizeMinus</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">write</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">read</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">read</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">write</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">read</span><span class="p">;</span>
+
+<span class="w">        </span><span class="cm">/* Байти порівнюються по черзі: на нульовому байті кінця рядка умова</span>
+<span class="cm">           стає хибною, і наступні байти вже не читаються. */</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">dash</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xE2</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">((</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x80</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x93</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
+<span class="w">                                           </span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x88</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x92</span><span class="p">));</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dash</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">s</span><span class="p">[</span><span class="n">write</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'-'</span><span class="p">;</span>
+<span class="w">            </span><span class="n">read</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">s</span><span class="p">[</span><span class="n">write</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">read</span><span class="p">];</span>
+<span class="w">            </span><span class="o">++</span><span class="n">read</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">s</span><span class="p">[</span><span class="n">write</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  infixToPostfix - перетворити вираз з інфіксної форми в постфіксну.</span>
+
+<span class="cm">  Алгоритм сортувальної станції (алгоритм Дейкстри). Вираз переглядається</span>
+<span class="cm">  зліва направо, використовується стек знаків операцій:</span>
+
+<span class="cm">    - операнд одразу дописується до вихідного рядка;</span>
+<span class="cm">    - відкривна дужка заноситься до стеку;</span>
+<span class="cm">    - закривна дужка виштовхує зі стеку всі операції до відкривної дужки,</span>
+<span class="cm">      сама пара дужок у результат не потрапляє;</span>
+<span class="cm">    - знак операції виштовхує зі стеку всі операції з не меншим пріоритетом</span>
+<span class="cm">      (для лівоасоціативних операцій), після чого заноситься до стеку;</span>
+<span class="cm">    - після перегляду виразу зі стеку виштовхуються всі операції, що лишилися.</span>
+
+<span class="cm">  Саме тому постфіксна форма не потребує дужок: порядок операцій у ній</span>
+<span class="cm">  задається взаємним розташуванням знаків.</span>
+
+<span class="cm">  Унарне заперечення ! стоїть перед операндом, тому заноситься до стеку</span>
+<span class="cm">  без виштовхування інших операцій і виводиться після свого операнда.</span>
+
+<span class="cm">  Паралельно перевіряється порядок лексем: ознака expectOperand показує,</span>
+<span class="cm">  що зараз очікується - операнд (або '(' чи '!') чи знак бінарної операції</span>
+<span class="cm">  (або ')'). Так виявляються пропущені операнди та знаки операцій.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      infix  [вхідний]  - вираз в інфіксній формі;</span>
+<span class="cm">      postfix [вихідний] - буфер для виразу в постфіксній формі;</span>
+<span class="cm">      error  [вихідний] - адреса рядка-повідомлення про помилку;</span>
+<span class="cm">                          заповнюється лише при поверненні false.</span>
+<span class="cm">  Повертає : true - перетворення виконано; false - вираз некоректний.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      stack     - стек знаків операцій та дужок;</span>
+<span class="cm">      top       - індекс вершини стеку (-1, якщо стек порожній);</span>
+<span class="cm">      out       - поточна позиція запису у вихідному рядку;</span>
+<span class="cm">      i         - поточна позиція перегляду вхідного рядка;</span>
+<span class="cm">      expectOperand - чи очікується зараз операнд.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">infixToPostfix</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">infix</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">postfix</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">error</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">MAX_STACK</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">expectOperand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">infix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">infix</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">        </span><span class="cm">/* Пропуски у вхідному виразі ігноруються. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isspace</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">c</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* Операнд: переписується цілком, як одна лексема. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isOperandChar</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">expectOperand</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"пропущено знак операції між операндами"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">infix</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isOperandChar</span><span class="p">(</span><span class="n">infix</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">infix</span><span class="p">[</span><span class="n">i</span><span class="o">++</span><span class="p">];</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
+<span class="w">            </span><span class="n">expectOperand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'('</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'!'</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">expectOperand</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'('</span><span class="p">)</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"пропущено знак операції перед дужкою"</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">else</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"заперечення ! має стояти перед операндом"</span><span class="p">;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">MAX_STACK</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"переповнення стеку: вираз занадто складний"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">stack</span><span class="p">[</span><span class="o">++</span><span class="n">top</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">')'</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">expectOperand</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"пропущено операнд перед закривною дужкою"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'('</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="o">--</span><span class="p">];</span>
+<span class="w">                </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"зайва закривна дужка"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="o">--</span><span class="n">top</span><span class="p">;</span><span class="w"> </span><span class="cm">/* вилучити '(' зі стеку */</span>
+<span class="w">            </span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isOperator</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">expectOperand</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"пропущено операнд перед знаком операції"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="cm">/* Для лівоасоціативних операцій виштовхуються операції</span>
+<span class="cm">               з не меншим пріоритетом. */</span>
+<span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">]</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'('</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">                   </span><span class="n">precedence</span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">])</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">precedence</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="o">--</span><span class="p">];</span>
+<span class="w">                </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">MAX_STACK</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"переповнення стеку: вираз занадто складний"</span><span class="p">;</span>
+<span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="n">stack</span><span class="p">[</span><span class="o">++</span><span class="n">top</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="w">            </span><span class="o">++</span><span class="n">i</span><span class="p">;</span>
+<span class="w">            </span><span class="n">expectOperand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"неприпустимий символ у виразі"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">expectOperand</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">top</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"порожній вираз"</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"вираз закінчується без операнда"</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Виштовхнути операції, що лишилися у стеку. */</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">top</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'('</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"не вистачає закривної дужки"</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stack</span><span class="p">[</span><span class="n">top</span><span class="o">--</span><span class="p">];</span>
+<span class="w">        </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="o">++</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">' '</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Прибрати завершальний пропуск. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">--</span><span class="n">out</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">postfix</span><span class="p">[</span><span class="n">out</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число із заданого діапазону з контролем введення.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      prompt [вхідний]  - текст запрошення;</span>
+<span class="cm">      value  [вихідний] - адреса змінної для введеного числа;</span>
+<span class="cm">      low, high [вхідні] - межі припустимого діапазону.</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Читає кількість виразів та самі вирази, перетворює кожен</span>
+<span class="cm">  у постфіксну форму й виводить результати.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      lines   - масив рядків з виразами в інфіксній формі;</span>
+<span class="cm">      count   - кількість введених виразів;</span>
+<span class="cm">      postfix - буфер для результату перетворення;</span>
+<span class="cm">      error   - повідомлення про помилку розбору.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №9, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Перетворення виразу з інфіксної форми в постфіксну</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Припустимі операції: ! * / %% + - &lt; &gt; &amp; |</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Операнди - імена змінних та числа.</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"Уведіть кількість виразів (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_LINES</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* readInt відкидає залишок рядка після числа, тому далі fgets читає</span>
+<span class="cm">       саме вирази. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_LINES</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">lines</span><span class="p">[</span><span class="n">MAX_LINES</span><span class="p">][</span><span class="n">MAX_LINE</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть вирази по одному в рядку (усього %d):</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  вираз %d: "</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">MAX_LINE</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* Прибрати символ переведення рядка, який лишає fgets. */</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="cm">/* Рядок довший за буфер: зайві символи відкидаються. */</span>
+<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Результати перетворення</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">char</span><span class="w"> </span><span class="n">postfix</span><span class="p">[</span><span class="n">MAX_LINE</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">2</span><span class="p">];</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">""</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">normalizeMinus</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Інфіксна форма:   %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">infixToPostfix</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">postfix</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">error</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Постфіксна форма: %s</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">postfix</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Помилка: %s</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+      </section>
+
+      <section id="s-results">
+        <h2>6. Результати виконання роботи</h2>
+        <p>
+          Компіляція: <code>make</code> (<code>gcc -std=c17</code>, прапорці
+          <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+        </p>
+        <p>
+          Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+          програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін, що
+          не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+          прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+          посиланнями.
+        </p>
+        <figure>
+          <img
+            src="results/shot_task1_1.png"
+            alt="Екранна копія 1 (частина 1 з 2) - завдання 1: контрольний рядок українською та всі команди меню"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 1 з 2) - завдання 1: контрольний рядок українською та всі
+            команди меню
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="results/shot_task1_2.png"
+            alt="Екранна копія 1 (частина 2 з 2) - завдання 1: контрольний рядок українською та всі команди меню"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 2 з 2) - завдання 1: контрольний рядок українською та всі
+            команди меню
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
+          <span class="muted">(повний протокол, 213 рядків)</span>
+        </p>
+        <figure>
+          <img
+            src="results/shot_task2_1.png"
+            alt="Екранна копія 2 - завдання 2: два запуски - контрольний тест з умови (вставлений з тире) та вирази з пропущеними операндами й знаками операцій"
+          />
+          <figcaption>
+            Екранна копія 2 - завдання 2: два запуски - контрольний тест з умови (вставлений з тире)
+            та вирази з пропущеними операндами й знаками операцій
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task2.txt">Повний протокол виконання (task2.txt)</a>
+          <span class="muted">(повний протокол, 133 рядків)</span>
+        </p>
+      </section>
+
+      <section id="s-validation">
+        <h2>7. Аналіз достовірності результатів</h2>
+        <p>
+          Достовірність результатів перевірено контрольним тестом з умови варіанта та ручним
+          розбором контрольних рядків. Для кожної контрольної величини поруч із розрахунком наведено
+          результат програми.
+        </p>
+        <h3>Завдання 1. Контрольний рядок українською</h3>
+        <p>
+          Уведено рядок: <code>мова, програма. код тест дім і</code> (роздільники - кома, крапка,
+          пропуск).
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Слово</th>
+              <th>Літер (ручний підрахунок)</th>
+              <th>Голосні</th>
+              <th>Приголосні</th>
+              <th>Передостання літера</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>мова</td>
+              <td>4</td>
+              <td>о, а - 2</td>
+              <td>м, в - 2</td>
+              <td>в - приголосна</td>
+              <td>довжина 4, голосних 2, приголосних 2; збережено</td>
+            </tr>
+            <tr>
+              <td>програма</td>
+              <td>8</td>
+              <td>о, а, а - 3</td>
+              <td>п, р, г, р, м - 5</td>
+              <td>м - приголосна</td>
+              <td>довжина 8, голосних 3, приголосних 5; збережено</td>
+            </tr>
+            <tr>
+              <td>код</td>
+              <td>3</td>
+              <td>о - 1</td>
+              <td>к, д - 2</td>
+              <td>о - <b>голосна</b></td>
+              <td>довжина 3; <b>видалено</b></td>
+            </tr>
+            <tr>
+              <td>тест</td>
+              <td>4</td>
+              <td>е - 1</td>
+              <td>т, с, т - 3</td>
+              <td>с - приголосна</td>
+              <td>довжина 4, голосних 1, приголосних 3; збережено</td>
+            </tr>
+            <tr>
+              <td>дім</td>
+              <td>3</td>
+              <td>і - 1</td>
+              <td>д, м - 2</td>
+              <td>і - <b>голосна</b></td>
+              <td>довжина 3; <b>видалено</b></td>
+            </tr>
+            <tr>
+              <td>і</td>
+              <td>1</td>
+              <td>і - 1</td>
+              <td>0</td>
+              <td>літер менше двох</td>
+              <td>збережено з поясненням</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Результати команд збігаються з ручним розбором:</p>
+        <ul>
+          <li>слів з однаковою кількістю голосних і приголосних - <b>1</b> ("мова");</li>
+          <li>слів, коротших за 4 символи - <b>3</b> ("код", "дім", "і");</li>
+          <li>видалено слів - <b>2</b> ("код", "дім").</li>
+        </ul>
+        <p>
+          Довжини слів пораховано в літерах, а не в байтах (побайтово "мова" мала б довжину 8).
+          Літеру <b>і</b>, що лежить поза основним кириличним блоком, розпізнано як голосну, тому
+          слово "дім" видалено.
+        </p>
+        <p>
+          Додатково перевірено рядок англійською та рядок з кількома роздільниками підряд (<code
+            >один,,, два...три, чотири</code
+          >): порожніх слів не утворюється.
+        </p>
+        <h3>Завдання 2. Контрольний тест з умови варіанта</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Інфіксна форма</th>
+              <th>Очікувано за умовою</th>
+              <th>Результат програми</th>
+              <th>Збіг</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>(a + b) / (c - d)</td>
+              <td>a b + c d - /</td>
+              <td>a b + c d - /</td>
+              <td>так</td>
+            </tr>
+            <tr>
+              <td>(2*a - 3*d)*c + 2*b</td>
+              <td>2 a * 3 d * - c * 2 b * +</td>
+              <td>2 a * 3 d * - c * 2 b * +</td>
+              <td>так</td>
+            </tr>
+            <tr>
+              <td>(a+b)/c - приклад із тексту умови</td>
+              <td>a b + c /</td>
+              <td>a b + c /</td>
+              <td>так</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Рядки контрольного тесту вставлено так, як їх записано в умові (з тире "–"); обидва
+          результати збігаються з очікуваними символ у символ.
+        </p>
+        <h3>Завдання 2. Перевірка пріоритетів та помилкових виразів</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Вираз</th>
+              <th>Ручний розбір</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>a + b * c - d</td>
+              <td>множення виконується першим: <b>a b c * + d -</b></td>
+              <td>a b c * + d -</td>
+            </tr>
+            <tr>
+              <td>a * (b + c) * d</td>
+              <td>дужки змінюють порядок: <b>a b c + * d *</b></td>
+              <td>a b c + * d *</td>
+            </tr>
+            <tr>
+              <td>x &gt; y &amp; z &lt; w</td>
+              <td>порівняння пріоритетніші за логічне І: <b>x y &gt; z w &lt; &amp;</b></td>
+              <td>x y &gt; z w &lt; &amp;</td>
+            </tr>
+            <tr>
+              <td>(a + b</td>
+              <td>не вистачає закривної дужки</td>
+              <td>повідомлення "не вистачає закривної дужки"</td>
+            </tr>
+            <tr>
+              <td>a + b)</td>
+              <td>зайва закривна дужка</td>
+              <td>повідомлення "зайва закривна дужка"</td>
+            </tr>
+            <tr>
+              <td>a # b</td>
+              <td>неприпустимий символ</td>
+              <td>повідомлення "неприпустимий символ у виразі"</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Перші три рядки перевіряють порядок операцій, заданий пріоритетами й дужками; останні три
+          - вирази з незбалансованими дужками й неприпустимим символом: програма називає причину
+          помилки.
+        </p>
+        <h3>Завдання 2. Пропущені операнди, знаки операцій і унарне заперечення</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Вираз</th>
+              <th>Ручний розбір</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>a + * b</td>
+              <td>після знака + очікується операнд, а стоїть *</td>
+              <td>повідомлення "пропущено операнд перед знаком операції"</td>
+            </tr>
+            <tr>
+              <td>a b</td>
+              <td>між двома операндами немає знака операції</td>
+              <td>повідомлення "пропущено знак операції між операндами"</td>
+            </tr>
+            <tr>
+              <td>a +</td>
+              <td>після знака + вираз закінчився</td>
+              <td>повідомлення "вираз закінчується без операнда"</td>
+            </tr>
+            <tr>
+              <td>()</td>
+              <td>у дужках немає операнда</td>
+              <td>повідомлення "пропущено операнд перед закривною дужкою"</td>
+            </tr>
+            <tr>
+              <td>!a &amp; b</td>
+              <td>заперечення стосується лише a: <b>a ! b &amp;</b></td>
+              <td>a ! b &amp;</td>
+            </tr>
+            <tr>
+              <td>!!a</td>
+              <td>подвійне заперечення: <b>a ! !</b></td>
+              <td>a ! !</td>
+            </tr>
+            <tr>
+              <td>!(a | b)</td>
+              <td>заперечення всієї дужки: <b>a b | !</b></td>
+              <td>a b | !</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Для некоректної послідовності лексем програма повідомляє, чого бракує; унарне заперечення
+          записується після свого операнда.
+        </p>
+      </section>
+
+      <section id="s-conclusions">
+        <h2>8. Висновки</h2>
+        <ul>
+          <li>
+            Реалізовано обробку рядка слів функціями <code>string.h</code> із власним декодуванням
+            UTF-8, тож голосні, приголосні й довжини слів визначаються в літерах, а не в байтах.
+          </li>
+          <li>
+            Реалізовано всі три команди меню завдання 1, зокрема для слів, коротших за дві літери.
+          </li>
+          <li>
+            Реалізовано перетворення інфіксного виразу в постфіксний алгоритмом сортувальної
+            станції; контрольний тест з умови відтворено точно.
+          </li>
+          <li>
+            Передбачено діагностику некоректних виразів: незбалансовані дужки, неприпустимі символи,
+            пропущені операнди та знаки операцій.
+          </li>
+          <li>
+            Дотримано обмежень умови: STL, клас <code>string</code> та ітератори не
+            використовуються.
+          </li>
+          <li>Обидва завдання варіанта виконано в повному обсязі.</li>
+        </ul>
+      </section>
+
+      <footer>Одарчук Олексій, <a href="https://ishawyha.dev">ishawyha.dev</a></footer>
+    </main>
+  </body>
+</html>

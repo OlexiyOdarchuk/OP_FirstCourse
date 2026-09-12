@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Лабораторна робота №2. Розгалужені обчислювальні процеси</title>
+    <link rel="stylesheet" href="../report.css" />
+  </head>
+
+  <body>
+    <main>
+      <p class="files"><a href="../index.html">← До переліку лабораторних робіт</a></p>
+
+      <h1>Лабораторна робота №2. Розгалужені обчислювальні процеси</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C++17, g++
+      </p>
+
+      <nav class="toc">
+        <ul>
+          <li><a href="#s-goal">1. Мета роботи</a></li>
+          <li><a href="#s-task">2. Умова задачі</a></li>
+          <li><a href="#s-analysis">3. Аналіз задачі та теоретичне обґрунтування</a></li>
+          <li><a href="#s-flowchart">4. Блок-схема алгоритму</a></li>
+          <li><a href="#s-code">5. Текст програми</a></li>
+          <li><a href="#s-results">6. Результати виконання роботи</a></li>
+          <li><a href="#s-validation">7. Аналіз достовірності результатів</a></li>
+          <li><a href="#s-conclusions">8. Висновки</a></li>
+        </ul>
+      </nav>
+
+      <section id="s-goal">
+        <h2>1. Мета роботи</h2>
+        <ul>
+          <li>Вивчити особливості розгалужених обчислювальних процесів.</li>
+          <li>Опанувати технологію використання логічних операторів.</li>
+        </ul>
+      </section>
+
+      <section id="s-task">
+        <h2>2. Умова задачі</h2>
+        <h3>Завдання 1</h3>
+        <p>
+          Визначити значення функції залежно від значення її аргументу, який вводиться з клавіатури
+          (таблиця 2.1, варіант 19):
+        </p>
+        <pre class="formula">
+         | 4 - x²,   якщо 0 &lt; x &lt; 4
+         | 0,        якщо x = 0
+f(x)  =  | x³,       якщо x &lt; 0
+         | 1,        якщо x &gt; 4</pre>
+        <h3>Завдання 2</h3>
+        <p>
+          Увести з клавіатури дійсні числа x, y. Визначити, чи належить точка з координатами (x, y)
+          зафарбованій частині площини (таблиця 2.2, варіант 19).
+        </p>
+        <figure>
+          <img src="pictures/region.gif" alt="Рисунок до варіанта 19 (таблиця 2.2)" />
+          <figcaption>Рисунок до варіанта 19 (таблиця 2.2)</figcaption>
+        </figure>
+      </section>
+
+      <section id="s-analysis">
+        <h2>3. Аналіз задачі та теоретичне обґрунтування</h2>
+        <h3>Завдання 1</h3>
+        <p>
+          Умови варіанта задано нерівностями над дійсним числом, тому використано ланцюжок
+          <code>if ... else if ... else</code> (<code>switch</code> працює лише з цілим селектором).
+          Гілки перевіряються в порядку <code>x &lt; 0</code>, <code>x == 0</code>,
+          <code>x &lt; 4</code>, <code>x &gt; 4</code>, тож кожна наступна умова не повторює
+          попередніх.
+        </p>
+        <p>
+          Інтервали задано строгими нерівностями <code>0 &lt; x &lt; 4</code> та
+          <code>x &gt; 4</code>, тому точка <code>x = 4</code> не належить жодній гілці. Програма
+          повідомляє, що в цій точці функцію не визначено.
+        </p>
+        <h3>Завдання 2</h3>
+        <p>На рисунку варіанта подано дві зафарбовані фігури.</p>
+        <p>
+          <b>Фігура 1 - кільце.</b> Зафарбовано частину площини між двома концентричними колами з
+          центром у початку координат: внутрішній радіус 0,5, зовнішній 1. Оскільки на рисунку межі
+          суцільні, вони належать зафарбованій частині:
+        </p>
+        <pre class="formula">0,5 ≤ √(x² + y²) ≤ 1</pre>
+        <p>
+          <b>Фігура 2 - ромб</b> із вершинами (-0,5; 0), (0; 1), (0,5; 0), (0; -1). Ромб із
+          півдіагоналями a = 0,5 по осі Ox та b = 1 по осі Oy описується канонічною нерівністю:
+        </p>
+        <pre class="formula">|x| / 0,5 + |y| / 1 ≤ 1,   тобто  2·|x| + |y| ≤ 1</pre>
+        <p>
+          Програма визначає належність точки кільцю, ромбу або їх об'єднанню; фігуру обирають у меню
+          (оператор <code>switch</code>).
+        </p>
+        <p>
+          Порівняння виконується з допуском <code>EPS = 1e-9</code>, щоб точки на межі фігури не
+          відкидалися через похибку округлення.
+        </p>
+        <p>
+          Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
+          - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
+          Jersey. 2017. - 3015 p.
+        </p>
+      </section>
+
+      <section id="s-flowchart">
+        <h2>4. Блок-схема алгоритму</h2>
+        <figure>
+          <img
+            src="flowcharts/task1_algorithm.png"
+            alt="Рисунок 1 - Блок-схема головної функції main() завдання 1"
+          />
+          <figcaption>Рисунок 1 - Блок-схема головної функції main() завдання 1</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task2_algorithm.png"
+            alt="Рисунок 2 - Блок-схема головної функції main() завдання 2"
+          />
+          <figcaption>Рисунок 2 - Блок-схема головної функції main() завдання 2</figcaption>
+        </figure>
+        <p>
+          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
+            >rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+        </p>
+      </section>
+
+      <section id="s-code">
+        <h2>5. Текст програми</h2>
+        <h3>Завдання 1 - task1.cpp</h3>
+        <p class="files"><a href="task1.cpp" download>Завантажити файл task1.cpp</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №2. Завдання 1. Варіант 19.</span>
+<span class="cm">  Тема: розгалужені обчислювальні процеси.</span>
+
+<span class="cm">  Умова: визначити значення функції залежно від значення її аргументу,</span>
+<span class="cm">         що вводиться з клавіатури (таблиця 2.1, варіант 19):</span>
+
+<span class="cm">                  | 4 - x^2,  0 &lt; x &lt; 4</span>
+<span class="cm">                  | 0,        x = 0</span>
+<span class="cm">           f(x) = | x^3,      x &lt; 0</span>
+<span class="cm">                  | 1,        x &gt; 4</span>
+
+<span class="cm">  Нерівності 0 &lt; x &lt; 4 та x &gt; 4 строгі, тож точка x = 4 не належить жодній</span>
+<span class="cm">  гілці: для неї програма повідомляє, що функцію не визначено.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: g++ -std=c++17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits&gt;</span>
+
+<span class="cm">/* Код результату обчислення функції: чи визначено її в заданій точці. */</span>
+<span class="k">enum</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">FuncStatus</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">Ok</span><span class="p">,</span>
+<span class="w">    </span><span class="n">Undefined</span>
+<span class="p">};</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  evaluate - обчислити значення кусково-заданої функції f(x).</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      x      [вхідний]  - аргумент функції;</span>
+<span class="cm">      result [вихідний] - адреса змінної для значення функції;</span>
+<span class="cm">                          заповнюється лише при поверненні FuncStatus::Ok.</span>
+
+<span class="cm">  Повертає: FuncStatus::Ok        - функцію визначено, значення записано</span>
+<span class="cm">                                    в *result;</span>
+<span class="cm">            FuncStatus::Undefined - функцію не визначено в точці x (x = 4).</span>
+
+<span class="cm">  Гілки реалізовано вкладеною конструкцією if ... else if ... else, оскільки</span>
+<span class="cm">  умови є діапазонними: оператор switch тут незастосовний, бо його</span>
+<span class="cm">  вираз-селектор не може належати до дійсного типу.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="n">FuncStatus</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">result</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">4.0</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">FuncStatus</span><span class="o">::</span><span class="n">Undefined</span><span class="p">;</span><span class="w"> </span><span class="cm">/* залишається єдиний випадок x = 4 */</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">FuncStatus</span><span class="o">::</span><span class="n">Ok</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  branchName - текстова назва гілки, яку задіяно для заданого аргументу.</span>
+<span class="cm">  Використовується для протоколювання: показує, яка саме умова спрацювала.</span>
+
+<span class="cm">  Параметри: x [вхідний] - аргумент функції.</span>
+<span class="cm">  Повертає : рядок-константу з описом гілки.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">branchName</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"x &lt; 0      -&gt;  f(x) = x^3"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"x = 0      -&gt;  f(x) = 0"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"0 &lt; x &lt; 4  -&gt;  f(x) = 4 - x^2"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">4.0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"x &gt; 4      -&gt;  f(x) = 1"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">"x = 4      -&gt;  функцію не визначено"</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readArgument - прочитати дійсне число з контролем коректності введення.</span>
+
+<span class="cm">  Параметри: x [вихідний] - адреса змінної для аргументу функції.</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readArgument</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Уведіть аргумент x = "</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">eof</span><span class="p">())</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span><span class="w"> </span><span class="cm">/* зняти прапорець помилки */</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">streamsize</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">(),</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">);</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Помилка: очікується дійсне число. Повторіть: "</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Організовує введення аргументу, виклик обчислення</span>
+<span class="cm">  та виведення результату.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      x      - аргумент функції, введений з клавіатури;</span>
+<span class="cm">      y      - обчислене значення функції;</span>
+<span class="cm">      status - ознака визначеності функції в точці x.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Лабораторна робота №2, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"Обчислення кусково-заданої функції f(x):</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"    4 - x^2,  якщо 0 &lt; x &lt; 4</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"    0,        якщо x = 0</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"    x^3,      якщо x &lt; 0</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"    1,        якщо x &gt; 4</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readArgument</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="n">FuncStatus</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">evaluate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Дійсні числа виводяться у фіксованому форматі з шістьма знаками. */</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">.</span><span class="n">setf</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">fixed</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">.</span><span class="n">precision</span><span class="p">(</span><span class="mi">6</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Аргумент:  x = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Гілка:     "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">branchName</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">FuncStatus</span><span class="o">::</span><span class="n">Undefined</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Результат: функцію не визначено в точці x = 4 "</span>
+<span class="w">                     </span><span class="s">"(умова варіанта не покриває цю точку)."</span>
+<span class="w">                  </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Результат: f("</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">") = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+        <h3>Завдання 2 - task2.cpp</h3>
+        <p class="files"><a href="task2.cpp" download>Завантажити файл task2.cpp</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №2. Завдання 2. Варіант 19.</span>
+<span class="cm">  Тема: розгалужені обчислювальні процеси.</span>
+
+<span class="cm">  Умова: увести з клавіатури дійсні числа x, y. Визначити, чи належить точка</span>
+<span class="cm">         з координатами (x, y) зафарбованій частині площини</span>
+<span class="cm">         (таблиця 2.2, варіант 19).</span>
+
+<span class="cm">  Опис фігур із рисунка варіанта.</span>
+<span class="cm">      Фігура 1 - кільце: зафарбовано частину площини між двома концентричними</span>
+<span class="cm">      колами з центром у початку координат, внутрішній радіус 0,5, зовнішній 1.</span>
+<span class="cm">      Межі кіл на рисунку суцільні, тобто належать зафарбованій частині:</span>
+<span class="cm">                        0,5 &lt;= sqrt(x^2 + y^2) &lt;= 1.</span>
+
+<span class="cm">      Фігура 2 - ромб із вершинами (-0,5; 0), (0; 1), (0,5; 0), (0; -1).</span>
+<span class="cm">      Канонічне рівняння ромба з півдіагоналями a = 0,5 (по осі Ox)</span>
+<span class="cm">      та b = 1 (по осі Oy):</span>
+<span class="cm">                        |x| / 0,5 + |y| / 1 &lt;= 1,   тобто  2*|x| + |y| &lt;= 1.</span>
+
+<span class="cm">  Програма визначає належність точки кільцю, ромбу або їх об'єднанню;</span>
+<span class="cm">  фігуру обирають у меню (оператор switch).</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: g++ -std=c++17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cmath&gt;</span>
+
+<span class="cm">/* Півдіагоналі ромба та радіуси кільця - константи умови варіанта. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">R_INNER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span><span class="w"> </span><span class="cm">/* внутрішній радіус кільця */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">R_OUTER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* зовнішній радіус кільця  */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">RHOMB_A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span><span class="w"> </span><span class="cm">/* півдіагональ ромба по осі Ox */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">RHOMB_B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* півдіагональ ромба по осі Oy */</span>
+
+<span class="cm">/* Допуск для порівняння дійсних чисел: точка на самій межі фігури має</span>
+<span class="cm">   зараховуватись як така, що належить фігурі, попри похибку округлення. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">EPS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-9</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  inRing - чи належить точка кільцю 0,5 &lt;= r &lt;= 1.</span>
+
+<span class="cm">  Параметри: x, y [вхідні] - координати точки.</span>
+<span class="cm">  Повертає : true - точка належить кільцю (разом з межами).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      r - відстань від початку координат до точки.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">inRing</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">R_INNER</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">EPS</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">r</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">R_OUTER</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">EPS</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  inRhombus - чи належить точка ромбу |x|/a + |y|/b &lt;= 1.</span>
+
+<span class="cm">  Параметри: x, y [вхідні] - координати точки.</span>
+<span class="cm">  Повертає : true - точка належить ромбу (разом з межами).</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">inRhombus</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fabs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">RHOMB_A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fabs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">RHOMB_B</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">EPS</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readChoice - прочитати номер пункту меню (1..3) з контролем введення.</span>
+
+<span class="cm">  Параметри: choice [вихідний] - адреса змінної для номера пункту.</span>
+<span class="cm">  Повертає : true - номер прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readChoice</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">choice</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Оберіть фігуру (1..3): "</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">choice</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">*</span><span class="n">choice</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">*</span><span class="n">choice</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">eof</span><span class="p">())</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span><span class="w"> </span><span class="cm">/* зняти прапорець помилки */</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">streamsize</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">(),</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">);</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Помилка: потрібне число 1, 2 або 3. Повторіть: "</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readPoint - прочитати координати точки з контролем коректності введення.</span>
+
+<span class="cm">  Параметри: x, y [вихідні] - адреси змінних для координат точки.</span>
+<span class="cm">  Повертає : true - координати прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readPoint</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Уведіть координати точки x та y: "</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">eof</span><span class="p">())</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">clear</span><span class="p">();</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">ignore</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">streamsize</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">(),</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">);</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Помилка: очікуються два дійсних числа. Повторіть: "</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  yesNo - слово "так" або "ні" для логічного значення.</span>
+
+<span class="cm">  Параметри: value [вхідний] - логічне значення.</span>
+<span class="cm">  Повертає : рядок-константу "так" або "ні".</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">yesNo</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"так"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">"ні"</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Виводить меню вибору фігури, читає координати точки</span>
+<span class="cm">  та повідомляє результат перевірки.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      choice  - номер пункту меню, обраний користувачем;</span>
+<span class="cm">      x, y    - координати точки;</span>
+<span class="cm">      ring    - ознака належності точки кільцю;</span>
+<span class="cm">      rhomb   - ознака належності точки ромбу;</span>
+<span class="cm">      belongs - ознака належності точки обраній фігурі;</span>
+<span class="cm">      figure  - назва обраної фігури для повідомлення.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Лабораторна робота №2, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"Належність точки зафарбованій частині площини</span><span class="se">\n\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"  1 - кільце 0,5 &lt;= sqrt(x^2 + y^2) &lt;= 1</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"  2 - ромб |x|/0,5 + |y|/1 &lt;= 1</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">                 </span><span class="s">"  3 - об'єднання обох фігур</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readChoice</span><span class="p">(</span><span class="o">&amp;</span><span class="n">choice</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readPoint</span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">inRing</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rhomb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">inRhombus</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Дійсні числа виводяться у фіксованому форматі з чотирма знаками. */</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">.</span><span class="n">setf</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">fixed</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">.</span><span class="n">precision</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Точка: x = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">", y = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"  відстань від початку координат r = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"  значення |x|/0,5 + |y|/1        = "</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fabs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">RHOMB_A</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">fabs</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">RHOMB_B</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">belongs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">figure</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* Поліваріантний вибір: кожна гілка завершується оператором break,</span>
+<span class="cm">       інакше керування "провалилося" б у наступну гілку. */</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span>
+<span class="w">        </span><span class="n">belongs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ring</span><span class="p">;</span>
+<span class="w">        </span><span class="n">figure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"кільцю"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">2</span><span class="p">:</span>
+<span class="w">        </span><span class="n">belongs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhomb</span><span class="p">;</span>
+<span class="w">        </span><span class="n">figure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"ромбу"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="mi">3</span><span class="p">:</span>
+<span class="w">        </span><span class="n">belongs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">rhomb</span><span class="p">;</span>
+<span class="w">        </span><span class="n">figure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"об'єднанню кільця та ромба"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Неіснуючий пункт меню."</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">belongs</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Належність "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">figure</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">": ТАК - точка у зафарбованій частині"</span>
+<span class="w">                  </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Належність "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">figure</span>
+<span class="w">                  </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">": НІ - точка поза зафарбованою частиною"</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Довідково: кільце - "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">yesNo</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">", ромб - "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">yesNo</span><span class="p">(</span><span class="n">rhomb</span><span class="p">)</span>
+<span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+      </section>
+
+      <section id="s-results">
+        <h2>6. Результати виконання роботи</h2>
+        <p>
+          Компіляція: <code>make</code> (<code>g++ -std=c++17</code>, прапорці
+          <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+        </p>
+        <p>
+          Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+          програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін, що
+          не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+          прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+          посиланнями.
+        </p>
+        <figure>
+          <img
+            src="results/shot_task1_1.png"
+            alt="Екранна копія 1 - завдання 1: п&#x27;ять запусків - усі гілки функції (x = -2, 0, 2, 7) та точка x = 4, у якій функцію не визначено"
+          />
+          <figcaption>
+            Екранна копія 1 - завдання 1: п&#x27;ять запусків - усі гілки функції (x = -2, 0, 2, 7)
+            та точка x = 4, у якій функцію не визначено
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
+          <span class="muted">(повний протокол, 104 рядків)</span>
+        </p>
+        <figure>
+          <img
+            src="results/shot_task2_1.png"
+            alt="Екранна копія 2 - завдання 2: три запуски - належність точок кільцю, ромбу та їх об&#x27;єднанню"
+          />
+          <figcaption>
+            Екранна копія 2 - завдання 2: три запуски - належність точок кільцю, ромбу та їх
+            об&#x27;єднанню
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task2.txt">Повний протокол виконання (task2.txt)</a>
+          <span class="muted">(повний протокол, 159 рядків)</span>
+        </p>
+      </section>
+
+      <section id="s-validation">
+        <h2>7. Аналіз достовірності результатів</h2>
+        <p>
+          Достовірність результатів перевірено аналітично: значення функції обчислено вручну для
+          кожної гілки, а належність точок фігурам - підстановкою координат у нерівності кільця 0,5
+          ≤ √(x²+y²) ≤ 1 та ромба |x|/0,5 + |y|/1 ≤ 1. Для кожної контрольної величини поруч із
+          розрахунком наведено результат програми.
+        </p>
+        <h3>Завдання 1 - перевірка кожної гілки</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>x</th>
+              <th>Задіяна гілка</th>
+              <th>Аналітичний розрахунок</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-2</td>
+              <td>x &lt; 0</td>
+              <td>(-2)³ = -8</td>
+              <td>-8,000000</td>
+            </tr>
+            <tr>
+              <td>-0,5</td>
+              <td>x &lt; 0</td>
+              <td>(-0,5)³ = -0,125</td>
+              <td>-0,125000</td>
+            </tr>
+            <tr>
+              <td>0</td>
+              <td>x = 0</td>
+              <td>0</td>
+              <td>0,000000</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>0 &lt; x &lt; 4</td>
+              <td>4 - 2² = 0</td>
+              <td>0,000000</td>
+            </tr>
+            <tr>
+              <td>3,9</td>
+              <td>0 &lt; x &lt; 4</td>
+              <td>4 - 15,21 = -11,21</td>
+              <td>-11,210000</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>-</td>
+              <td>не визначено умовою</td>
+              <td>повідомлення про невизначеність</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>x &gt; 4</td>
+              <td>1</td>
+              <td>1,000000</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Задіяно всі чотири гілки та точку x = 4; обчислені значення збігаються з ручним
+          розрахунком.
+        </p>
+        <h3>Завдання 2 - перевірка на характерних точках</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Точка (x; y)</th>
+              <th>r = √(x²+y²)</th>
+              <th>|x|/0,5 + |y|</th>
+              <th>Кільце (аналітично)</th>
+              <th>Ромб (аналітично)</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>(0,8; 0)</td>
+              <td>0,8000</td>
+              <td>1,6000</td>
+              <td>так (0,5 ≤ 0,8 ≤ 1)</td>
+              <td>ні (1,6 &gt; 1)</td>
+              <td>кільце - так, ромб - ні</td>
+            </tr>
+            <tr>
+              <td>(0,1; 0,1)</td>
+              <td>0,1414</td>
+              <td>0,3000</td>
+              <td>ні (0,1414 &lt; 0,5)</td>
+              <td>так (0,3 ≤ 1)</td>
+              <td>кільце - ні, ромб - так</td>
+            </tr>
+            <tr>
+              <td>(0; 0,9)</td>
+              <td>0,9000</td>
+              <td>0,9000</td>
+              <td>так</td>
+              <td>так</td>
+              <td>кільце - так, ромб - так</td>
+            </tr>
+            <tr>
+              <td>(0,9; 0,9)</td>
+              <td>1,2728</td>
+              <td>2,7000</td>
+              <td>ні (&gt; 1)</td>
+              <td>ні</td>
+              <td>кільце - ні, ромб - ні</td>
+            </tr>
+            <tr>
+              <td>(0,5; 0) - межа кільця</td>
+              <td>0,5000</td>
+              <td>1,0000</td>
+              <td>так (точно на межі)</td>
+              <td>так (точно на межі)</td>
+              <td>кільце - так, ромб - так</td>
+            </tr>
+            <tr>
+              <td>(0,25; 0,5) - межа ромба</td>
+              <td>0,5590</td>
+              <td>1,0000</td>
+              <td>так</td>
+              <td>так (точно на межі)</td>
+              <td>кільце - так, ромб - так</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Точки (0,5; 0) і (0,25; 0,5) лежать на межах кільця та ромба; обидві зараховано як
+          належні, що відповідає суцільним межам на рисунку.
+        </p>
+      </section>
+
+      <section id="s-conclusions">
+        <h2>8. Висновки</h2>
+        <ul>
+          <li>
+            Кусково-задану функцію обчислено ланцюжком <code>if ... else if ... else</code>, вибір
+            фігури реалізовано оператором <code>switch</code>.
+          </li>
+          <li>
+            Точку <code>x = 4</code>, не покриту умовою, оброблено окремо: програма повідомляє, що
+            функцію в ній не визначено.
+          </li>
+          <li>
+            Належність точки кільцю та ромбу визначається складеними умовами з операціями
+            <code>&amp;&amp;</code> та <code>||</code> і допуском для точок на межі.
+          </li>
+          <li>Обидва завдання варіанта виконано в повному обсязі.</li>
+        </ul>
+      </section>
+
+      <footer>Одарчук Олексій, <a href="https://ishawyha.dev">ishawyha.dev</a></footer>
+    </main>
+  </body>
+</html>

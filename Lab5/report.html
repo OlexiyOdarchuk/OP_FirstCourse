@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Лабораторна робота №5. Рекурсивні функції</title>
+    <link rel="stylesheet" href="../report.css" />
+  </head>
+
+  <body>
+    <main>
+      <p class="files"><a href="../index.html">← До переліку лабораторних робіт</a></p>
+
+      <h1>Лабораторна робота №5. Рекурсивні функції</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C17, gcc
+      </p>
+
+      <nav class="toc">
+        <ul>
+          <li><a href="#s-goal">1. Мета роботи</a></li>
+          <li><a href="#s-task">2. Умова задачі</a></li>
+          <li><a href="#s-analysis">3. Аналіз задачі та теоретичне обґрунтування</a></li>
+          <li><a href="#s-flowchart">4. Блок-схема алгоритму</a></li>
+          <li><a href="#s-code">5. Текст програми</a></li>
+          <li><a href="#s-results">6. Результати виконання роботи</a></li>
+          <li><a href="#s-validation">7. Аналіз достовірності результатів</a></li>
+          <li><a href="#s-conclusions">8. Висновки</a></li>
+        </ul>
+      </nav>
+
+      <section id="s-goal">
+        <h2>1. Мета роботи</h2>
+        <ul>
+          <li>Вивчити особливості рекурсивних процесів.</li>
+          <li>Опанувати технологію рекурсивних обчислень.</li>
+          <li>Навчитися розробляти алгоритми та програми із застосуванням рекурсивних функцій.</li>
+        </ul>
+      </section>
+
+      <section id="s-task">
+        <h2>2. Умова задачі</h2>
+        <h3>Завдання 1</h3>
+        <p>
+          Увести ціле число n в десятковій системі числення з клавіатури. Перевести його у двійкову
+          систему. Знайти кількість одиниць у двійковому представленні числа n, використовуючи
+          рекурентне означення функції f(n), де символ &amp; означує операцію побітового логічного
+          множення (таблиця 5.1, варіант 19):
+        </p>
+        <pre class="formula">
+        | 0,                      якщо n = 0
+ f(n) = |
+        | 1 + f(n &amp; (n - 1)),     якщо n ≠ 0</pre>
+        <p>
+          Реалізувати рекурсивний та ітеративний варіанти розв'язку, порівняти ефективність,
+          визначивши глибину рекурсії та кількість ітерацій циклу.
+        </p>
+        <h3>Завдання 2</h3>
+        <p>
+          Потрібно сплатити поштове відправлення, вартість котрого складає m копійок, а в наявності
+          тільки поштові марки номіналом x, y, z копійок. Скількома різними способами можна сплатити
+          поштове відправлення? Розробити рекурсивну функцію для обчислення кількості зображень
+          числа m у вигляді суми фіксованих чисел, використавши рекурентне співвідношення для чисел
+          Фібоначчі (таблиця 5.2, варіант 19).
+        </p>
+        <pre class="formula">
+        | 1,                      n = 0
+ f(n) = | 1,                      n = 1
+        | f(n-1) + f(n-2),       n &gt; 2</pre>
+        <p>
+          <b>Обмеження умови:</b> забороняється використовувати масиви і рядки; використання
+          рекурсії обов'язкове.
+        </p>
+      </section>
+
+      <section id="s-analysis">
+        <h2>3. Аналіз задачі та теоретичне обґрунтування</h2>
+        <h3>Завдання 1. Означення f(n) = 1 + f(n &amp; (n-1))</h3>
+        <p>
+          Віднімання одиниці інвертує наймолодший одиничний біт числа та всі нулі праворуч від
+          нього, тому <code>n &amp; (n - 1)</code> гасить рівно цей біт, а старші лишає без змін.
+          Наприклад:
+        </p>
+        <pre class="formula">
+n     = 1011100₂
+n - 1 = 1011011₂
+─────────────────  &amp;
+        1011000₂    &lt;- погашено рівно один (наймолодший) одиничний біт</pre>
+        <p>
+          Кожен рекурсивний виклик прибирає одну одиницю, тож глибина рекурсії дорівнює кількості
+          одиниць плюс один завершальний виклик із <code>n = 0</code> (алгоритм Кернігана).
+        </p>
+        <p>
+          <b>Умова завершення рекурсії:</b> <code>n = 0</code>. Вона завжди досяжна, бо кожен виклик
+          зменшує кількість одиничних бітів.
+        </p>
+        <p>
+          Двійковий запис також виводиться рекурсивно: виклик для старшої частини числа стоїть перед
+          виведенням розряду <code>n % 2</code>, тож розряди друкуються у правильному порядку без
+          масиву.
+        </p>
+        <h3>Завдання 2. Побудова рекурентного співвідношення</h3>
+        <p>
+          Будь-який спосіб оплати починається з наклеювання однієї марки - котроїсь із трьох. Після
+          цього лишається сплатити суму, меншу на її номінал. Звідси:
+        </p>
+        <pre class="formula">
+w(m) = w(m - x) + w(m - y) + w(m - z)
+w(0) = 1     сума набрана точно - це один завершений спосіб
+w(m) = 0     при m &lt; 0: перевитрата, спосіб не існує</pre>
+        <p>
+          Співвідношення має будову співвідношення Фібоначчі з умови, а при <code>x = 1</code>,
+          <code>y = 2</code> і недоступному третьому номіналі збігається з ним точно; це використано
+          як контрольний тест у розділі 7.
+        </p>
+        <p>
+          В означенні з умови третій рядок записано для <code>n &gt; 2</code>, тож значення f(2)
+          формально не визначене. Тут прийнято стандартне означення чисел Фібоначчі, у якому
+          рекурентний перехід діє вже з <code>n = 2</code>: f(2) = f(1) + f(0) = 2. Саме за такого
+          прочитання вироджений випадок дає F₁₁ = 89.
+        </p>
+        <p>
+          <b>Різні способи.</b> Способи вважаються різними, якщо відрізняється послідовність
+          наклеювання марок: 1+2 і 2+1 - два способи. Саме так рахує співвідношення Фібоначчі з
+          умови.
+        </p>
+        <p>
+          <b>Однакові номінали.</b> Повторні номінали враховуються один раз, інакше той самий спосіб
+          було б підраховано двічі.
+        </p>
+        <p>
+          <b>Трудомісткість.</b> Рекурсія без запам'ятовування обчислює ті самі значення
+          багаторазово, тому кількість викликів зростає експоненційно. Запам'ятовування потребує
+          масиву, а масиви умова забороняє, тому вартість відправлення обмежено. Найгірший випадок -
+          номінали 1, 2, 3:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>m (номінали 1, 2, 3)</th>
+              <th>Викликів</th>
+              <th>Час</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>20</td>
+              <td>433 993</td>
+              <td>0,007 с</td>
+            </tr>
+            <tr>
+              <td>25</td>
+              <td>9 135 460</td>
+              <td>0,04 с</td>
+            </tr>
+            <tr>
+              <td>30</td>
+              <td>192 299 281</td>
+              <td>0,6 с</td>
+            </tr>
+            <tr>
+              <td>35</td>
+              <td>4 047 854 365</td>
+              <td>8 с</td>
+            </tr>
+            <tr>
+              <td>40</td>
+              <td>-</td>
+              <td>не завершилось за 30 с</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Кожні п'ять копійок збільшують кількість викликів приблизно в 20 разів, тому межу
+          встановлено на рівні <code>MAX_COST = 30</code>: найгірший випадок виконується за частки
+          секунди. Номінал марки обмежено тим самим значенням.
+        </p>
+        <p>
+          Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
+          - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
+          Jersey. 2017. - 3015 p.; Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest,
+          Clifford Stein Introduction to Algorithms, Third Edition 2009. - 960 p.
+        </p>
+      </section>
+
+      <section id="s-flowchart">
+        <h2>4. Блок-схема алгоритму</h2>
+        <figure>
+          <img
+            src="flowcharts/task1_recursive.png"
+            alt="Рисунок 1 - Рекурсивний варіант підрахунку одиничних бітів"
+          />
+          <figcaption>Рисунок 1 - Рекурсивний варіант підрахунку одиничних бітів</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task1_iterative.png"
+            alt="Рисунок 2 - Ітеративний варіант підрахунку одиничних бітів"
+          />
+          <figcaption>Рисунок 2 - Ітеративний варіант підрахунку одиничних бітів</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/task2_countWays.png"
+            alt="Рисунок 3 - Рекурсивна функція підрахунку способів оплати"
+          />
+          <figcaption>Рисунок 3 - Рекурсивна функція підрахунку способів оплати</figcaption>
+        </figure>
+        <p>
+          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
+            >rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+        </p>
+      </section>
+
+      <section id="s-code">
+        <h2>5. Текст програми</h2>
+        <h3>Завдання 1 - task1.c</h3>
+        <p class="files"><a href="task1.c" download>Завантажити файл task1.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №5. Завдання 1. Варіант 19.</span>
+<span class="cm">  Тема: рекурсивні функції.</span>
+
+<span class="cm">  Умова (таблиця 5.1, варіант 19): увести ціле число n в десятковій системі</span>
+<span class="cm">  числення з клавіатури. Перевести його у двійкову систему. Знайти кількість</span>
+<span class="cm">  одиниць у двійковому представленні числа n, використовуючи рекурентне</span>
+<span class="cm">  означення функції f(n), де символ &amp; означує операцію побітового логічного</span>
+<span class="cm">  множення:</span>
+
+<span class="cm">                  | 0,                     n = 0</span>
+<span class="cm">           f(n) = |</span>
+<span class="cm">                  | 1 + f(n &amp; (n - 1)),    n != 0</span>
+
+<span class="cm">  Реалізувати рекурсивний та ітеративний варіанти розв'язку, порівняти</span>
+<span class="cm">  ефективність, визначивши глибину рекурсії та кількість ітерацій циклу.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;limits.h&gt;</span>
+
+<span class="cm">/* Глобальні лічильники характеристик виконання. Рекурсивна функція має</span>
+<span class="cm">   відповідати рекурентному означенню з умови задачі, тому службових</span>
+<span class="cm">   параметрів-лічильників вона не має, а лічильники оголошено глобально. */</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">g_recursiveCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* кількість викликів рекурсивної функції */</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                  </span><span class="cm">/* поточна глибина вкладеності викликів  */</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                      </span><span class="cm">/* максимальна досягнута глибина рекурсії */</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  countBitsRecursive - кількість одиничних бітів числа за рекурентним</span>
+<span class="cm">                       означенням f(n) з умови варіанта.</span>
+
+<span class="cm">  Ідея операції n &amp; (n - 1): віднімання одиниці інвертує наймолодший</span>
+<span class="cm">  одиничний біт та всі нулі праворуч від нього; побітове множення з вихідним</span>
+<span class="cm">  числом лишає всі старші біти незмінними і гасить саме цей один біт.</span>
+<span class="cm">  Отже кожен виклик прибирає рівно одну одиницю, і кількість викликів</span>
+<span class="cm">  дорівнює кількості одиниць. Це алгоритм Кернігана.</span>
+
+<span class="cm">  Параметри: n [вхідний] - число, біти якого підраховуються.</span>
+<span class="cm">  Повертає : кількість одиничних бітів числа n.</span>
+
+<span class="cm">  Умова завершення рекурсії: n = 0 - одиничних бітів не лишилось.</span>
+<span class="cm">  Глибина рекурсії дорівнює кількості одиниць у двійковому записі плюс один</span>
+<span class="cm">  (завершальний виклик з n = 0).</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">countBitsRecursive</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_recursiveCalls</span><span class="p">;</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* умова завершення рекурсії */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  countBitsIterative - те саме обчислення циклом.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      n          [вхідний]  - число, біти якого підраховуються;</span>
+<span class="cm">      iterations [вихідний] - адреса лічильника ітерацій циклу.</span>
+
+<span class="cm">  Повертає: кількість одиничних бітів числа n.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      count - накопичувана кількість одиниць;</span>
+<span class="cm">      rest  - залишок числа з ще не погашеними одиничними бітами.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">countBitsIterative</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="o">*</span><span class="n">iterations</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* погасити наймолодший одиничний біт */</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">iterations</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printBinaryRecursive - вивести двійкове представлення числа.</span>
+
+<span class="cm">  Молодший розряд обчислюється першим (n % 2), а виводитись має останнім,</span>
+<span class="cm">  тому рекурсивний виклик для старшої частини числа стоїть перед</span>
+<span class="cm">  виведенням розряду. Масив чи рядок для цього не потрібні.</span>
+
+<span class="cm">  Параметри: n [вхідний] - число, що виводиться у двійковій системі.</span>
+
+<span class="cm">  Умова завершення рекурсії: n = 0 - старших розрядів більше немає.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printBinaryRecursive</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%u"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Читає число, виводить його двійкове представлення,</span>
+<span class="cm">  обчислює кількість одиниць двома способами та порівнює їх ефективність.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      n            - введене число;</span>
+<span class="cm">      recResult    - результат рекурсивного обчислення;</span>
+<span class="cm">      iterResult   - результат ітеративного обчислення;</span>
+<span class="cm">      iterations   - кількість ітерацій циклу.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кількість одиниць у двійковому записі числа за означенням</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    f(n) = 0,                  якщо n = 0</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    f(n) = 1 + f(n &amp; (n-1)),   якщо n != 0</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть ціле невід'ємне число n: "</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lld"</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">UINT_MAX</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">feof</span><span class="p">(</span><span class="n">stdin</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від 0 до %u. Повторіть: "</span><span class="p">,</span><span class="w"> </span><span class="n">UINT_MAX</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="p">)</span><span class="n">input</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Число у десятковій системі: %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Число у двійковій системі:  "</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"0"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Рекурсивний варіант. */</span>
+<span class="w">    </span><span class="n">g_recursiveCalls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">recResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Ітеративний варіант. */</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">iterResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countBitsIterative</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">iterations</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результат</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Кількість одиниць (рекурсія):  %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">recResult</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Кількість одиниць (ітерація):  %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">iterResult</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Результати %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">           </span><span class="n">recResult</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">iterResult</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">"збігаються"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">"РОЗБІГАЮТЬСЯ - помилка"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Порівняння ефективності</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Викликів рекурсивної функції: %llu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_recursiveCalls</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Глибина рекурсії:             %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Ітерацій циклу:               %llu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">iterations</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+        <h3>Завдання 2 - task2.c</h3>
+        <p class="files"><a href="task2.c" download>Завантажити файл task2.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №5. Завдання 2. Варіант 19.</span>
+<span class="cm">  Тема: рекурсивна обробка послідовностей.</span>
+
+<span class="cm">  Умова (таблиця 5.2, варіант 19): потрібно сплатити поштове відправлення,</span>
+<span class="cm">  вартість котрого складає m копійок, а в наявності тільки поштові марки</span>
+<span class="cm">  номіналом x, y, z копійок. Скількома різними способами можна сплатити</span>
+<span class="cm">  поштове відправлення? Розробити рекурсивну функцію для обчислення</span>
+<span class="cm">  кількості зображень числа m у вигляді суми певних фіксованих чисел</span>
+<span class="cm">  з використанням рекурентних співвідношень. Використати рекурентне</span>
+<span class="cm">  співвідношення для чисел Фібоначчі:</span>
+
+<span class="cm">                  | 1,                      n = 0</span>
+<span class="cm">           f(n) = | 1,                      n = 1</span>
+<span class="cm">                  | f(n-1) + f(n-2),        n &gt; 2</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати масиви і рядки.</span>
+<span class="cm">  Використання рекурсії обов'язкове.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+
+<span class="cm">/* Найбільша вартість відправлення. Рекурсія без запам'ятовування проміжних</span>
+<span class="cm">   результатів має експоненційну трудомісткість, а масиви для запам'ятовування</span>
+<span class="cm">   умова забороняє. Найгірший випадок - найдрібніші номінали 1, 2, 3: тоді</span>
+<span class="cm">   при m = 30 виконується близько 1,9*10^8 викликів (частки секунди), при</span>
+<span class="cm">   m = 35 - 4*10^9 (секунди), а при m = 40 програма вже не завершується за</span>
+<span class="cm">   прийнятний час. Тому межу встановлено на рівні 30. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_COST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+
+<span class="cm">/* Найбільший номінал марки: більший за вартість відправлення номінал</span>
+<span class="cm">   використати неможливо, тому межа збігається з MAX_COST. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_STAMP</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+
+<span class="cm">/* Лічильник викликів рекурсивної функції - характеристика трудомісткості.</span>
+<span class="cm">   Оголошений глобально, щоб не додавати службовий параметр до функції,</span>
+<span class="cm">   яка має відповідати рекурентному означенню з умови. */</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cm">/* Поточна та максимальна глибина вкладеності рекурсивних викликів. */</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  countWays - кількість різних способів набрати суму m марками номіналом</span>
+<span class="cm">              x, y, z копійок.</span>
+
+<span class="cm">  Рекурентне співвідношення. Будь-який спосіб оплати починається з наклеювання</span>
+<span class="cm">  однієї марки - котроїсь із трьох. Після цього лишається сплатити суму,</span>
+<span class="cm">  меншу на її номінал. Отже:</span>
+
+<span class="cm">        w(m) = w(m - x) + w(m - y) + w(m - z),</span>
+<span class="cm">        w(0) = 1   (сума набрана - це один завершений спосіб),</span>
+<span class="cm">        w(m) = 0   при m &lt; 0 (перевитрата - спосіб не існує).</span>
+
+<span class="cm">  Це співвідношення має ту саму будову, що й означення чисел Фібоначчі</span>
+<span class="cm">  з умови варіанта: значення в точці визначається через значення в кількох</span>
+<span class="cm">  попередніх точках, а базові випадки зупиняють рекурсію. При x = 1, y = 2</span>
+<span class="cm">  і третьому номіналі, більшому за m, воно вироджується точно у Фібоначчі.</span>
+
+<span class="cm">  Способи вважаються різними, якщо відрізняється ПОСЛІДОВНІСТЬ наклеювання</span>
+<span class="cm">  марок: 1+2 і 2+1 - це два різних способи. Саме таку інтерпретацію задає</span>
+<span class="cm">  співвідношення Фібоначчі, вказане в умові варіанта.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      m       [вхідний] - сума, яку лишилось сплатити, копійок;</span>
+<span class="cm">      x, y, z [вхідні]  - номінали наявних марок, копійок.</span>
+
+<span class="cm">  Повертає: кількість способів сплатити суму m.</span>
+
+<span class="cm">  Умови завершення рекурсії: m = 0 (успіх) та m &lt; 0 (глухий кут).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      ways - накопичувана кількість способів.</span>
+
+<span class="cm">  Однакові номінали враховуються лише один раз: інакше один і той самий</span>
+<span class="cm">  спосіб було б підраховано двічі.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">countWays</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_calls</span><span class="p">;</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">ways</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* сума набрана точно */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* перевитрата - глухий кут */</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ways</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число з контролем коректності введення.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      prompt [вхідний]  - текст запрошення;</span>
+<span class="cm">      value  [вихідний] - адреса змінної для введеного числа;</span>
+<span class="cm">      low    [вхідний]  - найменше припустиме значення;</span>
+<span class="cm">      high   [вхідний]  - найбільше припустиме значення.</span>
+
+<span class="cm">  Повертає: true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Читає вартість відправлення та номінали марок,</span>
+<span class="cm">  обчислює кількість способів оплати й виводить характеристики рекурсії.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      m       - вартість поштового відправлення, копійок;</span>
+<span class="cm">      x, y, z - номінали марок, копійок;</span>
+<span class="cm">      ways    - кількість способів оплати.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кількість способів сплатити m копійок марками номіналом x, y, z</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Способи вважаються різними, якщо відрізняється послідовність</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"наклеювання марок (1+2 і 2+1 - два різних способи).</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* Верхня межа вартості обмежена: трудомісткість рекурсії без</span>
+<span class="cm">       запам'ятовування зростає експоненційно з ростом m. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть вартість відправлення m (1..30): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COST</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть номінал першої марки x (1..30): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_STAMP</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть номінал другої марки y (1..30): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_STAMP</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Уведіть номінал третьої марки z (1..30): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_STAMP</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Увага: серед номіналів є однакові - повторні враховуються</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">               </span><span class="s">"один раз, інакше однакові способи рахувалися б двічі.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вартість відправлення: %d коп.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Номінали марок:        %d, %d, %d коп.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Кількість способів оплати: %llu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ways</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ways</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Сплатити цю суму наявними номіналами неможливо.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Характеристики рекурсії</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Викликів рекурсивної функції: %llu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_calls</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Глибина рекурсії:             %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+      </section>
+
+      <section id="s-results">
+        <h2>6. Результати виконання роботи</h2>
+        <p>
+          Компіляція: <code>make</code> (<code>gcc -std=c17</code>, прапорці
+          <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+        </p>
+        <p>
+          Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+          програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін, що
+          не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+          прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+          посиланнями.
+        </p>
+        <figure>
+          <img
+            src="results/shot_task1_1.png"
+            alt="Екранна копія 1 - завдання 1: два запуски - числа 1000 та 4294967295, порівняння рекурсії та ітерації"
+          />
+          <figcaption>
+            Екранна копія 1 - завдання 1: два запуски - числа 1000 та 4294967295, порівняння
+            рекурсії та ітерації
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
+          <span class="muted">(повний протокол, 131 рядків)</span>
+        </p>
+        <figure>
+          <img
+            src="results/shot_task2_1.png"
+            alt="Екранна копія 2 - завдання 2: два запуски - m = 6 (марки 1, 2, 3) та m = 10 (марки 1, 2, 30, вироджений випадок Фібоначчі)"
+          />
+          <figcaption>
+            Екранна копія 2 - завдання 2: два запуски - m = 6 (марки 1, 2, 3) та m = 10 (марки 1, 2,
+            30, вироджений випадок Фібоначчі)
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task2.txt">Повний протокол виконання (task2.txt)</a>
+          <span class="muted">(повний протокол, 155 рядків)</span>
+        </p>
+      </section>
+
+      <section id="s-validation">
+        <h2>7. Аналіз достовірності результатів</h2>
+        <p>
+          Достовірність результатів перевірено ручним розрахунком за рекурентними співвідношеннями
+          та обчисленням на калькуляторі. Для кожної контрольної величини поруч із розрахунком
+          наведено результат програми.
+        </p>
+        <h3>Перевірка розрахунків на калькуляторі</h3>
+        <p>
+          Нижче наведено екранні копії обчислень у калькуляторі WolframAlpha; поруч із кожною -
+          результат програми.
+        </p>
+        <figure>
+          <img
+            src="results/calc_task1.png"
+            alt="Калькулятор: DigitCount[1000, 2, 1] (кількість одиниць у двійковому запису 1000)"
+          />
+          <figcaption>
+            Калькулятор: DigitCount[1000, 2, 1] (кількість одиниць у двійковому запису 1000)
+          </figcaption>
+        </figure>
+        <p>
+          Калькулятор: <b>6</b>; програма: <b>6 (і рекурсія, і ітерація)</b>. Значення збігаються.
+        </p>
+        <h3>Завдання 1. Порівняння рекурсії та ітерації</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>n</th>
+              <th>Двійкове представлення</th>
+              <th>Одиниць (ручний підрахунок)</th>
+              <th>Рекурсія</th>
+              <th>Ітерація</th>
+              <th>Глибина рекурсії</th>
+              <th>Ітерацій циклу</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>1</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>1</td>
+              <td>1</td>
+              <td>1</td>
+              <td>1</td>
+              <td>2</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>111</td>
+              <td>3</td>
+              <td>3</td>
+              <td>3</td>
+              <td>4</td>
+              <td>3</td>
+            </tr>
+            <tr>
+              <td>255</td>
+              <td>11111111</td>
+              <td>8</td>
+              <td>8</td>
+              <td>8</td>
+              <td>9</td>
+              <td>8</td>
+            </tr>
+            <tr>
+              <td>1000</td>
+              <td>1111101000</td>
+              <td>6</td>
+              <td>6</td>
+              <td>6</td>
+              <td>7</td>
+              <td>6</td>
+            </tr>
+            <tr>
+              <td>4294967295</td>
+              <td>32 одиниці</td>
+              <td>32</td>
+              <td>32</td>
+              <td>32</td>
+              <td>33</td>
+              <td>32</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Двійкові представлення звірено вручну: 1000 = 512 + 256 + 128 + 64 + 32 + 8 = 1111101000₂,
+          що дає 6 одиниць. Результати рекурсивного та ітеративного варіантів збігаються на всіх
+          наборах.
+        </p>
+        <p>
+          <b>Ефективність.</b> Глибина рекурсії завжди на одиницю більша за кількість ітерацій циклу
+          (завершальний виклик із <code>n = 0</code>). Кількість кроків однакова, але рекурсія
+          займає кадр стеку на кожен рівень (до 33 для 32-бітного числа), а цикл - сталий обсяг
+          пам'яті.
+        </p>
+        <h3>Завдання 2. Контрольні тести</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>m</th>
+              <th>Номінали x, y, z</th>
+              <th>Ручна перевірка</th>
+              <th>Результат програми</th>
+              <th>Викликів</th>
+              <th>Глибина</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>6</td>
+              <td>1, 2, 3</td>
+              <td>
+                Числа "трибоначчі": w(0)=1, w(1)=1, w(2)=2, w(3)=4, w(4)=7, w(5)=13, <b>w(6)=24</b>
+              </td>
+              <td>24</td>
+              <td>85</td>
+              <td>7</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>1, 2, 5</td>
+              <td>w(0..10) = 1, 1, 2, 3, 5, 9, 15, 26, 44, 75, <b>128</b></td>
+              <td>128</td>
+              <td>544</td>
+              <td>11</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>1, 2, 30</td>
+              <td>
+                Третій номінал (30) перевищує суму (10), тому недоступний; співвідношення
+                вироджується у Фібоначчі: <b>F₁₁ = 89</b>
+              </td>
+              <td>89</td>
+              <td>430</td>
+              <td>11</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>2, 4, 6</td>
+              <td>Непарну суму парними номіналами набрати неможливо -> <b>0</b></td>
+              <td>0</td>
+              <td>25</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>5, 10, 25</td>
+              <td>12 не подається сумою чисел 5 і 10 -> <b>0</b></td>
+              <td>0</td>
+              <td>13</td>
+              <td>4</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          При номіналах 1 і 2 (третій, 30, недоступний) співвідношення збігається з означенням
+          Фібоначчі з умови, і програма дає F₁₁ = 89.
+        </p>
+        <p>
+          Два останні рядки перевіряють випадок, коли суму набрати неможливо: програма повертає 0.
+        </p>
+        <p>
+          Кількість викликів швидко зростає (85 при m = 6, 544 при m = 10), що відповідає
+          експоненційній трудомісткості.
+        </p>
+      </section>
+
+      <section id="s-conclusions">
+        <h2>8. Висновки</h2>
+        <ul>
+          <li>
+            Реалізовано рекурсивний та ітеративний підрахунок одиничних бітів за означенням
+            <code>f(n) = 1 + f(n &amp; (n-1))</code>; кроків однаково, але рекурсія займає кадр
+            стеку на кожен рівень.
+          </li>
+          <li>Двійковий запис числа виводиться рекурсивною функцією без масиву.</li>
+          <li>
+            Для задачі про марки побудовано рекурентне співвідношення будови Фібоначчі й перевірено
+            його на виродженому випадку (89 = F₁₁); масиви й рядки не використовуються.
+          </li>
+          <li>
+            Показано експоненційне зростання кількості викликів рекурсії без запам'ятовування.
+          </li>
+          <li>Обидва завдання варіанта виконано в повному обсязі.</li>
+        </ul>
+      </section>
+
+      <footer>Одарчук Олексій, <a href="https://ishawyha.dev">ishawyha.dev</a></footer>
+    </main>
+  </body>
+</html>

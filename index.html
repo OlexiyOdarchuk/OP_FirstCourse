@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Основи програмування - лабораторні роботи</title>
+    <link rel="stylesheet" href="report.css" />
+  </head>
+
+  <body>
+    <main>
+      <h1>Основи програмування. Лабораторні роботи</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C17, gcc / C++17, g++
+      </p>
+
+      <h2>Перелік робіт</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Робота</th>
+            <th>Тема</th>
+            <th>Завдань</th>
+            <th>Мова</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="Lab1/report.html">№1</a></td>
+            <td>
+              <a href="Lab1/report.html"
+                >Типи даних. Функції введення-виведення. Обчислення виразів</a
+              >
+            </td>
+            <td>2</td>
+            <td>1 × C, 1 × C++</td>
+          </tr>
+          <tr>
+            <td><a href="Lab2/report.html">№2</a></td>
+            <td><a href="Lab2/report.html">Розгалужені обчислювальні процеси</a></td>
+            <td>2</td>
+            <td>2 × C++</td>
+          </tr>
+          <tr>
+            <td><a href="Lab3/report.html">№3</a></td>
+            <td><a href="Lab3/report.html">Циклічні обчислювальні процеси</a></td>
+            <td>1</td>
+            <td>1 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab4/report.html">№4</a></td>
+            <td><a href="Lab4/report.html">Рекурентні співвідношення. Степеневі ряди</a></td>
+            <td>2</td>
+            <td>2 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab5/report.html">№5</a></td>
+            <td><a href="Lab5/report.html">Рекурсивні функції</a></td>
+            <td>2</td>
+            <td>2 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab6/report.html">№6</a></td>
+            <td><a href="Lab6/report.html">Одновимірні масиви</a></td>
+            <td>3</td>
+            <td>3 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab7/report.html">№7</a></td>
+            <td><a href="Lab7/report.html">Багатовимірні масиви</a></td>
+            <td>2</td>
+            <td>2 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab8/report.html">№8</a></td>
+            <td><a href="Lab8/report.html">Покажчики та посилання. Покажчики на функції</a></td>
+            <td>1</td>
+            <td>1 × C++</td>
+          </tr>
+          <tr>
+            <td><a href="Lab9/report.html">№9</a></td>
+            <td><a href="Lab9/report.html">Обробка рядків</a></td>
+            <td>2</td>
+            <td>2 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab10/report.html">№10</a></td>
+            <td><a href="Lab10/report.html">Структури та масиви структур</a></td>
+            <td>1</td>
+            <td>1 × C</td>
+          </tr>
+          <tr>
+            <td><a href="Lab11/report.html">№11</a></td>
+            <td><a href="Lab11/report.html">Текстові та бінарні файли</a></td>
+            <td>2</td>
+            <td>1 × C, 1 × C++</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="files">
+        <a href="OP_Lab_Odarchuk_v19.zip">Завантажити всі роботи одним архівом (ZIP)</a>
+      </p>
+
+      <h2>Структура кожного каталогу</h2>
+      <ul>
+        <li>
+          <code>task*.c</code> / <code>task*.cpp</code> - тексти програм з коментарями та
+          специфікаціями функцій, параметрів, локальних і глобальних змінних;
+        </li>
+        <li>
+          <code>Makefile</code> - компіляція (<code>make</code>, <code>make run1</code>,
+          <code>make clean</code>);
+        </li>
+        <li>
+          <code>report.html</code> - звіт із восьми розділів, передбачених вимогами до звіту в
+          методичних вказівках;
+        </li>
+        <li><code>flowcharts/</code> - блок-схеми алгоритмів за ДСТУ 19.701-90;</li>
+        <li>
+          <code>results/</code> - екранні копії повних прогонів програм (<code>shot_*.png</code>) та
+          протоколи всіх прогонів (<code>task*.txt</code>).
+        </li>
+      </ul>
+
+      <h2>Компіляція</h2>
+      <pre><code>make -C Lab1        # скомпілювати одну роботу
+for i in $(seq 1 11); do make -C Lab$i; done   # скомпілювати всі</code></pre>
+      <p>
+        Прапорці компіляції: <code>gcc -std=c17</code> та <code>g++ -std=c++17</code>, обидва з
+        <code>-Wall -Wextra -pedantic -O2</code>. Попереджень компілятора немає в жодній роботі.
+      </p>
+
+      <h2>Автор та інструменти</h2>
+      <ul>
+        <li>
+          Автор: Одарчук Олексій - <a href="https://ishawyha.dev">ishawyha.dev</a>. Звіти розміщено
+          на цьому домені.
+        </li>
+        <li>
+          Блок-схеми алгоритмів побудовано з текстів програм за допомогою rombik -
+          <a href="https://rombik.app">rombik.app</a>.
+        </li>
+        <li>
+          Розрахунки для аналізу достовірності перевірено в калькуляторі WolframAlpha -
+          <a href="https://www.wolframalpha.com">wolframalpha.com</a>.
+        </li>
+      </ul>
+    </main>
+  </body>
+</html>

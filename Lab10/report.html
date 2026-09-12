@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Лабораторна робота №10. Структури та масиви структур</title>
+    <link rel="stylesheet" href="../report.css" />
+  </head>
+
+  <body>
+    <main>
+      <p class="files"><a href="../index.html">← До переліку лабораторних робіт</a></p>
+
+      <h1>Лабораторна робота №10. Структури та масиви структур</h1>
+      <p class="sub">
+        Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені Тараса
+        Шевченка, ФІТ, група ІПЗ-11. C17, gcc
+      </p>
+
+      <nav class="toc">
+        <ul>
+          <li><a href="#s-goal">1. Мета роботи</a></li>
+          <li><a href="#s-task">2. Умова задачі</a></li>
+          <li><a href="#s-analysis">3. Аналіз задачі та теоретичне обґрунтування</a></li>
+          <li><a href="#s-flowchart">4. Блок-схема алгоритму</a></li>
+          <li><a href="#s-code">5. Текст програми</a></li>
+          <li><a href="#s-results">6. Результати виконання роботи</a></li>
+          <li><a href="#s-validation">7. Аналіз достовірності результатів</a></li>
+          <li><a href="#s-conclusions">8. Висновки</a></li>
+        </ul>
+      </nav>
+
+      <section id="s-goal">
+        <h2>1. Мета роботи</h2>
+        <ul>
+          <li>
+            Ознайомитися зі структурним типом даних, оголошенням структурної змінної та масиву
+            структур.
+          </li>
+          <li>Опанувати доступ до елементів структури та передачу структур у функції.</li>
+          <li>Навчитися розробляти програми обробки масивів структур із реалізацією запитів.</li>
+        </ul>
+      </section>
+
+      <section id="s-task">
+        <h2>2. Умова задачі</h2>
+        <p>
+          Створити масив структур. Кожна структура складається з таких елементів: назва фірми,
+          продукт, що продається - комп'ютери і програмне забезпечення, регіон збуту, вартість
+          продажу, термін постачання. Реалізувати запити, визначивши:
+        </p>
+        <ol>
+          <li>список комп'ютерів, що продаються у заданому регіоні конкретною фірмою;</li>
+          <li>вартість проданого програмного забезпечення у задані терміни;</li>
+          <li>найрентабельніші фірми (з найбільшою вартістю продажів).</li>
+        </ol>
+        <p>Результати запитів вивести у вигляді таблиць.</p>
+        <h3>Обов'язкові вимоги до виконання</h3>
+        <p>
+          Невиконання пунктів 1-6 неприпустимо і призводить до штрафних санкцій у 50% зниження
+          балів:
+        </p>
+        <ol>
+          <li>меню команд, виконання яких здійснювати через виклики функцій;</li>
+          <li>кожна функція визначає окрему обмежену дію відповідно до сценарію програми;</li>
+          <li>застосування покажчиків на масив структур та окремі структури схвалюється;</li>
+          <li>
+            створення масиву через введення з клавіатури або генерацію псевдовипадкових даних;
+          </li>
+          <li>
+            створений масив обов'язково вивести на екран у табличній формі із заголовком, що
+            відповідає переліку полів з умови;
+          </li>
+          <li>пошук здійснювати, задаючи ключі пошуку з клавіатури;</li>
+          <li>
+            результати запитів виводити в табличній формі, заголовок таблиці виводиться один раз.
+          </li>
+        </ol>
+        <p>
+          <b>Обмеження умови:</b> забороняється використовувати STL для колекцій - класи
+          <code>vector</code>, <code>list</code>, <code>map</code>, <code>set</code>,
+          <code>string</code>, ітератори, контейнери. Дозволено функції заголовних файлів
+          <code>string.h</code>, <code>ctype.h</code>, <code>stdlib.h</code>.
+        </p>
+      </section>
+
+      <section id="s-analysis">
+        <h2>3. Аналіз задачі та теоретичне обґрунтування</h2>
+        <h3>Проєктування структури даних</h3>
+        <p>
+          <b>Вид продукту</b> подано переліковим типом <code>ProductKind</code> (комп'ютери або ПЗ),
+          а не рядком, тож запит "список комп'ютерів" не залежить від того, як користувач написав
+          назву. Назва моделі зберігається окремим полем <code>product</code>.
+        </p>
+        <p>
+          <b>Термін постачання</b> подано вкладеною структурою <code>Date</code> (день, місяць,
+          рік). Найбільший день, який можна ввести, залежить від місяця й року (функція
+          <code>daysInMonth()</code> враховує високосні роки), тож неіснуючу дату на кшталт 31.02
+          ввести неможливо. Для порівняння дату зведено до числа виду РРРРММДД:
+        </p>
+        <pre class="formula">dateToNumber(d) = d.year·10000 + d.month·100 + d.day</pre>
+        <p>
+          Порядок таких чисел збігається з хронологічним, тож дати порівнюються звичайними
+          операціями відношення.
+        </p>
+        <h3>Виконання обов'язкових вимог</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Вимога</th>
+              <th>Реалізація</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1-2. Меню та поділ на функції</td>
+              <td>
+                Кожен пункт меню виконує окрема функція <code>cmdCreate()</code>,
+                <code>cmdPrintAll()</code>, <code>cmdComputersByRegionAndFirm()</code>,
+                <code>cmdSoftwareValueByPeriod()</code>, <code>cmdMostProfitableFirms()</code>.
+                Головна функція лише відображає меню й викликає потрібну - жодної обробки даних у
+                ній немає.
+              </td>
+            </tr>
+            <tr>
+              <td>3. Покажчики на структури</td>
+              <td>
+                Функції <code>printRecord()</code>, <code>inputRecord()</code>,
+                <code>generateRecord()</code>, <code>dateToNumber()</code> приймають структуру через
+                покажчик, а не копіюванням. У циклах запитів поточний запис адресується покажчиком
+                <code>const Sale *const sale = &amp;g_sales[i]</code>: це уникає копіювання
+                структури, а модифікатор <code>const</code> документує, що запис не змінюється.
+              </td>
+            </tr>
+            <tr>
+              <td>4. Два способи створення</td>
+              <td>
+                Введення з клавіатури або генерація псевдовипадкових даних із наборів реалістичних
+                назв фірм, регіонів, моделей комп'ютерів і назв програм.
+              </td>
+            </tr>
+            <tr>
+              <td>5. Таблична форма із заголовком</td>
+              <td>
+                Заголовок <code>printTableHeader()</code> повторює перелік полів з умови: Фірма,
+                Продукт, Вид, Регіон збуту, Вартість, Термін постачання.
+              </td>
+            </tr>
+            <tr>
+              <td>6. Ключі пошуку з клавіатури</td>
+              <td>
+                Регіон і назва фірми для запиту 1, межі періоду для запиту 2 вводяться користувачем.
+              </td>
+            </tr>
+            <tr>
+              <td>7. Заголовок один раз</td>
+              <td>
+                Заголовок таблиці результатів виводиться перед <b>першим знайденим</b> записом
+                (умова <code>if (found == 0)</code>), а не перед кожним. Якщо записів не знайдено,
+                таблиця не виводиться взагалі - натомість виводиться повідомлення.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Запит 3: найрентабельніші фірми</h3>
+        <p>
+          Записи групуються за назвою фірми, для кожної обчислюється сумарна вартість продажів,
+          знаходиться найбільша сума, і виводяться <b>усі</b> фірми з цією сумою: за рівних сум їх
+          може бути кілька.
+        </p>
+        <p>
+          Перед відповіддю виводиться таблиця сум по всіх фірмах, з якої видно, як отримано
+          максимум.
+        </p>
+        <h3>Вирівнювання таблиць</h3>
+        <p>
+          Специфікатор <code>%-16s</code> рахує байти, а кирилична літера в UTF-8 займає два байти,
+          тому для вирівнювання таблиць використано функцію <code>printPadded()</code>, що рахує
+          ширину в символах.
+        </p>
+        <p>
+          Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
+          - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
+          Jersey. 2017. - 3015 p.
+        </p>
+      </section>
+
+      <section id="s-flowchart">
+        <h2>4. Блок-схема алгоритму</h2>
+        <figure>
+          <img
+            src="flowcharts/query1_computers.png"
+            alt="Рисунок 1 - Запит 1: комп&#x27;ютери у заданому регіоні заданої фірми"
+          />
+          <figcaption>
+            Рисунок 1 - Запит 1: комп&#x27;ютери у заданому регіоні заданої фірми
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/query2_software.png"
+            alt="Рисунок 2 - Запит 2: вартість проданого ПЗ у задані терміни"
+          />
+          <figcaption>Рисунок 2 - Запит 2: вартість проданого ПЗ у задані терміни</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/query3_firms.png"
+            alt="Рисунок 3 - Запит 3: групування за фірмами та пошук найрентабельніших"
+          />
+          <figcaption>
+            Рисунок 3 - Запит 3: групування за фірмами та пошук найрентабельніших
+          </figcaption>
+        </figure>
+        <p>
+          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
+            >rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+        </p>
+      </section>
+
+      <section id="s-code">
+        <h2>5. Текст програми</h2>
+        <h3>task1.c</h3>
+        <p class="files"><a href="task1.c" download>Завантажити файл task1.c</a></p>
+        <pre
+          class="code"
+        ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  Лабораторна робота №10. Варіант 19.</span>
+<span class="cm">  Тема: структури та масиви структур.</span>
+
+<span class="cm">  Умова (варіант 19): створити масив структур. Кожна структура складається</span>
+<span class="cm">  з таких елементів: назва фірми, продукт, що продається - комп'ютери</span>
+<span class="cm">  і програмне забезпечення, регіон збуту, вартість продажу, термін постачання.</span>
+<span class="cm">  Реалізувати запити, визначивши:</span>
+<span class="cm">    - список комп'ютерів, що продаються у заданому регіоні конкретною фірмою;</span>
+<span class="cm">    - вартість проданого програмного забезпечення у задані терміни;</span>
+<span class="cm">    - найрентабельніші фірми (з найбільшою вартістю продажів).</span>
+<span class="cm">  Результати запитів вивести у вигляді таблиць.</span>
+
+<span class="cm">  ОБОВ'ЯЗКОВІ ВИМОГИ ДО ВИКОНАННЯ (невиконання пунктів 1-6 - штраф 50%):</span>
+<span class="cm">    1. Програма повинна мати меню команд, виконання яких здійснювати через</span>
+<span class="cm">       виклики функцій.</span>
+<span class="cm">    2. Кожна функція має визначати окрему обмежену дію відповідно до сценарію</span>
+<span class="cm">       програми: створення масиву структур, виведення масиву структур, пошук</span>
+<span class="cm">       і виведення результатів запитів.</span>
+<span class="cm">    3. Застосування покажчиків на масив структур та окремі структури</span>
+<span class="cm">       схвалюється.</span>
+<span class="cm">    4. Створення масиву структур здійснювати через введення з клавіатури або</span>
+<span class="cm">       генерацію рядків і чисел за допомогою генератора псевдовипадкових чисел.</span>
+<span class="cm">    5. Створений масив структур обов'язково вивести на екран у табличній формі.</span>
+<span class="cm">       Заголовок таблиці має відповідати заданому в умові переліку полів.</span>
+<span class="cm">    6. Виконання пошуку по масиву структур здійснювати, задаючи ключі пошуку</span>
+<span class="cm">       з клавіатури.</span>
+<span class="cm">    7. Виведення результатів запитів здійснювати в табличній формі. Заголовок</span>
+<span class="cm">       таблиці виводиться один раз, далі виводяться дані результату пошуку.</span>
+
+<span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL для колекцій: класи</span>
+<span class="cm">  vector, list, map, set, string, ітератори, контейнери. Дозволено</span>
+<span class="cm">  використовувати функції заголовних файлів string.h, ctype.h, stdlib.h.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;string.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ctype.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;time.h&gt;</span>
+
+<span class="cm">/* Обмеження на розміри даних. Межа масиву в мові C має бути сталим виразом</span>
+<span class="cm">   часу компіляції, а змінна з модифікатором const ним не є, тому розміри</span>
+<span class="cm">   задано директивами препроцесора. */</span>
+<span class="cp">#define MAX_RECORDS 200 </span><span class="cm">/* записів у масиві структур */</span>
+<span class="cp">#define MAX_NAME 32     </span><span class="cm">/* довжина текстового поля   */</span>
+
+<span class="cm">/* Межі року в терміні постачання. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MIN_YEAR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2000</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_YEAR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2100</span><span class="p">;</span>
+
+<span class="cm">/* Ширини стовпців таблиці записів (у символах). */</span>
+<span class="k">enum</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">COL_NUMBER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_FIRM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">14</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_PRODUCT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_KIND</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_REGION</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_PRICE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_DATE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">18</span><span class="p">,</span>
+<span class="w">    </span><span class="n">TABLE_WIDTH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">COL_NUMBER</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_FIRM</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_PRODUCT</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_KIND</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_REGION</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                  </span><span class="n">COL_PRICE</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_DATE</span>
+<span class="p">};</span>
+
+<span class="cm">/* Ширини стовпців таблиці сум продажів по фірмах. */</span>
+<span class="k">enum</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">COL_FIRM_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_FIRM_SALES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span>
+<span class="w">    </span><span class="n">COL_FIRM_TOTAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<span class="w">    </span><span class="n">FIRM_TABLE_WIDTH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">COL_FIRM_NAME</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_FIRM_SALES</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">COL_FIRM_TOTAL</span>
+<span class="p">};</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Вид продукту. Умова прямо називає два види: комп'ютери та програмне</span>
+<span class="cm">  забезпечення. Переліковий тип замість рядка робить порівняння надійним:</span>
+<span class="cm">  запит "список комп'ютерів" не залежатиме від того, як саме користувач</span>
+<span class="cm">  написав назву виду.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">enum</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">KIND_COMPUTER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="cm">/* комп'ютери             */</span>
+<span class="w">    </span><span class="n">KIND_SOFTWARE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">  </span><span class="cm">/* програмне забезпечення */</span>
+<span class="p">}</span><span class="w"> </span><span class="n">ProductKind</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Date - термін постачання. Окрема структура, вкладена в основну: це дозволяє</span>
+<span class="cm">  порівнювати терміни як єдине ціле, а не трьома окремими полями.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">day</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">month</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">year</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Date</span><span class="p">;</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Sale - запис про продаж. Поля відповідають переліку з умови варіанта:</span>
+<span class="cm">      firm     - назва фірми;</span>
+<span class="cm">      kind     - вид продукту (комп'ютери або програмне забезпечення);</span>
+<span class="cm">      product  - назва конкретного продукту (моделі);</span>
+<span class="cm">      region   - регіон збуту;</span>
+<span class="cm">      price    - вартість продажу;</span>
+<span class="cm">      delivery - термін постачання.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">firm</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+<span class="w">    </span><span class="n">ProductKind</span><span class="w"> </span><span class="n">kind</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">product</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">region</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">price</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Date</span><span class="w"> </span><span class="n">delivery</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Sale</span><span class="p">;</span>
+
+<span class="cm">/* Масив структур та кількість заповнених записів. */</span>
+<span class="n">Sale</span><span class="w"> </span><span class="n">g_sales</span><span class="p">[</span><span class="n">MAX_RECORDS</span><span class="p">];</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Допоміжні функції</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  utf8Width - ширина рядка в символах, а не в байтах.</span>
+
+<span class="cm">  Специфікатор формату виду %-18s рахує байти, а в кодуванні UTF-8 кирилична</span>
+<span class="cm">  літера займає два байти, тому таблиці з українськими даними "розповзаються".</span>
+
+<span class="cm">  Параметри: s [вхідний] - рядок.</span>
+<span class="cm">  Повертає : кількість символів рядка.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">utf8Width</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">s</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Продовжувальний байт UTF-8 має вигляд 10xxxxxx: маска 0xC0 лишає</span>
+<span class="cm">           два старші біти, і якщо вони не дорівнюють 10, це початок символу. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="o">++</span><span class="n">width</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">width</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printPadded - вивести рядок, доповнивши пропусками до заданої ширини</span>
+<span class="cm">                в символах.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      s     [вхідний] - рядок;</span>
+<span class="cm">      width [вхідний] - ширина поля в символах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printPadded</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">width</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">utf8Width</span><span class="p">(</span><span class="n">s</span><span class="p">);</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">width</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">putchar</span><span class="p">(</span><span class="sc">' '</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  kindName - назва виду продукту.</span>
+
+<span class="cm">  Параметри: kind [вхідний] - вид продукту.</span>
+<span class="cm">  Повертає : рядок-константу з назвою.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">kindName</span><span class="p">(</span><span class="n">ProductKind</span><span class="w"> </span><span class="n">kind</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">KIND_COMPUTER</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">"комп'ютери"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">"ПЗ"</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  dateToNumber - звести дату до одного цілого числа виду РРРРММДД.</span>
+
+<span class="cm">  Таке подання дозволяє порівнювати дати звичайними операціями відношення:</span>
+<span class="cm">  хронологічний порядок дат збігається з числовим порядком цих чисел.</span>
+
+<span class="cm">  Параметри: d [вхідний] - покажчик на дату.</span>
+<span class="cm">  Повертає : число виду РРРРММДД.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">long</span><span class="w"> </span><span class="nf">dateToNumber</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">d</span><span class="o">-&gt;</span><span class="n">year</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">month</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">day</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  formatDate - записати дату до рядка у вигляді ДД.ММ.РРРР.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      d      [вхідний]  - покажчик на дату;</span>
+<span class="cm">      buffer [вихідний] - буфер для рядка;</span>
+<span class="cm">      size   [вхідний]  - розмір буфера.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">formatDate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">*</span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="s">"%02d.%02d.%d"</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">day</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">year</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  daysInMonth - кількість днів у місяці з урахуванням високосного року.</span>
+
+<span class="cm">  Параметри: month, year [вхідні] - місяць і рік.</span>
+<span class="cm">  Повертає : кількість днів у місяці.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">daysInMonth</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">year</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">month</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">isLeap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">year</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">year</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">year</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">400</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">isLeap</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">29</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">28</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">month</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">month</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">11</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">31</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readInt - прочитати ціле число із заданого діапазону з контролем введення.</span>
+
+<span class="cm">  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від %d до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readDouble - прочитати дійсне число з контролем введення.</span>
+
+<span class="cm">  Параметри: prompt [вхідний], value [вихідний], low [вхідний] - нижня межа.</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readDouble</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">low</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">low</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне дійсне число, не менше за %.2f.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  trimIncompleteUtf8 - відкинути неповний символ UTF-8 у кінці рядка.</span>
+
+<span class="cm">  Якщо рядок обрізано за розміром буфера, межа може пройти посередині</span>
+<span class="cm">  багатобайтового символу (кирилична літера займає два байти). Такий</span>
+<span class="cm">  залишок не є коректним символом, тому відкидається.</span>
+
+<span class="cm">  Параметри: s [вхідний/вихідний] - рядок.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      length   - довжина рядка в байтах;</span>
+<span class="cm">      lead     - індекс початкового байта останнього символу;</span>
+<span class="cm">      expected - кількість байтів, яку задає початковий байт.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">trimIncompleteUtf8</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Продовжувальні байти мають вигляд 10xxxxxx: пропускаємо їх до</span>
+<span class="cm">       початкового байта останнього символу. */</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">lead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">lead</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">s</span><span class="p">[</span><span class="n">lead</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x80</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">--</span><span class="n">lead</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Старші біти початкового байта задають довжину послідовності:</span>
+<span class="cm">       110xxxxx - 2 байти, 1110xxxx - 3, 11110xxx - 4. */</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="n">first</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">s</span><span class="p">[</span><span class="n">lead</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">expected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">first</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xC0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">expected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">first</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xE0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">expected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">first</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xF8</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xF0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">expected</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">lead</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">expected</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">s</span><span class="p">[</span><span class="n">lead</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  trimSpaces - прибрати пропуски на початку й у кінці рядка, щоб випадковий</span>
+<span class="cm">               пропуск не заважав порівнянню назв під час пошуку.</span>
+
+<span class="cm">  Параметри: s [вхідний/вихідний] - рядок.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">trimSpaces</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">s</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isspace</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">s</span><span class="p">[</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">--</span><span class="n">length</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">s</span><span class="p">[</span><span class="n">length</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">isspace</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="n">s</span><span class="p">[</span><span class="n">start</span><span class="p">]))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">++</span><span class="n">start</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">memmove</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readLine - прочитати текстовий рядок (назву) з клавіатури.</span>
+<span class="cm">  Пропуски на початку й у кінці рядка відкидаються.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      prompt [вхідний]  - текст запрошення;</span>
+<span class="cm">      buffer [вихідний] - буфер для рядка;</span>
+<span class="cm">      size   [вхідний]  - розмір буфера.</span>
+<span class="cm">  Повертає : true - рядок прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readLine</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fgets</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">buffer</span><span class="p">[</span><span class="n">length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">feof</span><span class="p">(</span><span class="n">stdin</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Буфер заповнено до кінця. Якщо далі не кінець рядка, рядок</span>
+<span class="cm">           задовгий: зайві символи відкидаються. */</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">            </span><span class="n">trimIncompleteUtf8</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"Увага: рядок задовгий, збережено лише його початок: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">trimSpaces</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  readDate - прочитати дату: рік, місяць і день.</span>
+
+<span class="cm">  Найбільший припустимий день залежить від місяця й року, тому неіснуючу</span>
+<span class="cm">  дату (наприклад, 31.02) ввести неможливо.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      indent [вхідний]  - відступ перед запрошеннями;</span>
+<span class="cm">      date   [вихідний] - покажчик на дату.</span>
+<span class="cm">  Повертає : true - дату прочитано; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readDate</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">indent</span><span class="p">,</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">*</span><span class="n">date</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"%sрік (%d..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="p">,</span><span class="w"> </span><span class="n">MIN_YEAR</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_YEAR</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">MIN_YEAR</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_YEAR</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"%sмісяць (1..12): "</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">lastDay</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">daysInMonth</span><span class="p">(</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="o">-&gt;</span><span class="n">year</span><span class="p">);</span>
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"%sдень (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="p">,</span><span class="w"> </span><span class="n">lastDay</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">day</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">lastDay</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Створення та виведення масиву структур</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/* Набори назв для генерації псевдовипадкових записів. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">FIRMS</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">"Everest"</span><span class="p">,</span><span class="w"> </span><span class="s">"Kvazar"</span><span class="p">,</span><span class="w"> </span><span class="s">"Sokil"</span><span class="p">,</span><span class="w"> </span><span class="s">"Dnipro-IT"</span><span class="p">,</span><span class="w"> </span><span class="s">"Karpaty"</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">REGIONS</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">"Київський"</span><span class="p">,</span><span class="w"> </span><span class="s">"Львівський"</span><span class="p">,</span><span class="w"> </span><span class="s">"Одеський"</span><span class="p">,</span><span class="w"> </span><span class="s">"Харківський"</span><span class="p">,</span>
+<span class="w">                         </span><span class="s">"Дніпровський"</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">COMPUTERS</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">"Optima 5"</span><span class="p">,</span><span class="w"> </span><span class="s">"Nova Pro"</span><span class="p">,</span><span class="w"> </span><span class="s">"Titan X"</span><span class="p">,</span><span class="w"> </span><span class="s">"Bureau 300"</span><span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">SOFTWARE</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">"OblikPro"</span><span class="p">,</span><span class="w"> </span><span class="s">"SklavSoft"</span><span class="p">,</span><span class="w"> </span><span class="s">"DocFlow"</span><span class="p">,</span><span class="w"> </span><span class="s">"AntiVirus U"</span><span class="p">};</span>
+
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">FIRMS_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">FIRMS</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">FIRMS</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">REGIONS_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">REGIONS</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">REGIONS</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">COMPUTERS_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">COMPUTERS</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">COMPUTERS</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">SOFTWARE_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="p">)(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">SOFTWARE</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">SOFTWARE</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  generateRecord - заповнити один запис псевдовипадковими даними.</span>
+
+<span class="cm">  Параметри: sale [вихідний] - покажчик на структуру, що заповнюється.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">generateRecord</span><span class="p">(</span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="n">sale</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">strcpy</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">,</span><span class="w"> </span><span class="n">FIRMS</span><span class="p">[</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">FIRMS_COUNT</span><span class="p">]);</span>
+<span class="w">    </span><span class="n">strcpy</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">REGIONS</span><span class="p">[</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">REGIONS_COUNT</span><span class="p">]);</span>
+
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">KIND_COMPUTER</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">KIND_SOFTWARE</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">KIND_COMPUTER</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">strcpy</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">COMPUTERS</span><span class="p">[</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">COMPUTERS_COUNT</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">strcpy</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">SOFTWARE</span><span class="p">[</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">SOFTWARE_COUNT</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Вартість від 1000,00 до 9999,99 з копійками. */</span>
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1000.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">9000</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mf">100.0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">.</span><span class="n">year</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2025</span><span class="p">;</span>
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">.</span><span class="n">month</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">12</span><span class="p">;</span>
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">.</span><span class="n">day</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">daysInMonth</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">.</span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="mi">2025</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  inputRecord - заповнити один запис даними з клавіатури.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      sale  [вихідний] - покажчик на структуру;</span>
+<span class="cm">      index [вхідний]  - номер запису (для запрошень).</span>
+<span class="cm">  Повертає : true - запис заповнено; false - вхідні дані вичерпано.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">inputRecord</span><span class="p">(</span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="n">sale</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  --- запис %d ---</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readLine</span><span class="p">(</span><span class="s">"  Назва фірми: "</span><span class="p">,</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_NAME</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"  Вид продукту (1 - комп'ютери, 2 - ПЗ): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">kind</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">kind</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">KIND_COMPUTER</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">KIND_SOFTWARE</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readLine</span><span class="p">(</span><span class="s">"  Назва продукту: "</span><span class="p">,</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_NAME</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readLine</span><span class="p">(</span><span class="s">"  Регіон збуту: "</span><span class="p">,</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_NAME</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"  Вартість продажу: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Термін постачання:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">readDate</span><span class="p">(</span><span class="s">"    "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printTableHeader - вивести заголовок таблиці записів.</span>
+
+<span class="cm">  Заголовок відповідає переліку полів, заданому в умові варіанта, і виводиться</span>
+<span class="cm">  РІВНО ОДИН РАЗ перед даними - як вимагає пункт 7 умови.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printTableHeader</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"№"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_NUMBER</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Фірма"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Продукт"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_PRODUCT</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Вид"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_KIND</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Регіон збуту"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_REGION</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Вартість"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_PRICE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Термін постачання"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_DATE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  "</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">TABLE_WIDTH</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">putchar</span><span class="p">(</span><span class="sc">'-'</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printRecord - вивести один запис рядком таблиці.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      sale  [вхідний] - покажчик на структуру;</span>
+<span class="cm">      index [вхідний] - порядковий номер рядка.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printRecord</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="n">sale</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="s">"%d."</span><span class="p">,</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">COL_NUMBER</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">COL_PRODUCT</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">kindName</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="p">),</span><span class="w"> </span><span class="n">COL_KIND</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">COL_REGION</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="s">"%.2f"</span><span class="p">,</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">COL_PRICE</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">formatDate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">COL_DATE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdCreate - команда меню: створити масив структур.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cmdCreate</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"Уведіть кількість записів (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_RECORDS</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_RECORDS</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Спосіб створення:</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  1 - введення з клавіатури</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"  2 - генерація псевдовипадкових даних</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть спосіб (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">inputRecord</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">i</span><span class="p">))</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="k">return</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">generateRecord</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">g_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Масив структур створено. Кількість записів: %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_count</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdPrintAll - команда меню: вивести весь масив структур у табличній формі.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cmdPrintAll</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Масив структур порожній. Скористайтеся командою 1.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Масив структур (записів: %d)</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_count</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printTableHeader</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printRecord</span><span class="p">(</span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="w"> </span><span class="n">i</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*==============================================================================</span>
+<span class="cm">  Запити</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdComputersByRegionAndFirm - запит 1: список комп'ютерів, що продаються</span>
+<span class="cm">                                у заданому регіоні конкретною фірмою.</span>
+
+<span class="cm">  Ключі пошуку (регіон і назва фірми) вводяться з клавіатури, як вимагає</span>
+<span class="cm">  пункт 6 умови.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cmdComputersByRegionAndFirm</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Масив структур порожній. Скористайтеся командою 1.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">region</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">firm</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readLine</span><span class="p">(</span><span class="s">"Уведіть регіон збуту: "</span><span class="p">,</span><span class="w"> </span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_NAME</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readLine</span><span class="p">(</span><span class="s">"Уведіть назву фірми:  "</span><span class="p">,</span><span class="w"> </span><span class="n">firm</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_NAME</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Запит 1. Комп'ютери, що продаються у регіоні </span><span class="se">\"</span><span class="s">%s</span><span class="se">\"</span><span class="s"> фірмою </span><span class="se">\"</span><span class="s">%s</span><span class="se">\"\n\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">           </span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">firm</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">sale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="cm">/* поточний запис */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">KIND_COMPUTER</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">region</span><span class="p">,</span><span class="w"> </span><span class="n">region</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">,</span><span class="w"> </span><span class="n">firm</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cm">/* Заголовок таблиці виводиться один раз - перед першим знайденим</span>
+<span class="cm">           записом, а не перед кожним. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printTableHeader</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printRecord</span><span class="p">(</span><span class="n">sale</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">);</span>
+<span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="n">found</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  За заданими ключами пошуку записів не знайдено.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  Знайдено записів: %d, сумарна вартість: %.2f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdSoftwareValueByPeriod - запит 2: вартість проданого програмного</span>
+<span class="cm">                             забезпечення у задані терміни.</span>
+
+<span class="cm">  Терміни задаються двома датами - початком і кінцем періоду; обидві межі</span>
+<span class="cm">  входять до періоду.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cmdSoftwareValueByPeriod</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Масив структур порожній. Скористайтеся командою 1.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">Date</span><span class="w"> </span><span class="n">from</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Date</span><span class="w"> </span><span class="n">to</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Початок періоду постачання:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDate</span><span class="p">(</span><span class="s">"  "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">from</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кінець періоду постачання:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDate</span><span class="p">(</span><span class="s">"  "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">to</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">fromNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">from</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">toNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">to</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fromNumber</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">toNumber</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Початок періоду пізніший за його кінець - період порожній.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">fromText</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">toText</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span>
+<span class="w">    </span><span class="n">formatDate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">fromText</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">fromText</span><span class="p">);</span>
+<span class="w">    </span><span class="n">formatDate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">to</span><span class="p">,</span><span class="w"> </span><span class="n">toText</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">toText</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Запит 2. Програмне забезпечення з терміном постачання з %s до %s</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">           </span><span class="n">fromText</span><span class="p">,</span><span class="w"> </span><span class="n">toText</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">sale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="cm">/* поточний запис */</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">kind</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">KIND_SOFTWARE</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">fromNumber</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">toNumber</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">continue</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printTableHeader</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printRecord</span><span class="p">(</span><span class="n">sale</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">);</span>
+<span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="n">found</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">found</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  У заданий період програмне забезпечення не постачалося.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  Знайдено записів: %d</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">               </span><span class="s">"  Вартість проданого програмного забезпечення: %.2f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+<span class="w">               </span><span class="n">found</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printFirmHeader - вивести заголовок таблиці сум продажів по фірмах.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printFirmHeader</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Фірма"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_NAME</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Продажів"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_SALES</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="s">"Сумарна вартість"</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_TOTAL</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">  "</span><span class="p">);</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">FIRM_TABLE_WIDTH</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">putchar</span><span class="p">(</span><span class="sc">'-'</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  printFirmRow - вивести рядок таблиці сум продажів по фірмах.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      name  [вхідний] - назва фірми;</span>
+<span class="cm">      sales [вхідний] - кількість продажів;</span>
+<span class="cm">      total [вхідний] - сумарна вартість продажів.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printFirmRow</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sales</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">MAX_NAME</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  "</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_NAME</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">sales</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_SALES</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="s">"%.2f"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printPadded</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">COL_FIRM_TOTAL</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  cmdMostProfitableFirms - запит 3: найрентабельніші фірми (з найбільшою</span>
+<span class="cm">                           вартістю продажів).</span>
+
+<span class="cm">  Обчислюється сумарна вартість продажів кожної фірми, після чого знаходиться</span>
+<span class="cm">  найбільша сума. Виводяться всі фірми з цією сумою: найбільших значень може</span>
+<span class="cm">  бути кілька, і мовчки показати лише одну було б неправильно.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      firmNames - назви фірм, знайдені в масиві структур;</span>
+<span class="cm">      firmTotal - сумарна вартість продажів кожної фірми;</span>
+<span class="cm">      firmCount - кількість різних фірм;</span>
+<span class="cm">      maxTotal  - найбільша сумарна вартість.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">cmdMostProfitableFirms</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Масив структур порожній. Скористайтеся командою 1.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">firmNames</span><span class="p">[</span><span class="n">MAX_RECORDS</span><span class="p">][</span><span class="n">MAX_NAME</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">MAX_RECORDS</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">firmSales</span><span class="p">[</span><span class="n">MAX_RECORDS</span><span class="p">];</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">firmCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cm">/* Групування записів за назвою фірми. */</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">g_count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="n">Sale</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">sale</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">g_sales</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w"> </span><span class="cm">/* поточний запис */</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">firmCount</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">firmNames</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="p">;</span>
+<span class="w">                </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">position</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">firmCount</span><span class="o">++</span><span class="p">;</span>
+<span class="w">            </span><span class="n">strcpy</span><span class="p">(</span><span class="n">firmNames</span><span class="p">[</span><span class="n">position</span><span class="p">],</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">firm</span><span class="p">);</span>
+<span class="w">            </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">            </span><span class="n">firmSales</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">position</span><span class="p">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">price</span><span class="p">;</span>
+<span class="w">        </span><span class="o">++</span><span class="n">firmSales</span><span class="p">[</span><span class="n">position</span><span class="p">];</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Захист звертання до firmTotal[0]: без жодної фірми елемент був би</span>
+<span class="cm">       неініціалізованим. */</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">firmCount</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Даних для запиту немає.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Пошук найбільшої сумарної вартості. */</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">maxTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">firmTotal</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">firmCount</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">firmTotal</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxTotal</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">maxTotal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Запит 3. Сумарна вартість продажів по фірмах</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printFirmHeader</span><span class="p">();</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">firmCount</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printFirmRow</span><span class="p">(</span><span class="n">firmNames</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">firmSales</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Найрентабельніші фірми (з найбільшою вартістю продажів)</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printFirmHeader</span><span class="p">();</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">firmCount</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">firmTotal</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">maxTotal</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printFirmRow</span><span class="p">(</span><span class="n">firmNames</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">firmSales</span><span class="p">[</span><span class="n">j</span><span class="p">],</span><span class="w"> </span><span class="n">firmTotal</span><span class="p">[</span><span class="n">j</span><span class="p">]);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="cm">  Головна функція. Відображає меню та викликає відповідні функції.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      choice - номер обраного пункту меню.</span>
+<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №10 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Масив структур: продажі комп'ютерів та програмного забезпечення</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cm">/* Генератор псевдовипадкових чисел ініціалізується один раз на весь</span>
+<span class="cm">       сеанс роботи програми. */</span>
+<span class="w">    </span><span class="n">srand</span><span class="p">((</span><span class="kt">unsigned</span><span class="p">)</span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Меню команд:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  1 - створити масив структур</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  2 - вивести масив структур</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  3 - запит: комп'ютери у заданому регіоні заданої фірми</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  4 - запит: вартість проданого ПЗ у задані терміни</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  5 - запит: найрентабельніші фірми</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  6 - вихід</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть команду (1..6): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано. Завершення роботи.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdCreate</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdPrintAll</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdComputersByRegionAndFirm</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdSoftwareValueByPeriod</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">cmdMostProfitableFirms</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"Завершення роботи.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+      </section>
+
+      <section id="s-results">
+        <h2>6. Результати виконання роботи</h2>
+        <p>
+          Компіляція: <code>make</code> (<code>gcc -std=c17</code>, прапорці
+          <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+        </p>
+        <p>
+          Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+          програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін, що
+          не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+          прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+          посиланнями.
+        </p>
+        <figure>
+          <img
+            src="results/shot_task1_1.png"
+            alt="Екранна копія 1 (частина 1 з 4) - контрольний набір з 5 записів: створення масиву, виведення та всі запити"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 1 з 4) - контрольний набір з 5 записів: створення масиву,
+            виведення та всі запити
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="results/shot_task1_2.png"
+            alt="Екранна копія 1 (частина 2 з 4) - контрольний набір з 5 записів: створення масиву, виведення та всі запити"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 2 з 4) - контрольний набір з 5 записів: створення масиву,
+            виведення та всі запити
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="results/shot_task1_3.png"
+            alt="Екранна копія 1 (частина 3 з 4) - контрольний набір з 5 записів: створення масиву, виведення та всі запити"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 3 з 4) - контрольний набір з 5 записів: створення масиву,
+            виведення та всі запити
+          </figcaption>
+        </figure>
+        <figure>
+          <img
+            src="results/shot_task1_4.png"
+            alt="Екранна копія 1 (частина 4 з 4) - контрольний набір з 5 записів: створення масиву, виведення та всі запити"
+          />
+          <figcaption>
+            Екранна копія 1 (частина 4 з 4) - контрольний набір з 5 записів: створення масиву,
+            виведення та всі запити
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
+          <span class="muted">(повний протокол, 524 рядків)</span>
+        </p>
+      </section>
+
+      <section id="s-validation">
+        <h2>7. Аналіз достовірності результатів</h2>
+        <p>
+          Достовірність результатів перевірено ручним відбором записів і розрахунком сум за таблицею
+          вхідних даних. Для кожної контрольної величини поруч із розрахунком наведено результат
+          програми.
+        </p>
+        <h3>Контрольний набір даних</h3>
+        <p>Дані підібрано так, щоб відповідь на кожен запит можна було перевірити вручну.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Фірма</th>
+              <th>Продукт</th>
+              <th>Вид</th>
+              <th>Регіон</th>
+              <th>Вартість</th>
+              <th>Термін</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Everest</td>
+              <td>Optima 5</td>
+              <td>комп'ютери</td>
+              <td>Київський</td>
+              <td>25000,00</td>
+              <td>15.03.2025</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Everest</td>
+              <td>OblikPro</td>
+              <td>ПЗ</td>
+              <td>Київський</td>
+              <td>12000,00</td>
+              <td>20.05.2025</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Kvazar</td>
+              <td>Titan X</td>
+              <td>комп'ютери</td>
+              <td>Львівський</td>
+              <td>31000,00</td>
+              <td>01.07.2025</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Everest</td>
+              <td>Nova Pro</td>
+              <td>комп'ютери</td>
+              <td>Київський</td>
+              <td>18000,00</td>
+              <td>10.09.2025</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Kvazar</td>
+              <td>DocFlow</td>
+              <td>ПЗ</td>
+              <td>Київський</td>
+              <td>9000,00</td>
+              <td>05.05.2025</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Запит 1: комп'ютери в Київському регіоні фірми Everest</h3>
+        <p>
+          Ручний відбір: запис 1 (комп'ютери, Київський, Everest) - підходить; запис 2 - ПЗ, не
+          підходить; запис 3 - інша фірма й регіон; запис 4 - підходить; запис 5 - ПЗ. Отже
+          <b>2 записи, сумарна вартість 25000 + 18000 = 43000</b>.
+        </p>
+        <p>Результат програми: 2 записи (Optima 5 і Nova Pro), сумарна вартість 43000,00.</p>
+        <h3>Запит 2: вартість ПЗ з терміном постачання 01.05.2025 - 01.06.2025</h3>
+        <p>
+          Ручний відбір серед записів виду "ПЗ": запис 2 (20.05.2025) - потрапляє в період; запис 5
+          (05.05.2025) - потрапляє. Комп'ютери не враховуються. Отже
+          <b>2 записи, вартість 12000 + 9000 = 21000</b>.
+        </p>
+        <p>Результат програми: 21000,00.</p>
+        <p>
+          Щоб перевірити фільтр за датою, запит повторено для періоду 01.05.2025 - 10.05.2025: має
+          лишитися тільки запис 5 (9000). Програма вивела один запис (DocFlow) і вартість 9000,00.
+        </p>
+        <h3>Запит 3: найрентабельніші фірми</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Фірма</th>
+              <th>Ручний розрахунок</th>
+              <th>Результат програми</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Everest</td>
+              <td>25000 + 12000 + 18000 = <b>55000</b> за 3 продажі</td>
+              <td>55000,00, продажів: 3</td>
+            </tr>
+            <tr>
+              <td>Kvazar</td>
+              <td>31000 + 9000 = <b>40000</b> за 2 продажі</td>
+              <td>40000,00, продажів: 2</td>
+            </tr>
+            <tr>
+              <td>Найрентабельніша</td>
+              <td>Everest (55000 &gt; 40000)</td>
+              <td>Everest, 55000,00</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>Перевірка випадку однакових сум</h3>
+        <p>
+          Окремий набір даних перевіряє рівні суми: Alpha (10000 + 5000 = 15000) і Beta (9000 + 6000
+          = 15000). Програма вивела <b>обидві</b> фірми як найрентабельніші.
+        </p>
+        <h3>Перевірка порожніх результатів</h3>
+        <p>
+          Запит за неіснуючим регіоном ("Полтавський") дає повідомлення "За заданими ключами пошуку
+          записів не знайдено" без порожньої таблиці. Окремо перевірено запити до порожнього масиву
+          структур і період, у якому початок пізніший за кінець: програма повідомляє про це.
+        </p>
+      </section>
+
+      <section id="s-conclusions">
+        <h2>8. Висновки</h2>
+        <ul>
+          <li>
+            Створено масив структур із вкладеною структурою <code>Date</code> і переліковим типом
+            виду продукту; масив створюється з клавіатури або генерацією і виводиться таблицею.
+          </li>
+          <li>
+            Реалізовано три запити з ключами пошуку, що вводяться з клавіатури; результати
+            виводяться таблицями, заголовок - один раз.
+          </li>
+          <li>
+            Дати порівнюються через зведення до числа РРРРММДД; у запиті 3 виводяться всі фірми з
+            максимальною сумою.
+          </li>
+          <li>
+            Дотримано обов'язкових вимог і обмежень умови: команди меню виконуються викликами
+            функцій, STL-колекції та клас <code>string</code> не використовуються.
+          </li>
+          <li>Завдання варіанта виконано в повному обсязі.</li>
+        </ul>
+      </section>
+
+      <footer>Одарчук Олексій, <a href="https://ishawyha.dev">ishawyha.dev</a></footer>
+    </main>
+  </body>
+</html>
