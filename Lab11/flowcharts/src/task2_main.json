@@ -1,0 +1,44 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи, автора і файл даних" },
+    { "kind": "process", "text": "Ініціалізувати генератор випадкових чисел" },
+    { "kind": "infloop", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести меню команд" },
+      { "kind": "process", "text": "Номер команди = 0" },
+      { "kind": "if", "cond": "Не вдалося ввести команду від 1 до 9",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Вивести: дані вичерпано, завершення роботи" },
+          { "kind": "break", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "io", "text": "Вивести порожній рядок" },
+      { "kind": "if", "cond": "команда = 1",
+        "then": { "stmts": [ { "kind": "call", "text": "Створити файл даних" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 2",
+        "then": { "stmts": [ { "kind": "call", "text": "Вивести вміст файлу даних" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 3",
+        "then": { "stmts": [ { "kind": "call", "text": "Доповнити файл новими записами" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 4",
+        "then": { "stmts": [ { "kind": "call", "text": "Замінити вибраний запис" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 5",
+        "then": { "stmts": [ { "kind": "call", "text": "Видалити вибраний запис" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 6",
+        "then": { "stmts": [ { "kind": "call", "text": "Запит: комп'ютери фірми в регіоні" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 7",
+        "then": { "stmts": [ { "kind": "call", "text": "Запит: вартість ПЗ за період" } ] },
+        "else": { "stmts": [
+      { "kind": "if", "cond": "команда = 8",
+        "then": { "stmts": [ { "kind": "call", "text": "Запит: найрентабельніші фірми" } ] },
+        "else": { "stmts": [
+          { "kind": "io", "text": "Вивести: завершення роботи" },
+          { "kind": "break", "depth": 0 } ] } }
+        ] } } ] } } ] } } ] } } ] } } ] } } ] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

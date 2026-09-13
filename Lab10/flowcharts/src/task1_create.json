@@ -1,0 +1,26 @@
+[
+  { "name": "cmdCreate", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив записів і кількість count" },
+    { "kind": "process", "text": "Сформувати підказку з найбільшою кількістю записів" },
+    { "kind": "if", "cond": "Кількість записів n не введено",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести способи створення масиву" },
+    { "kind": "if", "cond": "Спосіб створення не обрано",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "if", "cond": "Спосіб = 1",
+      "then": { "stmts": [
+        { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+          { "kind": "if", "cond": "i-й запис не введено",
+            "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+            "else": { "stmts": [] } }
+        ] } } ] },
+      "else": { "stmts": [
+        { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+          { "kind": "call", "text": "Згенерувати i-й запис" }
+        ] } } ] } },
+    { "kind": "process", "text": "Кількість записів count = n" },
+    { "kind": "io", "text": "Вивести: масив створено, кількість записів count" }
+  ] } }
+]

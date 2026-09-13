@@ -1,0 +1,26 @@
+[
+  { "name": "reportChanges", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести матриці a, b, розміри n, m" },
+    { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+      { "kind": "process", "text": "Зміна за продукцією i = 0" },
+      { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+        { "kind": "process", "text": "Додати до зміни продукції i різницю b − a (i, j)" }
+      ] } }
+    ] } },
+    { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+      { "kind": "process", "text": "Зміна по підприємству j = 0" },
+      { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+        { "kind": "process", "text": "Додати до зміни підприємства j різницю b − a (i, j)" }
+      ] } }
+    ] } },
+    { "kind": "io", "text": "Вивести заголовок звіту б)" },
+    { "kind": "io", "text": "Вивести шапку таблиці за видами продукції" },
+    { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести рядок таблиці: продукція i + 1, зміна, оцінка" }
+    ] } },
+    { "kind": "io", "text": "Вивести шапку таблиці по підприємствах" },
+    { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести рядок таблиці: підприємство j + 1, зміна, оцінка" }
+    ] } }
+  ] } }
+]

@@ -1,0 +1,36 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "process", "text": "Кількість записів count = 0" },
+    { "kind": "io", "text": "Вивести назву лабораторної роботи" },
+    { "kind": "io", "text": "Вивести відомості про виконавця" },
+    { "kind": "io", "text": "Вивести тему: продажі комп'ютерів і ПЗ" },
+    { "kind": "call", "text": "Ініціалізувати генератор випадкових чисел" },
+    { "kind": "infloop", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести меню команд" },
+      { "kind": "if", "cond": "Номер команди від 1 до 6 не введено",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+          { "kind": "break", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "io", "text": "Вивести порожній рядок" },
+      { "kind": "if", "cond": "Команда = 1",
+        "then": { "stmts": [ { "kind": "call", "text": "Створити масив структур" } ] },
+        "else": { "stmts": [
+          { "kind": "if", "cond": "Команда = 2",
+            "then": { "stmts": [ { "kind": "call", "text": "Вивести масив структур" } ] },
+            "else": { "stmts": [
+              { "kind": "if", "cond": "Команда = 3",
+                "then": { "stmts": [ { "kind": "call", "text": "Запит 1: комп'ютери регіону й фірми" } ] },
+                "else": { "stmts": [
+                  { "kind": "if", "cond": "Команда = 4",
+                    "then": { "stmts": [ { "kind": "call", "text": "Запит 2: вартість ПЗ за період" } ] },
+                    "else": { "stmts": [
+                      { "kind": "if", "cond": "Команда = 5",
+                        "then": { "stmts": [ { "kind": "call", "text": "Запит 3: найрентабельніші фірми" } ] },
+                        "else": { "stmts": [
+                          { "kind": "io", "text": "Вивести: завершення роботи" },
+                          { "kind": "break", "depth": 0 } ] } } ] } } ] } } ] } } ] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

@@ -1,0 +1,16 @@
+[
+  { "name": "sinTaylor", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести аргумент t і точність eps" },
+    { "kind": "process", "text": "Квадрат аргументу t2 = t²" },
+    { "kind": "process", "text": "Сума ряду sum = t" },
+    { "kind": "process", "text": "Доданок term = t" },
+    { "kind": "process", "text": "Номер доданка n = 0" },
+    { "kind": "while", "cond": "|term| ≥ eps", "body": { "stmts": [
+      { "kind": "process", "text": "term = term · (−t2) / ((2n + 2)(2n + 3))" },
+      { "kind": "process", "text": "Збільшити sum на term" },
+      { "kind": "process", "text": "Збільшити n на 1" }
+    ] } },
+    { "kind": "process", "text": "Кількість доданків = n + 1" },
+    { "kind": "terminal", "text": "Повернути sum" }
+  ] } }
+]

@@ -1,0 +1,252 @@
+[
+ {
+  "name": "infixToPostfix",
+  "main": false,
+  "block": {
+   "kind": "block",
+   "stmts": [
+    {
+     "kind": "io",
+     "text": "Ввести інфіксний вираз, буфери стеку та результату"
+    },
+    {
+     "kind": "process",
+     "text": "Стек порожній: вершина top = −1"
+    },
+    {
+     "kind": "process",
+     "text": "Позиція запису в результат out = 0"
+    },
+    {
+     "kind": "process",
+     "text": "Позиція у виразі i = 0"
+    },
+    {
+     "kind": "process",
+     "text": "Очікується операнд = так"
+    },
+    {
+     "kind": "process",
+     "text": "Помилки немає"
+    },
+    {
+     "kind": "while",
+     "cond": "Вираз не закінчився і помилки немає",
+     "body": {
+      "stmts": [
+       {
+        "kind": "process",
+        "text": "c = поточний символ виразу"
+       },
+       {
+        "kind": "if",
+        "cond": "c — пропуск",
+        "then": {
+         "stmts": [
+          {
+           "kind": "process",
+           "text": "Збільшити i на 1"
+          }
+         ]
+        },
+        "else": {
+         "stmts": [
+          {
+           "kind": "if",
+           "cond": "c — символ операнда",
+           "then": {
+            "stmts": [
+             {
+              "kind": "process",
+              "text": "Помилка = обробка операнда (readOperand)"
+             }
+            ]
+           },
+           "else": {
+            "stmts": [
+             {
+              "kind": "if",
+              "cond": "c — відкривна дужка або заперечення",
+              "then": {
+               "stmts": [
+                {
+                 "kind": "process",
+                 "text": "Помилка = занесення c до стеку (pushOpening)"
+                },
+                {
+                 "kind": "process",
+                 "text": "Збільшити i на 1"
+                }
+               ]
+              },
+              "else": {
+               "stmts": [
+                {
+                 "kind": "if",
+                 "cond": "c — закривна дужка",
+                 "then": {
+                  "stmts": [
+                   {
+                    "kind": "process",
+                    "text": "Помилка = обробка закривної дужки (closeBracket)"
+                   },
+                   {
+                    "kind": "process",
+                    "text": "Збільшити i на 1"
+                   }
+                  ]
+                 },
+                 "else": {
+                  "stmts": [
+                   {
+                    "kind": "if",
+                    "cond": "c — знак операції",
+                    "then": {
+                     "stmts": [
+                      {
+                       "kind": "process",
+                       "text": "Помилка = обробка знака операції (pushOperator)"
+                      },
+                      {
+                       "kind": "process",
+                       "text": "Збільшити i на 1"
+                      }
+                     ]
+                    },
+                    "else": {
+                     "stmts": [
+                      {
+                       "kind": "if",
+                       "cond": "c — десяткова крапка",
+                       "then": {
+                        "stmts": [
+                         {
+                          "kind": "process",
+                          "text": "Помилка: крапка лише між цифрами числа"
+                         }
+                        ]
+                       },
+                       "else": {
+                        "stmts": [
+                         {
+                          "kind": "process",
+                          "text": "Помилка: неприпустимий символ у виразі"
+                         }
+                        ]
+                       }
+                      }
+                     ]
+                    }
+                   }
+                  ]
+                 }
+                }
+               ]
+              }
+             }
+            ]
+           }
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "kind": "if",
+     "cond": "Помилки немає і очікується операнд",
+     "then": {
+      "stmts": [
+       {
+        "kind": "if",
+        "cond": "out = 0 і стек порожній",
+        "then": {
+         "stmts": [
+          {
+           "kind": "process",
+           "text": "Помилка: порожній вираз"
+          }
+         ]
+        },
+        "else": {
+         "stmts": [
+          {
+           "kind": "process",
+           "text": "Помилка: вираз закінчується без операнда"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "else": {
+      "stmts": []
+     }
+    },
+    {
+     "kind": "while",
+     "cond": "Помилки немає і стек не порожній",
+     "body": {
+      "stmts": [
+       {
+        "kind": "if",
+        "cond": "На вершині стеку відкривна дужка",
+        "then": {
+         "stmts": [
+          {
+           "kind": "process",
+           "text": "Помилка: не вистачає закривної дужки"
+          }
+         ]
+        },
+        "else": {
+         "stmts": [
+          {
+           "kind": "call",
+           "text": "Перенести операцію з вершини стеку в результат (popToOutput)"
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "kind": "if",
+     "cond": "Помилки немає",
+     "then": {
+      "stmts": [
+       {
+        "kind": "if",
+        "cond": "out > 0 і останній символ результату — пропуск",
+        "then": {
+         "stmts": [
+          {
+           "kind": "process",
+           "text": "Зменшити out на 1"
+          }
+         ]
+        },
+        "else": {
+         "stmts": []
+        }
+       },
+       {
+        "kind": "process",
+        "text": "Завершити рядок результату"
+       }
+      ]
+     },
+     "else": {
+      "stmts": []
+     }
+    },
+    {
+     "kind": "terminal",
+     "text": "Повернути ознаку відсутності помилки"
+    }
+   ]
+  }
+ }
+]

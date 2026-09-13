@@ -1,0 +1,29 @@
+[
+  { "name": "cmdComputersByRegionAndFirm", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив записів і кількість count" },
+    { "kind": "if", "cond": "Масив записів порожній",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "if", "cond": "Регіон або назву фірми не введено",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести заголовок запиту з регіоном і фірмою" },
+    { "kind": "process", "text": "Кількість знайдених found = 0" },
+    { "kind": "process", "text": "Сумарна вартість total = 0" },
+    { "kind": "for", "cond": "i := 0, count − 1", "body": { "stmts": [
+      { "kind": "process", "text": "Поточний запис — i-й запис масиву" },
+      { "kind": "if", "cond": "Запис не комп'ютер, або регіон чи фірма інші",
+        "then": { "stmts": [ { "kind": "continue", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "found = 0",
+        "then": { "stmts": [ { "kind": "call", "text": "Вивести заголовок таблиці" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "call", "text": "Вивести поточний запис під номером found" },
+      { "kind": "process", "text": "Збільшити total на ціну запису" },
+      { "kind": "process", "text": "Збільшити found на 1" }
+    ] } },
+    { "kind": "if", "cond": "found = 0",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: записів не знайдено" } ] },
+      "else": { "stmts": [ { "kind": "io", "text": "Вивести кількість знайдених found і total" } ] } }
+  ] } }
+]

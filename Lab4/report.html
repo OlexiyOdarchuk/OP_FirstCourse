@@ -1,0 +1,2978 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Лабораторна робота №4. Рекурентні співвідношення. Степеневі ряди</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%235b3df5'/%3E%3Cstop offset='1' stop-color='%230b9e8f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='41' font-family='monospace' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EC++%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700;800&amp;display=swap"
+    />
+    <link rel="stylesheet" href="../report.css" />
+    <script>
+      // Поведінка сторінок: тема, вкладки завдань, перелік функцій, збільшення
+      // рисунків, рядок стану, клавіші як у vim. Без сторонніх бібліотек.
+      (function () {
+        var root = document.documentElement;
+        var KEY = "op-theme";
+        try {
+          var saved = localStorage.getItem(KEY);
+          if (saved === "light" || saved === "dark") root.dataset.theme = saved;
+        } catch (e) {}
+
+        //типова тема світла; темна вмикається лише кнопкою
+        function isDark() {
+          return root.dataset.theme === "dark";
+        }
+
+        function switchTheme() {
+          var next = isDark() ? "light" : "dark";
+          root.dataset.theme = next;
+          try {
+            localStorage.setItem(KEY, next);
+          } catch (e) {}
+        }
+
+        function $all(sel, from) {
+          return Array.prototype.slice.call((from || document).querySelectorAll(sel));
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+          var toggle = document.querySelector(".theme-toggle");
+          if (toggle) toggle.addEventListener("click", switchTheme);
+
+          // ---------- вкладки завдань: перемикаються разом у коді й прогонах ----------
+          var tabGroups = $all(".tabs");
+          function selectTask(n) {
+            tabGroups.forEach(function (group) {
+              var has = group.querySelector('[role="tab"][data-task="' + n + '"]');
+              if (!has) return;
+              $all('[role="tab"]', group).forEach(function (t) {
+                t.setAttribute("aria-selected", t.dataset.task === String(n) ? "true" : "false");
+              });
+              $all(".tabpanel", group).forEach(function (panel) {
+                panel.hidden = panel.dataset.task !== String(n);
+              });
+            });
+          }
+          if (tabGroups.length) {
+            var first = tabGroups[0].querySelector('[role="tab"]');
+            selectTask(first.dataset.task);
+            $all('.tabs [role="tab"]').forEach(function (t) {
+              t.addEventListener("click", function () {
+                selectTask(t.dataset.task);
+              });
+            });
+          }
+          function selectTabIndex(i) {
+            var tabs = tabGroups.length ? $all('[role="tab"]', tabGroups[0]) : [];
+            if (tabs[i]) selectTask(tabs[i].dataset.task);
+          }
+
+          // ---------- перелік функцій: перехід до рядка у вікні коду ----------
+          $all(".tags button[data-line]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var block = btn.closest(".codeblock");
+              var view = block.querySelector(".codeview");
+              var gutter = block.querySelector(".gutter");
+              var style = getComputedStyle(gutter);
+              var lh = parseFloat(style.lineHeight);
+              var top = parseFloat(style.paddingTop) + (Number(btn.dataset.line) - 1) * lh;
+              var mark = view.querySelector(".linehl");
+              if (!mark) {
+                mark = document.createElement("div");
+                mark.className = "linehl";
+                view.appendChild(mark);
+              }
+              mark.style.top = top + "px";
+              mark.style.height = lh + "px";
+              mark.classList.remove("flash");
+              void mark.offsetWidth;
+              mark.classList.add("flash");
+              view.scrollTo({ top: Math.max(0, top - 3 * lh), behavior: "smooth" });
+              block.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            });
+          });
+
+          // ---------- протоколи ----------
+          // (розгортання робить сам елемент details)
+
+          // ---------- посилання на розділи ----------
+          $all("a.anchor").forEach(function (a) {
+            a.addEventListener("click", function () {
+              var url = location.href.split("#")[0] + a.hash;
+              if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function () {});
+              a.classList.add("copied");
+              setTimeout(function () {
+                a.classList.remove("copied");
+              }, 1200);
+            });
+          });
+
+          // ---------- копіювання коду ----------
+          $all(".codeblock .copy").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var text = btn.closest(".codeblock").querySelector("pre.src").innerText;
+              navigator.clipboard.writeText(text).then(function () {
+                btn.textContent = "Скопійовано";
+                setTimeout(function () {
+                  btn.textContent = "Копіювати";
+                }, 1600);
+              });
+            });
+          });
+
+          // ---------- друк ----------
+          $all(".print").forEach(function (b) {
+            b.addEventListener("click", function () {
+              window.print();
+            });
+          });
+
+          // ---------- збільшення рисунка: масштаб колесом, перетягування ----------
+          var box = document.createElement("div");
+          box.className = "lightbox";
+          box.hidden = true;
+          box.innerHTML =
+            '<div class="lb-bar"><span class="lb-name"></span>' +
+            '<button type="button" class="btn-sm" data-z="in">+</button>' +
+            '<button type="button" class="btn-sm" data-z="out">−</button>' +
+            '<button type="button" class="btn-sm" data-z="width">По ширині</button>' +
+            '<button type="button" class="btn-sm" data-z="whole">Цілком</button>' +
+            '<button type="button" class="btn-sm" data-z="one">1:1</button>' +
+            '<button type="button" class="btn-sm" data-z="close">Закрити</button></div>' +
+            '<div class="lb-stage"><img alt=""></div>';
+          document.body.appendChild(box);
+          var stage = box.querySelector(".lb-stage");
+          var big = box.querySelector("img");
+          var label = box.querySelector(".lb-name");
+          var view = { s: 1, x: 0, y: 0 };
+          function apply() {
+            big.style.transform =
+              "translate(" + view.x + "px," + view.y + "px) scale(" + view.s + ")";
+            label.textContent = Math.round(view.s * 100) + "%  " + (big.alt || "");
+          }
+          //whole = false: за шириною (текст високої схеми лишається читабельним);
+          //whole = true: схема вміщується цілком
+          function fit(whole) {
+            var w = stage.clientWidth - 32;
+            var h = stage.clientHeight - 32;
+            var nw = big.naturalWidth || 1;
+            var nh = big.naturalHeight || 1;
+            view.s = whole ? Math.min(1, w / nw, h / nh) : Math.min(1, w / nw);
+            view.x = (stage.clientWidth - nw * view.s) / 2;
+            view.y = Math.max(16, (stage.clientHeight - nh * view.s) / 2);
+            apply();
+          }
+          function zoomAt(factor, cx, cy) {
+            var s = Math.min(8, Math.max(0.05, view.s * factor));
+            view.x = cx - ((cx - view.x) * s) / view.s;
+            view.y = cy - ((cy - view.y) * s) / view.s;
+            view.s = s;
+            apply();
+          }
+          function openBox(img) {
+            big.src = img.currentSrc || img.src;
+            big.alt = img.alt;
+            box.hidden = false;
+            document.body.classList.add("noscroll");
+            if (big.complete && big.naturalWidth) fit(false);
+            else
+              big.onload = function () {
+                fit(false);
+              };
+          }
+          function closeBox() {
+            box.hidden = true;
+            document.body.classList.remove("noscroll");
+          }
+          $all("figure img").forEach(function (img) {
+            img.addEventListener("click", function () {
+              openBox(img);
+            });
+          });
+          box.querySelector(".lb-bar").addEventListener("click", function (e) {
+            var z = e.target.dataset && e.target.dataset.z;
+            var cx = stage.clientWidth / 2;
+            var cy = stage.clientHeight / 2;
+            if (z === "in") zoomAt(1.25, cx, cy);
+            else if (z === "out") zoomAt(0.8, cx, cy);
+            else if (z === "width") fit(false);
+            else if (z === "whole") fit(true);
+            else if (z === "one") zoomAt(1 / view.s, cx, cy);
+            else if (z === "close") closeBox();
+          });
+          stage.addEventListener(
+            "wheel",
+            function (e) {
+              e.preventDefault();
+              var r = stage.getBoundingClientRect();
+              //колесо миші та жест щипка змінюють масштаб, дотик двома пальцями гортає
+              var zoom = e.ctrlKey || e.metaKey || (e.deltaX === 0 && Math.abs(e.deltaY) >= 50);
+              if (zoom) {
+                zoomAt(e.deltaY < 0 ? 1.15 : 0.87, e.clientX - r.left, e.clientY - r.top);
+              } else {
+                view.x -= e.deltaX;
+                view.y -= e.deltaY;
+                apply();
+              }
+            },
+            { passive: false },
+          );
+          var drag = null;
+          stage.addEventListener("pointerdown", function (e) {
+            drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false };
+            stage.setPointerCapture(e.pointerId);
+          });
+          stage.addEventListener("pointermove", function (e) {
+            if (!drag) return;
+            var dx = e.clientX - drag.x;
+            var dy = e.clientY - drag.y;
+            if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+            view.x = drag.vx + dx;
+            view.y = drag.vy + dy;
+            apply();
+          });
+          stage.addEventListener("pointerup", function (e) {
+            if (drag && !drag.moved && e.target === stage) closeBox();
+            drag = null;
+          });
+
+          // ---------- довідка про клавіші ----------
+          var help = document.querySelector(".helpbox");
+          function toggleHelp(show) {
+            if (!help) return;
+            help.hidden = show === undefined ? !help.hidden : !show;
+          }
+          if (help) {
+            help.addEventListener("click", function (e) {
+              if (e.target === help || e.target.classList.contains("close")) toggleHelp(false);
+            });
+          }
+
+          // ---------- рядок стану та активний пункт змісту ----------
+          var sections = $all("main section[id]");
+          var links = $all(".toc a");
+          var bar = document.querySelector(".progress span");
+          var vim = document.querySelector(".vimbar");
+          function current() {
+            var y = window.scrollY + window.innerHeight * 0.25;
+            var cur = sections[0];
+            sections.forEach(function (s) {
+              if (s.offsetTop <= y) cur = s;
+            });
+            return cur;
+          }
+          function update() {
+            var max = root.scrollHeight - root.clientHeight;
+            var part = max > 0 ? Math.min(1, root.scrollTop / max) : 0;
+            if (bar) bar.style.transform = "scaleX(" + part + ")";
+            var cur = current();
+            if (cur) {
+              links.forEach(function (a) {
+                a.classList.toggle("active", a.hash === "#" + cur.id);
+              });
+            }
+            if (vim) {
+              vim.querySelector(".pos").textContent =
+                part === 0 ? "Top" : part === 1 ? "Bot" : Math.round(part * 100) + "%";
+              if (cur && cur.dataset.title)
+                vim.querySelector(".where").textContent = cur.dataset.title;
+            }
+          }
+          window.addEventListener("scroll", update, { passive: true });
+          window.addEventListener("resize", update);
+          update();
+
+          function jump(dir) {
+            if (!sections.length) return;
+            var cur = current();
+            var i = sections.indexOf(cur);
+            var target = sections[Math.min(sections.length - 1, Math.max(0, i + dir))];
+            if (dir < 0 && window.scrollY > cur.offsetTop + 10) target = cur;
+            //зі вступу сторінки перший крок веде до першого розділу
+            if (dir > 0 && window.scrollY + 10 < sections[0].offsetTop) target = sections[0];
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+
+          // ---------- клавіші ----------
+          var lastG = 0;
+          document.addEventListener("keydown", function (e) {
+            var tag = (e.target.tagName || "").toLowerCase();
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (tag === "input" || tag === "textarea" || tag === "select") return;
+            var code = e.code;
+            if (code === "Escape") {
+              if (!box.hidden) closeBox();
+              toggleHelp(false);
+              return;
+            }
+            if (!box.hidden) {
+              if (code === "Equal" || code === "NumpadAdd")
+                zoomAt(1.25, stage.clientWidth / 2, stage.clientHeight / 2);
+              if (code === "Minus" || code === "NumpadSubtract")
+                zoomAt(0.8, stage.clientWidth / 2, stage.clientHeight / 2);
+              if (code === "Digit0") fit(true);
+              return;
+            }
+            if ((code === "Slash" && e.shiftKey) || e.key === "?") {
+              toggleHelp();
+            } else if (code === "KeyT") {
+              switchTheme();
+            } else if (code === "KeyJ") {
+              jump(1);
+            } else if (code === "KeyK") {
+              jump(-1);
+            } else if (code === "KeyP") {
+              window.print();
+            } else if (code === "KeyG" && e.shiftKey) {
+              window.scrollTo({ top: root.scrollHeight, behavior: "smooth" });
+            } else if (code === "KeyG") {
+              var now = Date.now();
+              if (now - lastG < 500) window.scrollTo({ top: 0, behavior: "smooth" });
+              lastG = now;
+            } else if (code === "BracketLeft" || code === "BracketRight") {
+              var link = document.querySelector(
+                code === "BracketLeft" ? 'a[rel="prev"]' : 'a[rel="next"]',
+              );
+              if (link) location.href = link.href;
+            } else if (/^Digit[1-9]$/.test(code)) {
+              selectTabIndex(Number(code.slice(5)) - 1);
+            } else {
+              return;
+            }
+            e.preventDefault();
+          });
+        });
+      })();
+    </script>
+  </head>
+
+  <body class="report">
+    <div class="progress"><span></span></div>
+    <header class="topbar">
+      <a class="brand" href="../index.html" aria-label="На головну"
+        ><span class="logo">&gt;_</span></a
+      >
+      <nav class="crumbs" aria-label="Шлях">
+        <span class="host">ishawyha@op</span>:<a href="../index.html">~/OP_FirstCourse</a>/<a
+          href="report.html"
+          >Lab4</a
+        ><span class="ps">$</span>
+      </nav>
+      <span class="spacer"></span>
+      <a
+        class="icon-btn"
+        href="https://github.com/OlexiyOdarchuk/OP_FirstCourse"
+        title="Код на GitHub"
+        aria-label="Код на GitHub"
+        ><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"
+          /></svg
+      ></a>
+      <button
+        class="icon-btn theme-toggle"
+        type="button"
+        title="Змінити тему (T)"
+        aria-label="Змінити тему"
+      >
+        <svg
+          class="sun"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+          /></svg
+        ><svg
+          class="moon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="wrap layout">
+      <aside class="side">
+        <nav class="toc" aria-label="Зміст звіту">
+          <p class="toc-title">tree зміст/</p>
+          <ul>
+            <li>
+              <a href="#s-goal"><span>01</span>Мета роботи</a>
+            </li>
+            <li>
+              <a href="#s-task"><span>02</span>Умова задачі</a>
+            </li>
+            <li>
+              <a href="#s-analysis"><span>03</span>Аналіз задачі та теоретичне обґрунтування</a>
+            </li>
+            <li>
+              <a href="#s-flowchart"><span>04</span>Блок-схема алгоритму</a>
+            </li>
+            <li>
+              <a href="#s-code"><span>05</span>Текст програми</a>
+            </li>
+            <li>
+              <a href="#s-results"><span>06</span>Результати виконання роботи</a>
+            </li>
+            <li>
+              <a href="#s-validation"><span>07</span>Аналіз достовірності результатів</a>
+            </li>
+            <li>
+              <a href="#s-conclusions"><span>08</span>Висновки</a>
+            </li>
+          </ul>
+        </nav>
+        <p class="keyhint">Натисніть <kbd>?</kbd> для довідки про клавіші</p>
+      </aside>
+
+      <main>
+        <header class="hero">
+          <p class="manhead">
+            <span>LAB4(19)</span><span>Основи програмування</span><span>LAB4(19)</span>
+          </p>
+          <p class="eyebrow">Лабораторна робота №4</p>
+          <h1>Рекурентні співвідношення. Степеневі ряди</h1>
+          <p class="sub">
+            Варіант 19. Виконав: <a href="https://ishawyha.dev">Одарчук Олексій</a>, КНУ імені
+            Тараса Шевченка, Факультет інформаційних технологій, Кафедра програмних систем і
+            технологій, група ІПЗ-11. C17, gcc
+          </p>
+          <div class="hero-row">
+            <ul class="chips">
+              <li>2 завдання</li>
+              <li>C</li>
+              <li>8 розділів</li>
+            </ul>
+            <button class="btn-sm print" type="button">Друк / PDF</button>
+          </div>
+          <div class="window stat">
+            <div class="codebar">
+              <span class="lang lang-sh">&gt;_</span><span class="path">stat Lab4/</span>
+            </div>
+            <div class="body fetch">
+              <div class="kv">
+                <span class="k">Файли</span><span class="v">task1.c, task2.c</span>
+                <span class="k">Рядків коду</span><span class="v">697</span>
+                <span class="k">Функцій</span><span class="v">17</span>
+                <span class="k">Блок-схеми</span><span class="v">4 + 2 HIPO</span>
+                <span class="k">Прогони</span><span class="v">5 сценаріїв, 2 екранних копій</span>
+                <span class="k">Перевірки</span><span class="v">3 таблиць</span>
+                <span class="k">Попередження</span
+                ><span class="v">0 (-Wall -Wextra -pedantic)</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <nav class="toc toc-inline" aria-label="Зміст звіту">
+          <p class="toc-title">tree зміст/</p>
+          <ul>
+            <li>
+              <a href="#s-goal"><span>01</span>Мета роботи</a>
+            </li>
+            <li>
+              <a href="#s-task"><span>02</span>Умова задачі</a>
+            </li>
+            <li>
+              <a href="#s-analysis"><span>03</span>Аналіз задачі та теоретичне обґрунтування</a>
+            </li>
+            <li>
+              <a href="#s-flowchart"><span>04</span>Блок-схема алгоритму</a>
+            </li>
+            <li>
+              <a href="#s-code"><span>05</span>Текст програми</a>
+            </li>
+            <li>
+              <a href="#s-results"><span>06</span>Результати виконання роботи</a>
+            </li>
+            <li>
+              <a href="#s-validation"><span>07</span>Аналіз достовірності результатів</a>
+            </li>
+            <li>
+              <a href="#s-conclusions"><span>08</span>Висновки</a>
+            </li>
+          </ul>
+        </nav>
+
+        <section id="s-goal" data-title="§01 Мета роботи">
+          <h2>
+            <span class="num">01</span>Мета роботи<a
+              class="anchor"
+              href="#s-goal"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <ul>
+            <li>Вивчити особливості циклічних обчислювальних процесів з розгалуженнями.</li>
+            <li>Опанувати технологію рекурентних обчислень.</li>
+            <li>Навчитися розробляти алгоритми та програми розвинення функцій у ряди.</li>
+          </ul>
+        </section>
+
+        <section id="s-task" data-title="§02 Умова задачі">
+          <h2>
+            <span class="num">02</span>Умова задачі<a
+              class="anchor"
+              href="#s-task"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <h3 id="s-task-1">
+            Завдання 1<a class="anchor" href="#s-task-1" aria-label="Посилання на підрозділ">#</a>
+          </h3>
+          <p>
+            Обчислити значення функції y, розвинувши функцію sin(x) у ряд Тейлора. Визначити похибку
+            обчислення (таблиця 4.2, варіант 19):
+          </p>
+          <pre class="formula">
+      | sin²(x) - sin(x),     якщо  0 &lt; x ≤ 1
+ y =  |
+      | sin³(x) + sin(2x),    якщо -2 ≤ x ≤ 0</pre>
+          <p>
+            Аргумент змінюється від заданого з клавіатури мінімального значення до максимального із
+            заданим кроком; точність розвинення вводиться з клавіатури в діапазоні 10⁻⁶...10⁻²;
+            функції обчислення факторіалу та степеня не використовувати; похибка визначається як
+            різниця абсолютних значень наближеного та стандартного обчислення функції.
+          </p>
+          <h3 id="s-task-2">
+            Завдання 2<a class="anchor" href="#s-task-2" aria-label="Посилання на підрозділ">#</a>
+          </h3>
+          <p>
+            Натуральне число із n цифр є числом Армстронга, якщо сума його цифр, піднесених до n-го
+            степеня, дорівнює самому числу (наприклад, 153 = 1³ + 5³ + 3³ = 1 + 125 + 27). Визначити
+            всі числа Армстронга, що складаються з двох, трьох та чотирьох цифр (таблиця 4.3,
+            варіант 19).
+          </p>
+        </section>
+
+        <section id="s-analysis" data-title="§03 Аналіз задачі та теоретичне обґрунтування">
+          <h2>
+            <span class="num">03</span>Аналіз задачі та теоретичне обґрунтування<a
+              class="anchor"
+              href="#s-analysis"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <h3 id="s-analysis-1">
+            Завдання 1. Розвинення sin(x) у ряд<a
+              class="anchor"
+              href="#s-analysis-1"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>
+            Ряд Маклорена (окремий випадок ряду Тейлора при розвиненні в околі нуля) для синуса:
+          </p>
+          <pre class="formula">
+sin(t) = t - t³/3! + t⁵/5! - t⁷/7! + ...
+
+загальний доданок:  a(n) = (-1)ⁿ · t^(2n+1) / (2n+1)!</pre>
+          <p>
+            Факторіал і степінь окремо обчислювати заборонено, тому доданок виражено через
+            попередній:
+          </p>
+          <pre class="formula">
+ a(n+1)                -t²
+ ──────  =  ──────────────────────
+  a(n)         (2n + 2)·(2n + 3)
+
+початковий доданок:  a(0) = t</pre>
+          <p>
+            Ряд для синуса знакозмінний, а його члени спадають за модулем починаючи з номера, де
+            <code>t²</code> стає меншим за <code>(2n+2)(2n+3)</code>: для великих аргументів
+            (наприклад, <code>sin(2x)</code> при <code>x = -2</code>, тобто <code>t = -4</code>)
+            перші члени спершу зростають. Підсумовування припиняється вже на спадній ділянці, де
+            похибка часткової суми не перевищує модуля першого відкинутого доданка, тому умова
+            "модуль доданка менший за eps" гарантує задану точність.
+          </p>
+          <p>
+            Область визначення функції - <code>[-2; 1]</code>; точка <code>x = 0</code> належить
+            другій гілці. Для аргументів поза цим проміжком програма повідомляє, що функцію не
+            визначено.
+          </p>
+          <p>
+            Поточний аргумент обчислюється як <code>xStart + steps·step</code>, а не накопиченням
+            <code>x += step</code>, щоб не накопичувати похибку додавання.
+          </p>
+          <p>
+            Таблиця результатів містить чотири колонки, передбачені умовою (значення аргументу,
+            значення функції за рядом, стандартне значення, похибка), і додаткову п'яту - кількість
+            доданків ряду для кожної точки; вона показує, як швидкість збіжності залежить від
+            аргументу, і не замінює обов'язкових колонок.
+          </p>
+          <h3 id="s-analysis-2">
+            Завдання 2. Числа Армстронга<a
+              class="anchor"
+              href="#s-analysis-2"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>Для числа з n цифр перевіряється рівність:</p>
+          <pre class="formula">
+n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ - цифри числа N</pre>
+          <p>
+            Цифри виділяються операціями <code>rest % 10</code> і <code>rest / 10</code>, степінь
+            обчислює власна функція <code>intPower()</code> послідовним множенням.
+          </p>
+          <p>
+            Бібліотечна <code>pow()</code> тут непридатна: вона повертає дійсне число, і для цілих
+            показників можливе значення виду 124,999999997, яке спотворило б порівняння.
+          </p>
+          <p>
+            Перевіряються всі числа кожної розрядності (90 + 900 + 9000), тож знайдений перелік
+            повний.
+          </p>
+          <h3 id="s-analysis-3">
+            Вибір типів даних<a
+              class="anchor"
+              href="#s-analysis-3"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>
+            Кожна змінна має найменший тип, у який гарантовано вміщується її діапазон або якого
+            досить для потрібної точності.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Змінні</th>
+                  <th>Тип</th>
+                  <th>Чому</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Завдання 1: <code>X_MIN</code>, <code>X_MAX</code>, <code>EPS_MIN</code></td>
+                  <td><code>float</code></td>
+                  <td>
+                    Межі -2 і 1 зберігаються у <code>float</code> точно; для нижньої межі точності
+                    <code>float</code> досить.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>EPS_MAX</code></td>
+                  <td><code>double</code></td>
+                  <td>
+                    У <code>float</code> <code>1e-2f</code> трохи менше за 0,01, і введене значення
+                    1e-2 відхилялося б як завелике.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>ARG_TOLERANCE</code></td>
+                  <td><code>double</code></td>
+                  <td>У <code>float</code> <code>-2 - 1e-12</code> дорівнює -2: допуск зникає.</td>
+                </tr>
+                <tr>
+                  <td>
+                    Завдання 1: <code>sum</code>, <code>term</code>, <code>t2</code>,
+                    <code>s</code>, <code>s2x</code>, <code>approx</code>, <code>exact</code>,
+                    <code>eps</code>
+                  </td>
+                  <td><code>double</code></td>
+                  <td>
+                    Сума ряду у <code>float</code> має похибку округлення порядку 10⁻⁷, сумірну із
+                    точністю 10⁻⁶. Перевірка з <code>float</code> на сітці з кроком 0,25 при eps =
+                    10⁻⁶: при x = -2 похибка 2,45·10⁻⁷ замість 1,75·10⁻⁹, тобто в колонці похибки
+                    був би шум округлення, а не похибка ряду.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>error</code>, <code>maxError</code></td>
+                  <td><code>double</code></td>
+                  <td>Похибки порядку 10⁻⁹ у <code>float</code> губляться.</td>
+                </tr>
+                <tr>
+                  <td>
+                    Завдання 1: <code>xStart</code>, <code>xEnd</code>, <code>step</code>,
+                    <code>x</code>
+                  </td>
+                  <td><code>double</code></td>
+                  <td>
+                    Перевірка з <code>float</code>: для проміжку [-2; -0,8] з кроком 0,2 остання
+                    точка -0,8 губиться (6 точок замість 7), бо похибка <code>float</code> більша за
+                    допуск 10⁻¹².
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>steps</code></td>
+                  <td><code>int</code></td>
+                  <td>
+                    Кількість кроків залежить від введених меж і кроку й нічим не обмежена, тому 16
+                    біт не гарантовано вистачить.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>n</code>, <code>terms</code>, <code>n2</code></td>
+                  <td><code>short</code></td>
+                  <td>
+                    Номер доданка не перевищує 20, тож і кількість доданків за обидва розвинення
+                    вміщується в 16 біт.
+                  </td>
+                </tr>
+                <tr>
+                  <td>Завдання 1: <code>c</code>, <code>scanned</code></td>
+                  <td><code>short</code></td>
+                  <td>
+                    Символ або <code>EOF</code> та результат <code>scanf()</code> (1, 0 або
+                    <code>EOF</code>).
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Завдання 2: числа <code>n</code>, <code>low</code>, <code>high</code>,
+                    <code>rest</code>, <code>divisor</code>
+                  </td>
+                  <td><code>short</code></td>
+                  <td>Числа не більші за 9999.</td>
+                </tr>
+                <tr>
+                  <td>
+                    Завдання 2: <code>sum</code>, <code>result</code> у <code>intPower()</code>
+                  </td>
+                  <td><code>short</code></td>
+                  <td>
+                    Степінь цифри не більший за 9⁴ = 6561, сума степенів - за 4·6561 = 26244 &lt;
+                    32767.
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    Завдання 2: <code>digits</code>, <code>digit</code>, <code>count</code>,
+                    <code>total</code>, <code>found[]</code>, <code>i</code>
+                  </td>
+                  <td><code>short</code></td>
+                  <td>Малі лічильники, цифри й знайдені числа (до 9999).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <code>long</code> у програмах не використовується. Бібліотечна <code>sin()</code> працює
+            з <code>double</code>, тож еталонні значення завдання 1 теж мають тип
+            <code>double</code>.
+          </p>
+          <p>
+            Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006",
+            2024. - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc.
+            Hoboken, New Jersey. 2017. - 3015 p.
+          </p>
+        </section>
+
+        <section id="s-flowchart" data-title="§04 Блок-схема алгоритму">
+          <h2>
+            <span class="num">04</span>Блок-схема алгоритму<a
+              class="anchor"
+              href="#s-flowchart"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <figure>
+            <img
+              src="flowcharts/task1_sinTaylor.png"
+              alt="Рисунок 1 - Блок-схема функції sinTaylor() (розвинення в ряд за рекурентним співвідношенням)"
+            />
+            <figcaption>
+              Рисунок 1 - Блок-схема функції sinTaylor() (розвинення в ряд за рекурентним
+              співвідношенням)
+            </figcaption>
+          </figure>
+          <figure>
+            <img
+              src="flowcharts/task1_algorithm.png"
+              alt="Рисунок 2 - Блок-схема головної функції main() завдання 1: табулювання функції"
+            />
+            <figcaption>
+              Рисунок 2 - Блок-схема головної функції main() завдання 1: табулювання функції
+            </figcaption>
+          </figure>
+          <figure>
+            <img
+              src="flowcharts/task2_main.png"
+              alt="Рисунок 3 - Блок-схема головної функції main() завдання 2: перебір розрядностей і виведення знайдених чисел"
+            />
+            <figcaption>
+              Рисунок 3 - Блок-схема головної функції main() завдання 2: перебір розрядностей і
+              виведення знайдених чисел
+            </figcaption>
+          </figure>
+          <figure>
+            <img
+              src="flowcharts/task2_algorithm.png"
+              alt="Рисунок 4 - Блок-схема функції scanRange() завдання 2: пошук чисел Армстронга заданої розрядності"
+            />
+            <figcaption>
+              Рисунок 4 - Блок-схема функції scanRange() завдання 2: пошук чисел Армстронга заданої
+              розрядності
+            </figcaption>
+          </figure>
+          <p>
+            HIPO-діаграма показує ієрархію викликів функцій так само, як у лекції 5: зверху головна
+            функція main, від неї стрілки ведуть до функцій, які вона викликає, нижче - функції, що
+            викликаються з них; петля біля блока означає рекурсивний виклик. Функцію, яку викликають
+            з кількох місць, розгорнуто лише там, де вона трапляється вперше, а довгі переліки
+            викликів подано стовпчиком, щоб схема вміщувалася на сторінку. Діаграму побудовано за
+            текстом програми.
+          </p>
+          <figure>
+            <img
+              src="flowcharts/hipo_task1.png"
+              alt="Рисунок 5 - HIPO-діаграма завдання 1: ієрархія викликів функцій"
+            />
+            <figcaption>Рисунок 5 - HIPO-діаграма завдання 1: ієрархія викликів функцій</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="flowcharts/hipo_task2.png"
+              alt="Рисунок 6 - HIPO-діаграма завдання 2: ієрархія викликів функцій"
+            />
+            <figcaption>Рисунок 6 - HIPO-діаграма завдання 2: ієрархія викликів функцій</figcaption>
+          </figure>
+          <p>
+            Схеми побудовано за текстами програм у rombik (<a href="https://rombik.app"
+              >rombik.app</a
+            >) відповідно до ДСТУ 19.701-90 (ISO 5807). Структура кожної схеми точно відповідає коду
+            функції, а блоки описують дії словами, як у методичних вказівках, без фрагментів коду.
+          </p>
+        </section>
+
+        <section id="s-code" data-title="§05 Текст програми">
+          <h2>
+            <span class="num">05</span>Текст програми<a
+              class="anchor"
+              href="#s-code"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <div class="tabs">
+            <div class="tmux" role="tablist" aria-label="Завдання">
+              <span class="session">[lab4]</span
+              ><button type="button" role="tab" data-task="1" aria-selected="true">0:task1.c</button
+              ><button type="button" role="tab" data-task="2" aria-selected="false">
+                1:task2.c</button
+              ><span class="host">"ishawyha@op"</span>
+            </div>
+            <div class="tabpanel" role="tabpanel" data-task="1">
+              <h3>Завдання 1 - task1.c</h3>
+              <div class="codeblock window" data-file="task1.c">
+                <div class="codebar">
+                  <span class="lang lang-c">C</span
+                  ><span class="path">~/OP_FirstCourse/Lab4/task1.c</span
+                  ><button class="btn-sm copy" type="button">Копіювати</button
+                  ><a class="btn-sm" href="task1.c" download="task1.c">Завантажити</a>
+                </div>
+                <details class="tags">
+                  <summary>$ ctags -x task1.c <span class="muted">(9 функцій)</span></summary>
+                  <ul>
+                    <li>
+                      <button type="button" data-line="77">
+                        <span class="tn">sinTaylor</span><span class="tl">77</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="119">
+                        <span class="tn">yApprox</span><span class="tl">119</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="145">
+                        <span class="tn">yExact</span><span class="tl">145</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="166">
+                        <span class="tn">inDomain</span><span class="tl">166</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="176">
+                        <span class="tn">skipLine</span><span class="tl">176</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="198">
+                        <span class="tn">restOfLineOk</span><span class="tl">198</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="234">
+                        <span class="tn">readDouble</span><span class="tl">234</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="266">
+                        <span class="tn">printTableHeader</span><span class="tl">266</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="289">
+                        <span class="tn">main</span><span class="tl">289</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                  </ul>
+                </details>
+                <div class="codeview">
+                  <pre class="gutter" aria-hidden="true">
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399</pre>
+                  <pre
+                    class="code src"
+                  ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  task1.c. Лабораторна робота №4. Завдання 1. Варіант 19.</span>
+<span class="cm">  Тема: рекурентні співвідношення, степеневі ряди.</span>
+
+<span class="cm">  Умова (таблиця 4.2, варіант 19): обчислити значення функції y, розвинувши</span>
+<span class="cm">  функцію sin(x) у ряд Тейлора. Визначити похибку обчислення.</span>
+
+<span class="cm">              | sin^2(x) - sin(x),     0 &lt; x &lt;= 1</span>
+<span class="cm">          y = |</span>
+<span class="cm">              | sin^3(x) + sin(2*x),  -2 &lt;= x &lt;= 0</span>
+
+<span class="cm">  Вимоги методичних вказівок:</span>
+<span class="cm">    - параметр функції змінюється від заданого з клавіатури мінімального</span>
+<span class="cm">      значення до максимального із заданим кроком;</span>
+<span class="cm">    - точність розвинення вводиться з клавіатури в діапазоні 1e-2 ... 1e-6;</span>
+<span class="cm">    - для розвинення створити власну функцію, що обчислює суму ряду за</span>
+<span class="cm">      рекурентним співвідношенням;</span>
+<span class="cm">    - функції обчислення факторіалу та степеня НЕ використовувати;</span>
+<span class="cm">    - похибка - різниця абсолютних значень наближеного та стандартного</span>
+<span class="cm">      обчислення функції;</span>
+<span class="cm">    - стандартне значення обчислювати бібліотечною функцією.</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ctype.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
+
+<span class="cm">/* Межі області визначення функції за умовою варіанта. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">X_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-2.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//ліва межа області визначення</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">X_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">;</span><span class="w">  </span><span class="c1">//права межа області визначення</span>
+
+<span class="cm">/* Межі припустимої точності розвинення за умовою варіанта. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6f</span><span class="p">;</span><span class="w"> </span><span class="c1">//найменша припустима точність</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">EPS_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-2</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float 1e-2f &lt; 0.01, уведене 1e-2 відхилялося б</span>
+
+<span class="cm">/* Допуск порівняння аргументу з межами, щоб точки на межі не відкидались</span>
+<span class="cm">   через похибку округлення. */</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float -2 - 1e-12 = -2, допуск зникає</span>
+
+<span class="c1">//=============== sinTaylor: обчислити sin(t) розвиненням у ряд Тейлора ================</span>
+<span class="cm">/*</span>
+<span class="cm">  sinTaylor - обчислити sin(t) розвиненням у ряд Тейлора (ряд Маклорена).</span>
+
+<span class="cm">  Ряд:  sin(t) = t - t^3/3! + t^5/5! - t^7/7! + ...</span>
+
+<span class="cm">  Рекурентне співвідношення. Позначимо a(n) - доданок з номером n (n = 0, 1, 2...):</span>
+<span class="cm">        a(n) = (-1)^n * t^(2n+1) / (2n+1)!</span>
+<span class="cm">  Тоді</span>
+<span class="cm">        a(n+1)             -t^2</span>
+<span class="cm">        ------  =  ------------------------</span>
+<span class="cm">         a(n)        (2n+2) * (2n+3)</span>
+<span class="cm">  Початковий доданок a(0) = t.</span>
+
+<span class="cm">  Отже ані факторіал, ані піднесення до степеня окремо не обчислюються:</span>
+<span class="cm">  кожен наступний доданок отримується з попереднього сталою кількістю</span>
+<span class="cm">  множень і одним діленням, незалежно від номера доданка.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      t     [вхідний]  - аргумент синуса;</span>
+<span class="cm">      eps   [вхідний]  - точність: підсумовування триває, доки модуль</span>
+<span class="cm">                         доданка не стане меншим за eps;</span>
+<span class="cm">      terms [вихідний] - адреса лічильника доданків ряду.</span>
+
+<span class="cm">  Повертає: наближене значення sin(t).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      sum  - накопичувана сума ряду;</span>
+<span class="cm">      term - поточний доданок ряду a(n);</span>
+<span class="cm">      n    - номер поточного доданка; кількість доданків дорівнює n + 1;</span>
+<span class="cm">      t2   - квадрат аргументу (обчислюється один раз).</span>
+<span class="cm">*/</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">sinTaylor</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">  </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//номер поточного доданка (не більше 20)</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати, доки доданок не менший eps</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Рекурентний перехід a(n) -&gt; a(n+1). */</span>
+<span class="w">        </span><span class="c1">//обчислити наступний доданок</span>
+<span class="w">        </span><span class="n">term</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="o">-</span><span class="n">t2</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">((</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3.0</span><span class="p">));</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">term</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичити суму ряду</span>
+<span class="w">        </span><span class="o">++</span><span class="n">n</span><span class="p">;</span><span class="w">         </span><span class="c1">//перейти до наступного номера</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//зберегти кількість доданків</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути суму ряду</span>
+<span class="p">}</span>
+
+<span class="c1">//====== yApprox: обчислити значення кусково-заданої функції y(x), використовуючи ======</span>
+<span class="cm">/*</span>
+<span class="cm">  yApprox - обчислити значення кусково-заданої функції y(x), використовуючи</span>
+<span class="cm">            наближене (рядом Тейлора) значення синуса.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      x     [вхідний]  - аргумент функції;</span>
+<span class="cm">      eps   [вхідний]  - точність розвинення в ряд;</span>
+<span class="cm">      terms [вихідний] - адреса лічильника доданків ряду (сумарно за виклик).</span>
+
+<span class="cm">  Повертає: значення y(x).</span>
+
+<span class="cm">  Передумова: x належить області визначення [-2; 1]; перевірку виконує</span>
+<span class="cm">              функція inDomain() перед викликом.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      s   - наближене значення sin(x);</span>
+<span class="cm">      s2x - наближене значення sin(2x);</span>
+<span class="cm">      n2  - кількість доданків розвинення sin(2x).</span>
+<span class="cm">*/</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">yApprox</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо аргумент додатний</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cm">/* Гілка 0 &lt; x &lt;= 1:  y = sin^2(x) - sin(x) */</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w">                          </span><span class="c1">//повернути значення першої гілки</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* Гілка -2 &lt;= x &lt;= 0:  y = sin^3(x) + sin(2x) */</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків розвинення sin(2x)</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w">       </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s2x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n2</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">n2</span><span class="p">;</span><span class="w">                                    </span><span class="c1">//додати доданки розвинення sin(2x)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s2x</span><span class="p">;</span><span class="w">                          </span><span class="c1">//повернути значення другої гілки</span>
+<span class="p">}</span>
+
+<span class="c1">//====== yExact: обчислити те саме значення y(x) через бібліотечну функцію sin() =======</span>
+<span class="cm">/*</span>
+<span class="cm">  yExact - обчислити те саме значення y(x) через бібліотечну функцію sin().</span>
+<span class="cm">           Використовується як еталон для визначення похибки.</span>
+
+<span class="cm">  Параметри: x [вхідний] - аргумент функції.</span>
+<span class="cm">  Повертає : значення y(x), обчислене стандартними засобами.</span>
+<span class="cm">*/</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">yExact</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо аргумент додатний</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w">        </span><span class="c1">//повернути значення першої гілки</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">         </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути значення другої гілки</span>
+<span class="p">}</span>
+
+<span class="c1">//========= inDomain: чи належить аргумент області визначення функції [-2; 1] ==========</span>
+<span class="cm">/*</span>
+<span class="cm">  inDomain - чи належить аргумент області визначення функції [-2; 1].</span>
+
+<span class="cm">  Параметри: x [вхідний] - аргумент функції.</span>
+<span class="cm">  Повертає : true - функцію визначено в точці x.</span>
+
+<span class="cm">  Порівняння виконується з невеликим допуском, щоб точки на межі діапазону</span>
+<span class="cm">  не відкидались через похибку округлення при обчисленні аргументу.</span>
+<span class="cm">*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">inDomain</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">//перевірити належність до [-2; 1]</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">X_MIN</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">X_MAX</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========</span>
+<span class="cm">/*</span>
+<span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
+<span class="cm">*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ (символ або EOF)</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати до кінця рядка</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//======= restOfLineOk: перевірити залишок рядка після успішно прочитаного числа =======</span>
+<span class="cm">/*</span>
+<span class="cm">  restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.</span>
+
+<span class="cm">  Припустимі лише пропуски до кінця рядка або до наступного числа; інший</span>
+<span class="cm">  символ (наприклад, "0.5abc") - помилка, і решта рядка відкидається.</span>
+
+<span class="cm">  Повертає : true - залишок рядка коректний; false - у рядку є сторонні символи.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      c - черговий прочитаний символ.</span>
+<span class="cm">*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ (символ або EOF)</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span><span class="w"> </span><span class="c1">//пропускати пробільні символи</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо рядок закінчився</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку коректного рядка</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо далі починається число</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути символ у потік</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути ознаку коректного рядка</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span><span class="w">   </span><span class="c1">//відкинути решту рядка</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
+<span class="p">}</span>
+
+<span class="c1">//======== readDouble: прочитати скінченне дійсне число з контролем коректності ========</span>
+<span class="cm">/*</span>
+<span class="cm">  readDouble - прочитати скінченне дійсне число з контролем коректності</span>
+<span class="cm">               введення (не число, "inf", "nan", сторонні символи після числа</span>
+<span class="cm">               відхиляються).</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      prompt [вхідний]  - текст запрошення;</span>
+<span class="cm">      value  [вихідний] - адреса змінної для введеного числа.</span>
+<span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      scanned - результат scanf(): 1 - число прочитано, 0 - не число,</span>
+<span class="cm">                EOF - вхідні дані вичерпано.</span>
+<span class="cm">*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readDouble</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                      </span><span class="c1">//вивести запрошення</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//увести число (1, 0 або EOF)</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку вичерпання</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">//якщо число коректне й скінченне</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isfinite</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку успіху</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо введено не число</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="c1">//відкинути некоректний рядок</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">//вивести повідомлення про помилку</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: очікується дійсне число. Повторіть.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//============ printTableHeader: вивести заголовок таблиці значень функції =============</span>
+<span class="cm">/*</span>
+<span class="cm">  printTableHeader - вивести заголовок таблиці значень функції: аргумент,</span>
+<span class="cm">                     наближене та стандартне значення, похибка, доданки ряду.</span>
+<span class="cm">*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printTableHeader</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"           x |    y (ряд Тейлора) |    y (бібліотечна) |"</span>
+<span class="w">           </span><span class="s">"        похибка | доданків</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести заголовок таблиці</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  -----------+--------------------+--------------------"</span>
+<span class="w">           </span><span class="s">"+----------------+---------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести розділювальну лінію</span>
+<span class="p">}</span>
+
+<span class="c1">//================================ головна функція main ================================</span>
+<span class="cm">/*</span>
+<span class="cm">  Головна функція. Читає межі та крок зміни аргументу, точність розвинення,</span>
+<span class="cm">  табулює функцію і виводить таблицю значень з похибками.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      xStart, xEnd, step - межі та крок зміни аргументу;</span>
+<span class="cm">      eps                - точність розвинення в ряд;</span>
+<span class="cm">      x                  - поточне значення аргументу;</span>
+<span class="cm">      approx, exact      - наближене та еталонне значення функції;</span>
+<span class="cm">      error              - похибка обчислення;</span>
+<span class="cm">      terms              - кількість доданків ряду;</span>
+<span class="cm">      steps              - номер поточного кроку табулювання;</span>
+<span class="cm">      maxError           - найбільша похибка за всю таблицю.</span>
+<span class="cm">*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №4, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести виконавця</span>
+<span class="w">    </span><span class="c1">//вивести назву завдання</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Обчислення y(x) з розвиненням sin(x) у ряд Тейлора</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести першу гілку функції</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    y = sin^2(x) - sin(x),    якщо  0 &lt; x &lt;= 1</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести другу гілку функції</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Область визначення: [-2; 1].</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести область визначення</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xStart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xEnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">    </span><span class="c1">//double: точність до 1e-6</span>
+
+<span class="w">    </span><span class="c1">//якщо межі аргументу не прочитано</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть початкове значення аргументу: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">xStart</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
+<span class="w">        </span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть кінцеве значення аргументу:   "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">xEnd</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="c1">//повторювати введення кроку</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//якщо крок не прочитано</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть крок зміни аргументу (&gt; 0): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">step</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">step</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо крок недодатний</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">//вивести повідомлення про помилку</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: крок має бути додатним.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">step</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">);</span><span class="w"> </span><span class="c1">//повторювати, доки крок недодатний</span>
+
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="c1">//повторювати введення точності</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//якщо точність не прочитано</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть точність (від 1e-6 до 1e-2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">eps</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="cm">/* Умова записана через заперечення, щоб значення поза діапазоном</span>
+<span class="cm">           (зокрема NaN, для якого будь-яке порівняння хибне) не проходили. */</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">eps</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">EPS_MAX</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо точність поза діапазоном</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: точність має бути в діапазоні %g ... %g.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">EPS_MAX</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести повідомлення про помилку</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">eps</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">EPS_MAX</span><span class="p">));</span><span class="w"> </span><span class="c1">//повторювати до коректної точності</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">xStart</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">xEnd</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо початок більший за кінець</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//вивести повідомлення про порожню таблицю</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Початкове значення більше за кінцеве - таблиця порожня.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом порожньої таблиці</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Точність розвинення: %.1e</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести задану точність</span>
+<span class="w">    </span><span class="n">printTableHeader</span><span class="p">();</span><span class="w">                             </span><span class="c1">//вивести заголовок таблиці</span>
+
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">maxError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибки порядку 1e-9 у float губляться</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//номер поточного кроку (кількість кроків не обмежена)</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xStart</span><span class="p">;</span><span class="w">     </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+
+<span class="w">    </span><span class="cm">/* Цикл табулювання. Аргумент обчислюється через лічильник кроків замість</span>
+<span class="cm">       накопичення x += step, щоб похибка додавання не накопичувалась від кроку</span>
+<span class="cm">       до кроку. */</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">xEnd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати аргументи до кінця діапазону</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">inDomain</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо аргумент поза областю визначення</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">//вивести повідомлення про невизначеність</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %10.4f | %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span>
+<span class="w">                   </span><span class="s">"функцію не визначено (аргумент поза межами [-2; 1])"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="c1">//інакше обчислити значення функції</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="kt">short</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків ряду</span>
+<span class="w">            </span><span class="c1">//double: похибка float ~1e-7 перевищує саму похибку ряду</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">approx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yApprox</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">);</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">exact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yExact</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
+
+<span class="w">            </span><span class="cm">/* Похибка за умовою варіанта - різниця абсолютних значень</span>
+<span class="cm">               наближеного та стандартного обчислення функції. */</span>
+<span class="w">            </span><span class="c1">//double: похибки порядку 1e-9 у float губляться</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">approx</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">exact</span><span class="p">));</span>
+
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxError</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо похибка більша за найбільшу</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">maxError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">;</span><span class="w"> </span><span class="c1">//запам'ятати найбільшу похибку</span>
+<span class="w">            </span><span class="p">}</span>
+
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %10.4f | %18.12f | %18.12f | %14.3e | %8hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">approx</span><span class="p">,</span><span class="w"> </span><span class="n">exact</span><span class="p">,</span>
+<span class="w">                   </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести рядок таблиці</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="o">++</span><span class="n">steps</span><span class="p">;</span><span class="w">                   </span><span class="c1">//збільшити номер кроку</span>
+<span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xStart</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">step</span><span class="p">;</span><span class="w"> </span><span class="c1">//обчислити наступний аргумент</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Оброблено точок: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">steps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести кількість точок</span>
+<span class="w">    </span><span class="c1">//вивести найбільшу похибку</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Найбільша похибка за таблицею: %.3e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">maxError</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Задана точність розвинення:    %.3e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести задану точність</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити програму успішно</span>
+<span class="p">}</span>
+</code></pre>
+                </div>
+                <div class="statusline">
+                  <span class="mode">NORMAL</span><span class="file">task1.c</span
+                  ><span class="info">utf-8 · LF · C17 · 399L</span>
+                </div>
+              </div>
+            </div>
+            <div class="tabpanel" role="tabpanel" data-task="2">
+              <h3>Завдання 2 - task2.c</h3>
+              <div class="codeblock window" data-file="task2.c">
+                <div class="codebar">
+                  <span class="lang lang-c">C</span
+                  ><span class="path">~/OP_FirstCourse/Lab4/task2.c</span
+                  ><button class="btn-sm copy" type="button">Копіювати</button
+                  ><a class="btn-sm" href="task2.c" download="task2.c">Завантажити</a>
+                </div>
+                <details class="tags">
+                  <summary>$ ctags -x task2.c <span class="muted">(8 функцій)</span></summary>
+                  <ul>
+                    <li>
+                      <button type="button" data-line="52">
+                        <span class="tn">intPower</span><span class="tl">52</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="75">
+                        <span class="tn">digitCount</span><span class="tl">75</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="103">
+                        <span class="tn">isArmstrong</span><span class="tl">103</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="137">
+                        <span class="tn">printDigitTerms</span><span class="tl">137</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="174">
+                        <span class="tn">printExpansion</span><span class="tl">174</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="193">
+                        <span class="tn">digitRange</span><span class="tl">193</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="215">
+                        <span class="tn">scanRange</span><span class="tl">215</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" data-line="248">
+                        <span class="tn">main</span><span class="tl">248</span
+                        ><span class="tk">f</span>
+                      </button>
+                    </li>
+                  </ul>
+                </details>
+                <div class="codeview">
+                  <pre class="gutter" aria-hidden="true">
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298</pre>
+                  <pre
+                    class="code src"
+                  ><code><span class="cm">/*==============================================================================</span>
+<span class="cm">  task2.c. Лабораторна робота №4. Завдання 2. Варіант 19.</span>
+<span class="cm">  Тема: цикли з розгалуженням, комбінаторні задачі.</span>
+
+<span class="cm">  Умова (таблиця 4.3, варіант 19): натуральне число із n цифр є числом</span>
+<span class="cm">  Армстронга, якщо сума його цифр, піднесених до n-го степеня, дорівнює</span>
+<span class="cm">  самому числу (наприклад, 153 = 1^3 + 5^3 + 3^3 = 1 + 125 + 27).</span>
+<span class="cm">  Визначити всі числа Армстронга, що складаються з двох, трьох та</span>
+<span class="cm">  чотирьох цифр.</span>
+
+<span class="cm">  Степінь обчислюється за рекурентним співвідношенням (послідовним</span>
+<span class="cm">  множенням у цілій арифметиці), без бібліотечної функції pow().</span>
+
+<span class="cm">  Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.</span>
+
+<span class="cm">  Компілятор: gcc -std=c17</span>
+<span class="cm">==============================================================================*/</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+
+<span class="cm">/* Розмір масиву для знайдених чисел однієї розрядності. Чисел Армстронга</span>
+<span class="cm">   з двох, трьох і чотирьох цифр відповідно 0, 4 і 3. Межа масиву в мові C має</span>
+<span class="cm">   бути сталим виразом часу компіляції, а змінна з модифікатором const ним не є,</span>
+<span class="cm">   тому розмір задано константою переліку. */</span>
+<span class="k">enum</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">MAX_FOUND</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="c1">//розмір масиву знайдених чисел</span>
+<span class="p">};</span>
+
+<span class="c1">//=============== intPower: піднести ціле число до натурального степеня ================</span>
+<span class="cm">/*</span>
+<span class="cm">  intPower - піднести ціле число до натурального степеня.</span>
+
+<span class="cm">  Реалізує рекурентне співвідношення  p(0) = 1,  p(i) = p(i-1) * base,</span>
+<span class="cm">  тобто степінь накопичується послідовним множенням. Бібліотечна функція</span>
+<span class="cm">  pow() не використовується: вона працює з дійсними числами і для цілих</span>
+<span class="cm">  показників може давати результат виду 124.9999999, який після</span>
+<span class="cm">  перетворення до цілого типу (відкидання дробової частини) дав би 124</span>
+<span class="cm">  замість 125 і спотворив би порівняння.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      base [вхідний] - основа степеня (цифра числа, 0..9);</span>
+<span class="cm">      exp  [вхідний] - показник степеня (кількість цифр числа, 2..4).</span>
+
+<span class="cm">  Повертає: значення base у степені exp (не більше 9^4 = 6561).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      result - накопичуване значення степеня;</span>
+<span class="cm">      i      - лічильник множень.</span>
+<span class="cm">*/</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">intPower</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">exp</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичуване значення степеня (не більше 6561)</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">exp</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторити множення exp разів</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="c1">//помножити на основу</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути степінь</span>
+<span class="p">}</span>
+
+<span class="c1">//=============== digitCount: кількість цифр у десятковому записі числа ================</span>
+<span class="cm">/*</span>
+<span class="cm">  digitCount - кількість цифр у десятковому записі числа.</span>
+
+<span class="cm">  Параметри: n [вхідний] - натуральне число (не більше 9999); у процесі</span>
+<span class="cm">                           підрахунку від нього відкидаються цифри.</span>
+<span class="cm">  Повертає : кількість цифр (для n = 0 повертає 1).</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      count - лічильник цифр.</span>
+<span class="cm">*/</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">digitCount</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник цифр</span>
+
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="c1">//повторювати відкидання цифр</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//збільшити лічильник цифр</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//відкинути молодшу цифру</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">//повторювати, доки лишились цифри</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути кількість цифр</span>
+<span class="p">}</span>
+
+<span class="c1">//===================== isArmstrong: чи є число числом Армстронга ======================</span>
+<span class="cm">/*</span>
+<span class="cm">  isArmstrong - чи є число числом Армстронга.</span>
+
+<span class="cm">  Параметри: n [вхідний] - число, що перевіряється.</span>
+
+<span class="cm">  Повертає: true - сума цифр, піднесених до степеня, що дорівнює кількості</span>
+<span class="cm">            цифр числа, збігається із самим числом.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      digits - кількість цифр числа;</span>
+<span class="cm">      sum    - накопичувана сума степенів цифр;</span>
+<span class="cm">      rest   - залишок числа, що ще не оброблено;</span>
+<span class="cm">      digit  - чергова цифра числа.</span>
+<span class="cm">*/</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isArmstrong</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
+
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//сума степенів цифр (не більше 4 * 6561 = 26244)</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//залишок необробленого числа</span>
+
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри числа</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">  </span><span class="c1">//виділити молодшу цифру</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">);</span><span class="w"> </span><span class="c1">//накопичити степінь цифри</span>
+<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">                     </span><span class="c1">//відкинути молодшу цифру</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути результат порівняння</span>
+<span class="p">}</span>
+
+<span class="c1">//====== printDigitTerms: вивести доданки розкладу числа через " + ", від старшої ======</span>
+<span class="cm">/*</span>
+<span class="cm">  printDigitTerms - вивести доданки розкладу числа через " + ", від старшої</span>
+<span class="cm">                    цифри до молодшої: або у вигляді степенів (1^3 + 5^3 + 3^3),</span>
+<span class="cm">                    або їх значеннями (1 + 125 + 27).</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      n        [вхідний] - число (не більше 9999); у процесі виведення від</span>
+<span class="cm">                           нього відкидаються старші цифри;</span>
+<span class="cm">      asPowers [вхідний] - true: степені; false: значення степенів.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      digits  - кількість цифр числа;</span>
+<span class="cm">      divisor - дільник для виділення старшої цифри;</span>
+<span class="cm">      i       - номер розряду;</span>
+<span class="cm">      digit   - чергова цифра.</span>
+<span class="cm">*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printDigitTerms</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">asPowers</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
+
+<span class="w">    </span><span class="cm">/* Найстарший розряд: 10^(digits-1). */</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">divisor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити дільник старшого розряду</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">digits</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розряди від старшого</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w"> </span><span class="c1">//виділити старшу цифру</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">asPowers</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо потрібні степені</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%hd^%hd"</span><span class="p">,</span><span class="w"> </span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести цифру у степені</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="c1">//інакше вивести значення степенів</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%hd"</span><span class="p">,</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">));</span><span class="w"> </span><span class="c1">//вивести значення степеня</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо розряд не останній</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">" + "</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести знак плюс</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">%=</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w">  </span><span class="c1">//відкинути старшу цифру</span>
+<span class="w">        </span><span class="n">divisor</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//перейти до молодшого розряду</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">//====== printExpansion: вивести розклад числа Армстронга у вигляді суми степенів ======</span>
+<span class="cm">/*</span>
+<span class="cm">  printExpansion - вивести розклад числа Армстронга у вигляді суми степенів</span>
+<span class="cm">                   окремим рядком з відступом.</span>
+<span class="cm">                   Наприклад: 153 = 1^3 + 5^3 + 3^3 = 1 + 125 + 27</span>
+
+<span class="cm">  Параметри: n [вхідний] - число Армстронга.</span>
+<span class="cm">*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printExpansion</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %hd = "</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">     </span><span class="c1">//вивести число</span>
+<span class="w">    </span><span class="n">printDigitTerms</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести суму степенів</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">" = "</span><span class="p">);</span><span class="w">             </span><span class="c1">//вивести знак рівності</span>
+<span class="w">    </span><span class="n">printDigitTerms</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести значення степенів</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">              </span><span class="c1">//завершити рядок</span>
+<span class="p">}</span>
+
+<span class="c1">//==== digitRange: визначити межі діапазону натуральних чисел із заданою кількістю =====</span>
+<span class="cm">/*</span>
+<span class="cm">  digitRange - визначити межі діапазону натуральних чисел із заданою кількістю</span>
+<span class="cm">               цифр: від 10^(digits-1) до 10^digits - 1.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      digits [вхідний]  - кількість цифр (2, 3 або 4);</span>
+<span class="cm">      low    [вихідний] - адреса для найменшого числа (10, 100, 1000);</span>
+<span class="cm">      high   [вихідний] - адреса для найбільшого числа (99, 999, 9999).</span>
+<span class="cm">*/</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">digitRange</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">high</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="o">*</span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити найменше число</span>
+<span class="w">    </span><span class="o">*</span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">low</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">           </span><span class="c1">//обчислити найбільше число</span>
+<span class="p">}</span>
+
+<span class="c1">//======= scanRange: перебрати всі числа заданої розрядності й зібрати знайдені ========</span>
+<span class="cm">/*</span>
+<span class="cm">  scanRange - перебрати всі числа заданої розрядності й зібрати знайдені</span>
+<span class="cm">              числа Армстронга до масиву.</span>
+
+<span class="cm">  Параметри:</span>
+<span class="cm">      digits   [вхідний]  - кількість цифр (2, 3 або 4);</span>
+<span class="cm">      found    [вихідний] - масив для знайдених чисел;</span>
+<span class="cm">      capacity [вхідний]  - розмір масиву found.</span>
+<span class="cm">  Повертає : кількість знайдених чисел Армстронга.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      low, high - межі діапазону чисел заданої розрядності;</span>
+<span class="cm">      count     - лічильник знайдених чисел;</span>
+<span class="cm">      n         - число, що перевіряється.</span>
+<span class="cm">*/</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">scanRange</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">found</span><span class="p">[],</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">capacity</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//нижня межа діапазону</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//верхня межа діапазону</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник знайдених чисел</span>
+
+<span class="w">    </span><span class="n">digitRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//визначити межі діапазону</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="p">;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">capacity</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати числа діапазону</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isArmstrong</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо число Армстронга</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">found</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//зберегти знайдене число</span>
+<span class="w">            </span><span class="o">++</span><span class="n">count</span><span class="p">;</span><span class="w">          </span><span class="c1">//збільшити лічильник знайдених</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути кількість знайдених</span>
+<span class="p">}</span>
+
+<span class="c1">//================================ головна функція main ================================</span>
+<span class="cm">/*</span>
+<span class="cm">  Головна функція. Послідовно перебирає двоцифрові, трицифрові та</span>
+<span class="cm">  чотирицифрові числа й виводить знайдені числа Армстронга.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      total     - загальна кількість знайдених чисел;</span>
+<span class="cm">      digits    - поточна розрядність;</span>
+<span class="cm">      low, high - межі діапазону чисел поточної розрядності;</span>
+<span class="cm">      found     - знайдені числа поточної розрядності;</span>
+<span class="cm">      count     - їх кількість;</span>
+<span class="cm">      i         - номер знайденого числа.</span>
+<span class="cm">*/</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №4, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести виконавця</span>
+<span class="w">    </span><span class="c1">//вивести назву завдання</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Пошук чисел Армстронга з двох, трьох та чотирьох цифр</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести означення числа Армстронга</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Число з n цифр є числом Армстронга, якщо сума його цифр,</span><span class="se">\n</span><span class="s">"</span>
+<span class="w">           </span><span class="s">"піднесених до n-го степеня, дорівнює самому числу.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//загальна кількість знайдених чисел</span>
+
+<span class="w">    </span><span class="cm">/* За умовою перевіряються числа з двох, трьох та чотирьох цифр. */</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розрядності від 2 до 4</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//нижня межа діапазону</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//верхня межа діапазону</span>
+
+<span class="w">        </span><span class="n">digitRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//визначити межі діапазону</span>
+
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Числа Армстронга з %hd цифр (діапазон %hd..%hd) ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span>
+<span class="w">               </span><span class="n">low</span><span class="p">,</span>
+<span class="w">               </span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести заголовок розрядності</span>
+
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">found</span><span class="p">[</span><span class="n">MAX_FOUND</span><span class="p">];</span><span class="w"> </span><span class="c1">//знайдені числа поточної розрядності</span>
+<span class="w">        </span><span class="c1">//знайти числа Армстронга</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_FOUND</span><span class="p">);</span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати знайдені числа</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">printExpansion</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"> </span><span class="c1">//вивести розклад числа</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо чисел не знайдено</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">//вивести повідомлення про відсутність</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  чисел Армстронга цієї розрядності не існує</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">//вивести кількість перевірених і знайдених</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Перевірено чисел: %d, знайдено: %hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+<span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичити загальну кількість</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">//вивести роздільну лінію</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести загальну кількість</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Усього знайдено чисел Армстронга: %hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити програму успішно</span>
+<span class="p">}</span>
+</code></pre>
+                </div>
+                <div class="statusline">
+                  <span class="mode">NORMAL</span><span class="file">task2.c</span
+                  ><span class="info">utf-8 · LF · C17 · 298L</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="s-results" data-title="§06 Результати виконання роботи">
+          <h2>
+            <span class="num">06</span>Результати виконання роботи<a
+              class="anchor"
+              href="#s-results"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <p>
+            Компіляція: <code>make</code> (<code>gcc -std=c17</code>, прапорці
+            <code>-Wall -Wextra -pedantic -O2</code>). Попереджень компілятора немає.
+          </p>
+          <p>
+            Нижче наведено екранні копії повних прогонів програм: кожна починається з запуску
+            програми, містить усе введення з клавіатури й увесь вивід до завершення роботи. Прогін,
+            що не вміщується на один екран, подано кількома послідовними частинами. Протоколи всіх
+            прогонів, зокрема додаткових наборів вхідних даних, винесено окремими файлами за
+            посиланнями.
+          </p>
+          <div class="tabs">
+            <div class="tmux" role="tablist" aria-label="Завдання">
+              <span class="session">[lab4]</span
+              ><button type="button" role="tab" data-task="1" aria-selected="true">0:task1</button
+              ><button type="button" role="tab" data-task="2" aria-selected="false">1:task2</button
+              ><span class="host">"ishawyha@op"</span>
+            </div>
+            <div class="tabpanel" role="tabpanel" data-task="1">
+              <figure>
+                <img
+                  src="results/shot_task1_1.png"
+                  alt="Екранна копія 1 - завдання 1: табулювання функції на [-2; 1] з кроком 0,25 при точності 10⁻⁶"
+                />
+                <figcaption>
+                  Екранна копія 1 - завдання 1: табулювання функції на [-2; 1] з кроком 0,25 при
+                  точності 10⁻⁶
+                </figcaption>
+              </figure>
+              <details class="window term proto">
+                <summary class="codebar">
+                  <span class="lang lang-sh">sh</span
+                  ><span class="path">./bin/task1 - протокол: 4 прогонів, 140 рядків</span
+                  ><span class="btn-sm more"
+                    ><span class="closed">Розгорнути</span
+                    ><span class="opened">Згорнути</span></span
+                  >
+                </summary>
+                <pre><code><span class="pu">ishawyha@op</span>:<span class="pd">~/OP_FirstCourse/Lab4</span><span class="ps">$</span> ./bin/task1   <span class="cm"># [-2; 1], крок 0.25, точність 1e-6</span>
+Лабораторна робота №4, завдання 1 (варіант 19)
+Виконав: студент групи ІПЗ-11 Одарчук Олексій
+Обчислення y(x) з розвиненням sin(x) у ряд Тейлора
+
+    y = sin^2(x) - sin(x),    якщо  0 &lt; x &lt;= 1
+    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0
+
+Область визначення: [-2; 1].
+
+Уведіть початкове значення аргументу: -2
+Уведіть кінцеве значення аргументу:   1
+Уведіть крок зміни аргументу (&gt; 0): 0.25
+Уведіть точність (від 1e-6 до 1e-2): 1e-6
+
+Точність розвинення: 1.0e-06
+
+           x |    y (ряд Тейлора) |    y (бібліотечна) |        похибка | доданків
+  -----------+--------------------+--------------------+----------------+---------
+     -2.0000 |     0.004975548891 |     0.004975550639 |      1.748e-09 |       19
+     -1.7500 |    -0.601939860445 |    -0.601939855822 |      4.622e-09 |       17
+     -1.5000 |    -1.133623787774 |    -1.133623777429 |      1.034e-08 |       16
+     -1.2500 |    -1.453100914402 |    -1.453100938306 |      2.390e-08 |       14
+     -1.0000 |    -1.505120662713 |    -1.505120663417 |      7.037e-10 |       14
+     -0.7500 |    -1.314205759201 |    -1.314205757400 |      1.802e-09 |       12
+     -0.5000 |    -0.951666391959 |    -0.951666392110 |      1.514e-10 |       11
+     -0.2500 |    -0.494568818050 |    -0.494568818039 |      1.028e-11 |        9
+      0.0000 |     0.000000000000 |     0.000000000000 |      0.000e+00 |        2
+      0.2500 |    -0.186195240194 |    -0.186195240200 |      5.308e-12 |        4
+      0.5000 |    -0.249576691539 |    -0.249576691538 |      5.025e-13 |        5
+      0.7500 |    -0.217007360474 |    -0.217007360857 |      3.830e-10 |        5
+      1.0000 |    -0.133397566643 |    -0.133397566534 |      1.092e-10 |        6
+
+Оброблено точок: 13
+Найбільша похибка за таблицею: 2.390e-08
+Задана точність розвинення:    1.000e-06
+
+
+<span class="pu">ishawyha@op</span>:<span class="pd">~/OP_FirstCourse/Lab4</span><span class="ps">$</span> ./bin/task1   <span class="cm"># [-2; 1], крок 0.25, точність 1e-4</span>
+Лабораторна робота №4, завдання 1 (варіант 19)
+Виконав: студент групи ІПЗ-11 Одарчук Олексій
+Обчислення y(x) з розвиненням sin(x) у ряд Тейлора
+
+    y = sin^2(x) - sin(x),    якщо  0 &lt; x &lt;= 1
+    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0
+
+Область визначення: [-2; 1].
+
+Уведіть початкове значення аргументу: -2
+Уведіть кінцеве значення аргументу:   1
+Уведіть крок зміни аргументу (&gt; 0): 0.25
+Уведіть точність (від 1e-6 до 1e-2): 1e-4
+
+Точність розвинення: 1.0e-04
+
+           x |    y (ряд Тейлора) |    y (бібліотечна) |        похибка | доданків
+  -----------+--------------------+--------------------+----------------+---------
+     -2.0000 |     0.004976576336 |     0.004975550639 |      1.026e-06 |       15
+     -1.7500 |    -0.601939365713 |    -0.601939855822 |      4.901e-07 |       15
+     -1.5000 |    -1.133623331409 |    -1.133623777429 |      4.460e-07 |       14
+     -1.2500 |    -1.453102414542 |    -1.453100938306 |      1.476e-06 |       12
+     -1.0000 |    -1.505119425430 |    -1.505120663417 |      1.238e-06 |       11
+     -0.7500 |    -1.314205439532 |    -1.314205757400 |      3.179e-07 |       10
+     -0.5000 |    -0.951666413299 |    -0.951666392110 |      2.119e-08 |        9
+     -0.2500 |    -0.494568814891 |    -0.494568818039 |      3.148e-09 |        7
+      0.0000 |     0.000000000000 |     0.000000000000 |      0.000e+00 |        2
+      0.2500 |    -0.186195246312 |    -0.186195240200 |      6.113e-09 |        3
+      0.5000 |    -0.249576691317 |    -0.249576691538 |      2.210e-10 |        4
+      0.7500 |    -0.217007435641 |    -0.217007360857 |      7.478e-08 |        4
+      1.0000 |    -0.133397549534 |    -0.133397566534 |      1.700e-08 |        5
+
+Оброблено точок: 13
+Найбільша похибка за таблицею: 1.476e-06
+Задана точність розвинення:    1.000e-04
+
+
+<span class="pu">ishawyha@op</span>:<span class="pd">~/OP_FirstCourse/Lab4</span><span class="ps">$</span> ./bin/task1   <span class="cm"># [-2; 1], крок 0.25, точність 1e-2</span>
+Лабораторна робота №4, завдання 1 (варіант 19)
+Виконав: студент групи ІПЗ-11 Одарчук Олексій
+Обчислення y(x) з розвиненням sin(x) у ряд Тейлора
+
+    y = sin^2(x) - sin(x),    якщо  0 &lt; x &lt;= 1
+    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0
+
+Область визначення: [-2; 1].
+
+Уведіть початкове значення аргументу: -2
+Уведіть кінцеве значення аргументу:   1
+Уведіть крок зміни аргументу (&gt; 0): 0.25
+Уведіть точність (від 1e-6 до 1e-2): 1e-2
+
+Точність розвинення: 1.0e-02
+
+           x |    y (ряд Тейлора) |    y (бібліотечна) |        похибка | доданків
+  -----------+--------------------+--------------------+----------------+---------
+     -2.0000 |     0.004897605444 |     0.004975550639 |      7.795e-05 |       13
+     -1.7500 |    -0.600847786775 |    -0.601939855822 |      1.092e-03 |       11
+     -1.5000 |    -1.133068543285 |    -1.133623777429 |      5.552e-04 |       10
+     -1.2500 |    -1.453023014780 |    -1.453100938306 |      7.792e-05 |       10
+     -1.0000 |    -1.505586447310 |    -1.505120663417 |      4.658e-04 |        8
+     -0.7500 |    -1.314138585444 |    -1.314205757400 |      6.717e-05 |        7
+     -0.5000 |    -0.951863139135 |    -0.951666392110 |      1.967e-04 |        6
+     -0.2500 |    -0.494568870686 |    -0.494568818039 |      5.265e-08 |        5
+      0.0000 |     0.000000000000 |     0.000000000000 |      0.000e+00 |        2
+      0.2500 |    -0.186191134983 |    -0.186195240200 |      4.105e-06 |        2
+      0.5000 |    -0.249576755100 |    -0.249576691538 |      6.356e-08 |        3
+      0.7500 |    -0.216997813582 |    -0.217007360857 |      9.547e-06 |        3
+      1.0000 |    -0.133263888889 |    -0.133397566534 |      1.337e-04 |        3
+
+Оброблено точок: 13
+Найбільша похибка за таблицею: 1.092e-03
+Задана точність розвинення:    1.000e-02
+
+
+<span class="pu">ishawyha@op</span>:<span class="pd">~/OP_FirstCourse/Lab4</span><span class="ps">$</span> ./bin/task1   <span class="cm"># контроль області визначення: [-3; 2]</span>
+Лабораторна робота №4, завдання 1 (варіант 19)
+Виконав: студент групи ІПЗ-11 Одарчук Олексій
+Обчислення y(x) з розвиненням sin(x) у ряд Тейлора
+
+    y = sin^2(x) - sin(x),    якщо  0 &lt; x &lt;= 1
+    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0
+
+Область визначення: [-2; 1].
+
+Уведіть початкове значення аргументу: -3
+Уведіть кінцеве значення аргументу:   2
+Уведіть крок зміни аргументу (&gt; 0): 1
+Уведіть точність (від 1e-6 до 1e-2): 1e-4
+
+Точність розвинення: 1.0e-04
+
+           x |    y (ряд Тейлора) |    y (бібліотечна) |        похибка | доданків
+  -----------+--------------------+--------------------+----------------+---------
+     -3.0000 | функцію не визначено (аргумент поза межами [-2; 1])
+     -2.0000 |     0.004976576336 |     0.004975550639 |      1.026e-06 |       15
+     -1.0000 |    -1.505119425430 |    -1.505120663417 |      1.238e-06 |       11
+      0.0000 |     0.000000000000 |     0.000000000000 |      0.000e+00 |        2
+      1.0000 |    -0.133397549534 |    -0.133397566534 |      1.700e-08 |        5
+      2.0000 | функцію не визначено (аргумент поза межами [-2; 1])
+
+Оброблено точок: 6
+Найбільша похибка за таблицею: 1.238e-06
+Задана точність розвинення:    1.000e-04</code></pre>
+                <div class="statusline">
+                  <span class="mode">less</span><span class="file">results/task1.txt</span
+                  ><span class="info"
+                    ><a href="results/task1.txt">Повний протокол виконання (task1.txt)</a></span
+                  >
+                </div>
+              </details>
+            </div>
+            <div class="tabpanel" role="tabpanel" data-task="2">
+              <figure>
+                <img
+                  src="results/shot_task2_1.png"
+                  alt="Екранна копія 2 - завдання 2: пошук чисел Армстронга з двох, трьох та чотирьох цифр"
+                />
+                <figcaption>
+                  Екранна копія 2 - завдання 2: пошук чисел Армстронга з двох, трьох та чотирьох
+                  цифр
+                </figcaption>
+              </figure>
+              <details class="window term proto">
+                <summary class="codebar">
+                  <span class="lang lang-sh">sh</span
+                  ><span class="path">./bin/task2 - протокол: 1 прогонів, 26 рядків</span
+                  ><span class="btn-sm more"
+                    ><span class="closed">Розгорнути</span
+                    ><span class="opened">Згорнути</span></span
+                  >
+                </summary>
+                <pre><code><span class="pu">ishawyha@op</span>:<span class="pd">~/OP_FirstCourse/Lab4</span><span class="ps">$</span> ./bin/task2   <span class="cm"># пошук чисел Армстронга</span>
+Лабораторна робота №4, завдання 2 (варіант 19)
+Виконав: студент групи ІПЗ-11 Одарчук Олексій
+Пошук чисел Армстронга з двох, трьох та чотирьох цифр
+Число з n цифр є числом Армстронга, якщо сума його цифр,
+піднесених до n-го степеня, дорівнює самому числу.
+
+=== Числа Армстронга з 2 цифр (діапазон 10..99) ===
+  чисел Армстронга цієї розрядності не існує
+  Перевірено чисел: 90, знайдено: 0
+
+=== Числа Армстронга з 3 цифр (діапазон 100..999) ===
+  153 = 1^3 + 5^3 + 3^3 = 1 + 125 + 27
+  370 = 3^3 + 7^3 + 0^3 = 27 + 343 + 0
+  371 = 3^3 + 7^3 + 1^3 = 27 + 343 + 1
+  407 = 4^3 + 0^3 + 7^3 = 64 + 0 + 343
+  Перевірено чисел: 900, знайдено: 4
+
+=== Числа Армстронга з 4 цифр (діапазон 1000..9999) ===
+  1634 = 1^4 + 6^4 + 3^4 + 4^4 = 1 + 1296 + 81 + 256
+  8208 = 8^4 + 2^4 + 0^4 + 8^4 = 4096 + 16 + 0 + 4096
+  9474 = 9^4 + 4^4 + 7^4 + 4^4 = 6561 + 256 + 2401 + 256
+  Перевірено чисел: 9000, знайдено: 3
+
+============================================================
+Усього знайдено чисел Армстронга: 7</code></pre>
+                <div class="statusline">
+                  <span class="mode">less</span><span class="file">results/task2.txt</span
+                  ><span class="info"
+                    ><a href="results/task2.txt">Повний протокол виконання (task2.txt)</a></span
+                  >
+                </div>
+              </details>
+            </div>
+          </div>
+        </section>
+
+        <section id="s-validation" data-title="§07 Аналіз достовірності результатів">
+          <h2>
+            <span class="num">07</span>Аналіз достовірності результатів<a
+              class="anchor"
+              href="#s-validation"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <p>
+            Достовірність результатів перевірено порівнянням з бібліотечною функцією
+            <code>sin()</code>, ручним розрахунком і обчисленнями на калькуляторі. Для кожної
+            контрольної величини поруч із розрахунком наведено результат програми.
+          </p>
+          <h3 id="s-validation-1">
+            Перевірка розрахунків на калькуляторі<a
+              class="anchor"
+              href="#s-validation-1"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>
+            Нижче наведено екранні копії обчислень у калькуляторі WolframAlpha; поруч із кожною -
+            результат програми.
+          </p>
+          <figure>
+            <img
+              src="results/calc_task1.png"
+              alt="Калькулятор: sin²(1) - sin(1) (значення y(x) при x = 1)"
+            />
+            <figcaption>Калькулятор: sin²(1) - sin(1) (значення y(x) при x = 1)</figcaption>
+          </figure>
+          <p>
+            Калькулятор: <b>-0,1333975665343253...</b>; програма:
+            <b>-0,133397566643 (ряд Тейлора), -0,133397566534 (бібліотечна)</b>. З бібліотечною
+            функцією значення збігаються до всіх виведених цифр, з рядом Тейлора - з похибкою
+            1,1·10⁻¹⁰, меншою за задану точність.
+          </p>
+          <figure>
+            <img
+              src="results/calc_task2.png"
+              alt="Калькулятор: 9⁴ + 4⁴ + 7⁴ + 4⁴ (перевірка числа Армстронга 9474)"
+            />
+            <figcaption>
+              Калькулятор: 9⁴ + 4⁴ + 7⁴ + 4⁴ (перевірка числа Армстронга 9474)
+            </figcaption>
+          </figure>
+          <p>
+            Калькулятор: <b>9474</b>; програма: <b>9474 у переліку знайдених</b>. Значення
+            збігаються.
+          </p>
+          <h3 id="s-validation-2">
+            Завдання 1. Порівняння з бібліотечною функцією<a
+              class="anchor"
+              href="#s-validation-2"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>
+            Еталон обчислюється бібліотечною функцією <code>sin()</code> з
+            <code>&lt;math.h&gt;</code>; контрольні точки перевірено також вручну.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>x</th>
+                  <th>Ручний розрахунок</th>
+                  <th>Ряд Тейлора (eps = 10⁻⁶)</th>
+                  <th>Бібліотечна функція</th>
+                  <th>Похибка</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1,0</td>
+                  <td>sin1 = 0,8414710; 0,8414710² - 0,8414710 = <b>-0,1333976</b></td>
+                  <td>-0,133397566643</td>
+                  <td>-0,133397566534</td>
+                  <td>1,09·10⁻¹⁰</td>
+                </tr>
+                <tr>
+                  <td>0,0</td>
+                  <td>0³ + sin0 = <b>0</b></td>
+                  <td>0,000000000000</td>
+                  <td>0,000000000000</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>-1,0</td>
+                  <td>
+                    sin(-1) = -0,8414710; (-0,8414710)³ + sin(-2) = -0,5958232 - 0,9092974 =
+                    <b>-1,5051206</b>
+                  </td>
+                  <td>-1,505120662713</td>
+                  <td>-1,505120663417</td>
+                  <td>7,04·10⁻¹⁰</td>
+                </tr>
+                <tr>
+                  <td>-2,0</td>
+                  <td>
+                    sin(-2) = -0,9092974; (-0,9092974)³ + sin(-4) = -0,7518269 + 0,7568025 =
+                    <b>0,0049756</b>
+                  </td>
+                  <td>0,004975548891</td>
+                  <td>0,004975550639</td>
+                  <td>1,75·10⁻⁹</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3 id="s-validation-3">
+            Залежність похибки від заданої точності<a
+              class="anchor"
+              href="#s-validation-3"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <p>
+            Три прогони виконано на одній сітці аргументів: проміжок [-2; 1] з кроком 0,25 (13
+            точок), змінюється лише задана точність.
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Задана точність eps</th>
+                  <th>Найбільша похибка за таблицею</th>
+                  <th>Доданків при x = -1 (sin x і sin 2x разом)</th>
+                  <th>Доданків при x = 1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>10⁻²</td>
+                  <td>1,09·10⁻³</td>
+                  <td>8</td>
+                  <td>3</td>
+                </tr>
+                <tr>
+                  <td>10⁻⁴</td>
+                  <td>1,48·10⁻⁶</td>
+                  <td>11</td>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <td>10⁻⁶</td>
+                  <td>2,39·10⁻⁸</td>
+                  <td>14</td>
+                  <td>6</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Найбільша похибка на сітці на порядок і більше менша за задану точність і спадає з її
+            посиленням, а кількість доданків зростає з посиленням точності.
+          </p>
+          <p>
+            При x = -1 доданків більше, ніж при x = 1, бо для x ≤ 0 обчислюються два розвинення -
+            sin(x) і sin(2x), а аргумент 2x далі від нуля, де ряд збігається повільніше.
+          </p>
+          <p>
+            Контроль області визначення перевірено окремим запуском на діапазоні [-3; 2]: для x = -3
+            та x = 2 виведено повідомлення про невизначеність, обчислення не виконувалось.
+          </p>
+          <h3 id="s-validation-4">
+            Завдання 2. Перевірка знайдених чисел<a
+              class="anchor"
+              href="#s-validation-4"
+              aria-label="Посилання на підрозділ"
+              >#</a
+            >
+          </h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Розрядність</th>
+                  <th>Знайдені числа</th>
+                  <th>Перевірка ручним розрахунком</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2 цифри</td>
+                  <td>не існує</td>
+                  <td>
+                    Для двоцифрового числа потрібно a² + b² = 10a + b. Максимум лівої частини при
+                    a,b ≤ 9 дорівнює 162, але рівність не досягається за жодної пари - вичерпний
+                    перебір 90 чисел розв'язків не дав.
+                  </td>
+                </tr>
+                <tr>
+                  <td>3 цифри</td>
+                  <td>153, 370, 371, 407</td>
+                  <td>
+                    153 = 1 + 125 + 27 = 153 ✔<br />370 = 27 + 343 + 0 = 370 ✔<br />371 = 27 + 343 +
+                    1 = 371 ✔<br />407 = 64 + 0 + 343 = 407 ✔
+                  </td>
+                </tr>
+                <tr>
+                  <td>4 цифри</td>
+                  <td>1634, 8208, 9474</td>
+                  <td>
+                    1634 = 1 + 1296 + 81 + 256 = 1634 ✔<br />8208 = 4096 + 16 + 0 + 4096 = 8208 ✔<br />9474
+                    = 6561 + 256 + 2401 + 256 = 9474 ✔
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Усі сім чисел перевірено підстановкою; програма виводить розклад кожного числа у вигляді
+            суми степенів.
+          </p>
+        </section>
+
+        <section id="s-conclusions" data-title="§08 Висновки">
+          <h2>
+            <span class="num">08</span>Висновки<a
+              class="anchor"
+              href="#s-conclusions"
+              aria-label="Посилання на розділ"
+              >#</a
+            >
+          </h2>
+          <ul>
+            <li>
+              Створено функцію <code>sinTaylor()</code>, що обчислює суму ряду Тейлора за
+              рекурентним співвідношенням із заданою точністю, без факторіала та <code>pow()</code>.
+            </li>
+            <li>
+              Реалізовано табулювання кусково-заданої функції з контролем області визначення й
+              виведенням похибки; похибка менша за задану точність.
+            </li>
+            <li>
+              Знайдено всі числа Армстронга з двох, трьох і чотирьох цифр: двоцифрових немає,
+              трицифрові - 153, 370, 371, 407, чотирицифрові - 1634, 8208, 9474.
+            </li>
+            <li>Обидва завдання варіанта виконано в повному обсязі.</li>
+          </ul>
+        </section>
+
+        <nav class="pager" aria-label="Інші роботи">
+          <a class="prev" rel="prev" href="../Lab3/report.html"
+            ><small>← cd ../Lab3</small>Циклічні обчислювальні процеси</a
+          >
+          <a class="next" rel="next" href="../Lab5/report.html"
+            ><small>cd ../Lab5 →</small>Рекурсивні функції</a
+          >
+        </nav>
+
+        <footer>
+          <span>Одарчук Олексій · <a href="https://ishawyha.dev">ishawyha.dev</a></span>
+          <a href="../index.html">cd ~/OP_FirstCourse</a>
+          <span>LAB4(19)</span>
+        </footer>
+      </main>
+    </div>
+
+    <div class="vimbar" aria-hidden="true">
+      <span class="mode">NORMAL</span><span class="where">§01</span
+      ><span class="file">LAB4(19)</span><span class="pos">0%</span
+      ><span class="help">? довідка</span>
+    </div>
+    <div class="helpbox" hidden>
+      <div class="window" role="dialog" aria-modal="true" aria-label="Клавіші">
+        <div class="codebar">
+          <span class="lang lang-sh">?</span><span class="path">:help клавіші</span
+          ><button class="btn-sm close" type="button">Закрити</button>
+        </div>
+        <div class="body keys">
+          <kbd>j / k</kbd><span>наступний / попередній розділ</span> <kbd>[ / ]</kbd
+          ><span>попередня / наступна робота</span> <kbd>1 … 3</kbd><span>вкладка завдання</span>
+          <kbd>gg / G</kbd><span>на початок / у кінець сторінки</span> <kbd>t</kbd
+          ><span>світла / темна тема</span> <kbd>+ / − / 0</kbd
+          ><span>масштаб збільшеного рисунка</span> <kbd>p</kbd
+          ><span>друк або збереження в PDF</span> <kbd>?</kbd><span>ця довідка</span> <kbd>Esc</kbd
+          ><span>закрити вікно</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

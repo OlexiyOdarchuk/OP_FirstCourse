@@ -1,0 +1,25 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи та умову задачі" },
+    { "kind": "process", "text": "Вартість m = 0" },
+    { "kind": "process", "text": "Номінал x = 0" },
+    { "kind": "process", "text": "Номінал y = 0" },
+    { "kind": "process", "text": "Номінал z = 0" },
+    { "kind": "if", "cond": "Не вдалося ввести m, x, y, z?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "if", "cond": "x = y або x = z або y = z",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести попередження про однакові номінали" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Кількість викликів = 0" },
+    { "kind": "process", "text": "Поточна глибина рекурсії = 0" },
+    { "kind": "process", "text": "Максимальна глибина рекурсії = 0" },
+    { "kind": "process", "text": "Обчислити кількість способів ways для m" },
+    { "kind": "io", "text": "Вивести m, номінали x, y, z і ways" },
+    { "kind": "if", "cond": "ways = 0",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: сплатити суму неможливо" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести кількість викликів і глибину рекурсії" },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

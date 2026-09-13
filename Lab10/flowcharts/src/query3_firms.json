@@ -1,0 +1,27 @@
+[
+  { "name": "cmdMostProfitableFirms", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив записів і кількість count" },
+    { "kind": "if", "cond": "Масив записів порожній",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Згрупувати записи за фірмами, отримати їх кількість k" },
+    { "kind": "process", "text": "Найбільша сума max = сума першої фірми" },
+    { "kind": "for", "cond": "j := 1, k − 1", "body": { "stmts": [
+      { "kind": "if", "cond": "Сума j-ї фірми > max",
+        "then": { "stmts": [ { "kind": "process", "text": "max = сума j-ї фірми" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "io", "text": "Вивести: сумарна вартість продажів по фірмах" },
+    { "kind": "call", "text": "Вивести заголовок таблиці фірм" },
+    { "kind": "for", "cond": "j := 0, k − 1", "body": { "stmts": [
+      { "kind": "call", "text": "Вивести рядок j-ї фірми" }
+    ] } },
+    { "kind": "io", "text": "Вивести: найрентабельніші фірми" },
+    { "kind": "call", "text": "Вивести заголовок таблиці фірм" },
+    { "kind": "for", "cond": "j := 0, k − 1", "body": { "stmts": [
+      { "kind": "if", "cond": "Сума j-ї фірми ≥ max − допуск",
+        "then": { "stmts": [ { "kind": "call", "text": "Вивести рядок j-ї фірми" } ] },
+        "else": { "stmts": [] } }
+    ] } }
+  ] } }
+]

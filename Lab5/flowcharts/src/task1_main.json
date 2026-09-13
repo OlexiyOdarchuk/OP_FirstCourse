@@ -1,0 +1,41 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи та умову задачі" },
+    { "kind": "process", "text": "Число n = 0" },
+    { "kind": "io", "text": "Вивести запрошення ввести число n" },
+    { "kind": "infloop", "body": { "stmts": [
+      { "kind": "io", "text": "Ввести слово" },
+      { "kind": "if", "cond": "Вхідні дані вичерпано?",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+          { "kind": "terminal", "text": "Повернути 1" }
+        ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "Довжина слова > 10",
+        "then": { "stmts": [ { "kind": "call", "text": "Пропустити решту рядка" } ] },
+        "else": { "stmts": [
+          { "kind": "if", "cond": "Решта рядка коректна і слово — число n?",
+            "then": { "stmts": [ { "kind": "break", "depth": 0 } ] },
+            "else": { "stmts": [] } }
+        ] } },
+      { "kind": "io", "text": "Вивести помилку і запит повторити" }
+    ] } },
+    { "kind": "io", "text": "Вивести n у десятковій системі" },
+    { "kind": "io", "text": "Вивести підпис двійкового запису" },
+    { "kind": "if", "cond": "n = 0",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести 0" } ] },
+      "else": { "stmts": [ { "kind": "call", "text": "Вивести n у двійковій системі" } ] } },
+    { "kind": "io", "text": "Вивести перехід на новий рядок" },
+    { "kind": "process", "text": "Поточна глибина рекурсії = 0" },
+    { "kind": "process", "text": "Максимальна глибина рекурсії = 0" },
+    { "kind": "process", "text": "Кількість одиниць рекурсивно recResult" },
+    { "kind": "process", "text": "Кількість ітерацій = 0" },
+    { "kind": "process", "text": "Кількість одиниць ітеративно iterResult" },
+    { "kind": "io", "text": "Вивести recResult і iterResult" },
+    { "kind": "if", "cond": "recResult = iterResult",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: результати збігаються" } ] },
+      "else": { "stmts": [ { "kind": "io", "text": "Вивести: результати розбігаються" } ] } },
+    { "kind": "io", "text": "Вивести глибину рекурсії і кількість ітерацій" },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

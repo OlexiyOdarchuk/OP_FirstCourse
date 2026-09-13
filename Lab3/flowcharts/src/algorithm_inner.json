@@ -1,0 +1,23 @@
+[
+  { "name": "innerSum", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести x, точність eps" },
+    { "kind": "process", "text": "sum = 0" },
+    { "kind": "process", "text": "k = 1" },
+    { "kind": "process", "text": "Перший знаменник = (1 + 2)³ · √1" },
+    { "kind": "process", "text": "Елемент term = −x / перший знаменник" },
+    { "kind": "process", "text": "Кількість доданків terms = 0" },
+    { "kind": "call", "text": "Вивести заголовок таблиці" },
+    { "kind": "dowhile", "cond": "Причини зупинки немає?", "body": { "stmts": [
+      { "kind": "process", "text": "Збільшити sum на term" },
+      { "kind": "process", "text": "Збільшити terms на 1" },
+      { "kind": "io", "text": "Вивести рядок таблиці x, k, term, sum" },
+      { "kind": "process", "text": "Визначити причину зупинки reason за term, eps" },
+      { "kind": "if", "cond": "Причини зупинки немає?",
+        "then": { "stmts": [
+          { "kind": "process", "text": "term = наступний елемент ряду" },
+          { "kind": "process", "text": "Збільшити k на 1" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути sum" }
+  ] } }
+]

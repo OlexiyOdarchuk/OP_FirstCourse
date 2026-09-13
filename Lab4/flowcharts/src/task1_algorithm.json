@@ -1,0 +1,57 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи та умову задачі" },
+    { "kind": "process", "text": "Початок проміжку xStart = 0" },
+    { "kind": "process", "text": "Кінець проміжку xEnd = 0" },
+    { "kind": "process", "text": "Крок step = 0" },
+    { "kind": "process", "text": "Точність eps = 0" },
+    { "kind": "if", "cond": "Не введено xStart або xEnd?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "dowhile", "cond": "step ≤ 0", "body": { "stmts": [
+      { "kind": "if", "cond": "Не введено крок step?",
+        "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "step ≤ 0",
+        "then": { "stmts": [ { "kind": "io", "text": "Вивести: крок має бути додатним" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "dowhile", "cond": "не 10⁻⁶ ≤ eps ≤ 10⁻²", "body": { "stmts": [
+      { "kind": "if", "cond": "Не введено точність eps?",
+        "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "не 10⁻⁶ ≤ eps ≤ 10⁻²",
+        "then": { "stmts": [ { "kind": "io", "text": "Вивести: точність поза допустимим діапазоном" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "if", "cond": "xStart > xEnd",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: таблиця порожня" },
+        { "kind": "terminal", "text": "Повернути 2" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести точність розвинення eps" },
+    { "kind": "call", "text": "Вивести заголовок таблиці" },
+    { "kind": "process", "text": "Найбільша похибка maxError = 0" },
+    { "kind": "process", "text": "Номер кроку steps = 0" },
+    { "kind": "process", "text": "Аргумент x = xStart" },
+    { "kind": "while", "cond": "x ≤ xEnd + допуск", "body": { "stmts": [
+      { "kind": "if", "cond": "x поза областю визначення?",
+        "then": { "stmts": [ { "kind": "io", "text": "Вивести x: функцію не визначено" } ] },
+        "else": { "stmts": [
+          { "kind": "process", "text": "Кількість доданків terms = 0" },
+          { "kind": "process", "text": "Обчислити y(x) рядом Тейлора" },
+          { "kind": "process", "text": "Обчислити y(x) бібліотечними функціями" },
+          { "kind": "process", "text": "Похибка = | |y ряду| − |y точне| |" },
+          { "kind": "if", "cond": "похибка > maxError",
+            "then": { "stmts": [ { "kind": "process", "text": "maxError = похибка" } ] },
+            "else": { "stmts": [] } },
+          { "kind": "io", "text": "Вивести рядок таблиці для x" }
+        ] } },
+      { "kind": "process", "text": "Збільшити steps на 1" },
+      { "kind": "process", "text": "x = xStart + steps · step" }
+    ] } },
+    { "kind": "io", "text": "Вивести кількість точок, maxError і eps" },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

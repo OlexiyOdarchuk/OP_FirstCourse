@@ -1,0 +1,28 @@
+[
+  { "name": "findMaxByModulus", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести матрицю a, вимірність m" },
+    { "kind": "process", "text": "Найбільший модуль maxAbs = −1" },
+    { "kind": "process", "text": "Шуканий елемент maxValue = 0" },
+    { "kind": "process", "text": "Індекс рядка row = −1" },
+    { "kind": "process", "text": "Індекс стовпця col = −1" },
+    { "kind": "process", "text": "Кількість елементів частини count = 0" },
+    { "kind": "for", "cond": "i := 0, m − 1", "body": { "stmts": [
+      { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+        { "kind": "if", "cond": "Елемент (i, j) не в заштрихованій частині?",
+          "then": { "stmts": [ { "kind": "continue", "depth": 0 } ] },
+          "else": { "stmts": [] } },
+        { "kind": "process", "text": "Збільшити count на 1" },
+        { "kind": "process", "text": "Модуль absValue = |елемент рядка i, стовпця j|" },
+        { "kind": "if", "cond": "absValue > maxAbs",
+          "then": { "stmts": [
+            { "kind": "process", "text": "maxAbs = absValue" },
+            { "kind": "process", "text": "maxValue = елемент рядка i, стовпця j" },
+            { "kind": "process", "text": "row = i" },
+            { "kind": "process", "text": "col = j" }
+          ] },
+          "else": { "stmts": [] } }
+      ] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути maxValue" }
+  ] } }
+]

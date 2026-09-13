@@ -1,0 +1,13 @@
+[
+  { "name": "swapEvenOdd", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив a, кількість елементів n" },
+    { "kind": "process", "text": "Кількість обмінів swaps = 0" },
+    { "kind": "for", "cond": "i := 0, n − 2, 2", "body": { "stmts": [
+      { "kind": "process", "text": "Проміжне temp = i-й елемент" },
+      { "kind": "process", "text": "i-й елемент = (i + 1)-й елемент" },
+      { "kind": "process", "text": "(i + 1)-й елемент = temp" },
+      { "kind": "process", "text": "Збільшити swaps на 1" }
+    ] } },
+    { "kind": "terminal", "text": "Повернути swaps" }
+  ] } }
+]
