@@ -121,7 +121,7 @@ void printBinaryRecursive(unsigned int n)
         return;
     }
 
-    printBinaryRecursive(n / 2);
+    printBinaryRecursive(n >> 1);
     printf("%u", n % 2);
 }
 
