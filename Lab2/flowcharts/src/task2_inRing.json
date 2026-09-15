@@ -1,0 +1,7 @@
+[
+  { "name": "inRing", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести координати x, y" },
+    { "kind": "process", "text": "Відстань r = √(x² + y²)" },
+    { "kind": "terminal", "text": "Повернути ознаку 0,5 − ε ≤ r ≤ 1 + ε" }
+  ] } }
+]

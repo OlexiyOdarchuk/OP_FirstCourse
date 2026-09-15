@@ -1,0 +1,23 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи та умову задачі" },
+    { "kind": "process", "text": "Загальна кількість total = 0" },
+    { "kind": "for", "cond": "digits := 2, 4", "body": { "stmts": [
+      { "kind": "process", "text": "Нижня межа low = 0" },
+      { "kind": "process", "text": "Верхня межа high = 0" },
+      { "kind": "call", "text": "Визначити межі low, high для digits цифр" },
+      { "kind": "io", "text": "Вивести розрядність і діапазон low…high" },
+      { "kind": "process", "text": "Знайти числа Армстронга, їх кількість count" },
+      { "kind": "for", "cond": "i := 1, count", "body": { "stmts": [
+        { "kind": "call", "text": "Вивести розклад i-го знайденого числа" }
+      ] } },
+      { "kind": "if", "cond": "count = 0",
+        "then": { "stmts": [ { "kind": "io", "text": "Вивести: таких чисел не існує" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "io", "text": "Вивести кількість перевірених і знайдених" },
+      { "kind": "process", "text": "Збільшити total на count" }
+    ] } },
+    { "kind": "io", "text": "Вивести загальну кількість total" },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

@@ -1,0 +1,30 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи, автора, ряд і примітку" },
+    { "kind": "process", "text": "eps = 0" },
+    { "kind": "if", "cond": "Ввести точність eps не вдалося?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+        { "kind": "terminal", "text": "Повернути код 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести задану точність eps" },
+    { "kind": "process", "text": "Загальна сума total = 0" },
+    { "kind": "process", "text": "Ознака розбіжності divergent = хибність" },
+    { "kind": "for", "cond": "x := 1, 5", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести заголовок для параметра x" },
+      { "kind": "process", "text": "terms = 0" },
+      { "kind": "process", "text": "Причина зупинки reason: немає" },
+      { "kind": "process", "text": "Обчислити внутрішню суму inner для x, eps" },
+      { "kind": "io", "text": "Вивести кількість доданків, причину зупинки, inner" },
+      { "kind": "if", "cond": "reason = переповнення",
+        "then": { "stmts": [ { "kind": "process", "text": "divergent = істина" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "process", "text": "Збільшити total на inner" }
+    ] } },
+    { "kind": "io", "text": "Вивести роздільник і загальну суму total" },
+    { "kind": "if", "cond": "divergent = істина",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести попередження про розбіжність ряду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "terminal", "text": "Повернути код 0" }
+  ] } }
+]

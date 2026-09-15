@@ -1,0 +1,33 @@
+[
+  { "name": "heapSort", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив a, n, режим докладного виводу" },
+    { "kind": "if", "cond": "Докладний вивід?",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести заголовок фази побудови купи" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "for", "cond": "root := ⌊n/2⌋ − 1, 0, −1", "body": { "stmts": [
+      { "kind": "call", "text": "Просіяти вузол root у купі з n" },
+      { "kind": "if", "cond": "Докладний вивід?",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Вивести номер просіяного вузла root" },
+          { "kind": "io", "text": "Вивести масив a" }
+        ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "if", "cond": "Докладний вивід?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести побудовану купу" },
+        { "kind": "io", "text": "Вивести заголовок фази вилучення максимумів" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "for", "cond": "size := n − 1, 1, −1", "body": { "stmts": [
+      { "kind": "call", "text": "Обміняти перший елемент з елементом size" },
+      { "kind": "call", "text": "Просіяти корінь у купі з size" },
+      { "kind": "if", "cond": "Докладний вивід?",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Вивести номер ітерації n − size і size" },
+          { "kind": "io", "text": "Вивести масив a" }
+        ] },
+        "else": { "stmts": [] } }
+    ] } }
+  ] } }
+]

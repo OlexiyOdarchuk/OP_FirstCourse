@@ -1,0 +1,7 @@
+[
+  { "name": "inRhombus", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести координати x, y" },
+    { "kind": "process", "text": "measure = |x| / 0,5 + |y| / 1" },
+    { "kind": "terminal", "text": "Повернути ознаку measure ≤ 1 + ε" }
+  ] } }
+]

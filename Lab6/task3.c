@@ -33,6 +33,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 /* Найбільший припустимий степінь многочлена. Межа масиву в мові C має бути сталим виразом часу компіляції,
    а змінна з модифікатором const ним не є, тому розмір задано директивою
@@ -284,13 +285,14 @@ bool fillPolynomial(double c[], int degree, const char *name, bool byHand, doubl
             const double t = (double)rand() / RAND_MAX;
             c[i] = low * (1.0 - t) + high * t;
 
-            /* Цифри після першого десяткового знака відкидаються. Для чисел,
-               що після множення на 10 не вміщуються в long long, дробової
-               частини в double однаково немає. */
-            const double scaled = c[i] * 10.0;
-            if (scaled > (double)LLONG_MIN && scaled < (double)LLONG_MAX)
+            /* Цифри після першого десяткового знака відкидаються функцією
+               trunc(), яка працює прямо з double. Числа, не менші за 10^15 за
+               модулем, дробової частини в double однаково не мають, тому для
+               них відкидання не виконується - так множення на 10 не може
+               переповнити double. */
+            if (fabs(c[i]) < 1e15)
             {
-                c[i] = (double)(long long)scaled / 10.0;
+                c[i] = trunc(c[i] * 10.0) / 10.0;
             }
         }
     }

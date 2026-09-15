@@ -1,0 +1,31 @@
+[
+  { "name": "siftDown", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив a, корінь root, розмір купи size" },
+    { "kind": "infloop", "body": { "stmts": [
+      { "kind": "process", "text": "Найбільший largest = root" },
+      { "kind": "process", "text": "Лівий нащадок left = 2·root + 1" },
+      { "kind": "process", "text": "Правий нащадок right = 2·root + 2" },
+      { "kind": "if", "cond": "left < size",
+        "then": { "stmts": [
+          { "kind": "process", "text": "Збільшити лічильник порівнянь на 1" },
+          { "kind": "if", "cond": "елемент left > елемент largest",
+            "then": { "stmts": [ { "kind": "process", "text": "largest = left" } ] },
+            "else": { "stmts": [] } }
+        ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "right < size",
+        "then": { "stmts": [
+          { "kind": "process", "text": "Збільшити лічильник порівнянь на 1" },
+          { "kind": "if", "cond": "елемент right > елемент largest",
+            "then": { "stmts": [ { "kind": "process", "text": "largest = right" } ] },
+            "else": { "stmts": [] } }
+        ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "largest = root",
+        "then": { "stmts": [ { "kind": "break", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "call", "text": "Обміняти елементи root і largest" },
+      { "kind": "process", "text": "root = largest" }
+    ] } }
+  ] } }
+]

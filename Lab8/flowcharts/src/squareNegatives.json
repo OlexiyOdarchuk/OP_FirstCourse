@@ -1,0 +1,19 @@
+[
+  { "name": "squareNegatives", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив source, кількість n" },
+    { "kind": "process", "text": "Створити новий масив result з n елементів" },
+    { "kind": "process", "text": "Кількість замінених changed = 0" },
+    { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+      { "kind": "process", "text": "value = i-й елемент source" },
+      { "kind": "if", "cond": "value < 0",
+        "then": { "stmts": [
+          { "kind": "process", "text": "i-й елемент result = value²" },
+          { "kind": "process", "text": "Збільшити changed на 1" }
+        ] },
+        "else": { "stmts": [
+          { "kind": "process", "text": "i-й елемент result = value" }
+        ] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути масив result" }
+  ] } }
+]

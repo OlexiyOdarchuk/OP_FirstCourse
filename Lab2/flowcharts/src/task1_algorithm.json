@@ -1,0 +1,22 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи, автора і функцію f(x)" },
+    { "kind": "process", "text": "x = 0" },
+    { "kind": "if", "cond": "Ввести аргумент x не вдалося?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+        { "kind": "terminal", "text": "Повернути код 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "y = 0" },
+    { "kind": "process", "text": "Обчислити y = f(x) і гілку branch" },
+    { "kind": "process", "text": "Задати вивід із 6 знаками після коми" },
+    { "kind": "io", "text": "Вивести аргумент x і назву гілки" },
+    { "kind": "if", "cond": "branch = «не визначено»",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: функцію не визначено в точці x" },
+        { "kind": "terminal", "text": "Повернути код 2" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести результат f(x) = y" },
+    { "kind": "terminal", "text": "Повернути код 0" }
+  ] } }
+]

@@ -1,0 +1,47 @@
+[
+  { "name": "cmdSoftwareValueByPeriod", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив записів і кількість count" },
+    { "kind": "if", "cond": "Масив записів порожній",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести: початок періоду постачання" },
+    { "kind": "if", "cond": "Дату початку не введено",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести: кінець періоду постачання" },
+    { "kind": "if", "cond": "Дату кінця не введено",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Перевести дату початку в число from" },
+    { "kind": "process", "text": "Перевести дату кінця в число to" },
+    { "kind": "if", "cond": "from > to",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: період порожній" },
+        { "kind": "terminal", "text": "Завершити команду" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "call", "text": "Записати дату початку текстом" },
+    { "kind": "call", "text": "Записати дату кінця текстом" },
+    { "kind": "io", "text": "Вивести заголовок запиту з датами періоду" },
+    { "kind": "process", "text": "Кількість знайдених found = 0" },
+    { "kind": "process", "text": "Сумарна вартість total = 0" },
+    { "kind": "for", "cond": "i := 0, count − 1", "body": { "stmts": [
+      { "kind": "process", "text": "Поточний запис — i-й запис масиву" },
+      { "kind": "if", "cond": "Запис не програмне забезпечення",
+        "then": { "stmts": [ { "kind": "continue", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "process", "text": "Перевести дату постачання в число d" },
+      { "kind": "if", "cond": "d < from або d > to",
+        "then": { "stmts": [ { "kind": "continue", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "found = 0",
+        "then": { "stmts": [ { "kind": "call", "text": "Вивести заголовок таблиці" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "call", "text": "Вивести поточний запис під номером found" },
+      { "kind": "process", "text": "Збільшити total на ціну запису" },
+      { "kind": "process", "text": "Збільшити found на 1" }
+    ] } },
+    { "kind": "if", "cond": "found = 0",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: ПЗ у період не постачалося" } ] },
+      "else": { "stmts": [ { "kind": "io", "text": "Вивести кількість found і вартість total" } ] } }
+  ] } }
+]

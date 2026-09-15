@@ -1,0 +1,20 @@
+[
+  { "name": "reportTotalsByPlant", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести матриці a, b, розміри n, m" },
+    { "kind": "process", "text": "Загальний підсумок grandTotal = 0" },
+    { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+      { "kind": "process", "text": "Обсяг підприємства j = 0" },
+      { "kind": "for", "cond": "i := 0, n − 1", "body": { "stmts": [
+        { "kind": "process", "text": "Додати до обсягу підприємства j елементи a і b (i, j)" }
+      ] } },
+      { "kind": "process", "text": "Збільшити grandTotal на обсяг підприємства j" }
+    ] } },
+    { "kind": "io", "text": "Вивести заголовок звіту а)" },
+    { "kind": "io", "text": "Вивести шапку таблиці і розділювальну лінію" },
+    { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+      { "kind": "io", "text": "Вивести рядок таблиці: підприємство j + 1, обсяг" }
+    ] } },
+    { "kind": "io", "text": "Вивести розділювальну лінію" },
+    { "kind": "io", "text": "Вивести рядок таблиці «Разом» з grandTotal" }
+  ] } }
+]

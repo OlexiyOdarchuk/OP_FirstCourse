@@ -1,0 +1,31 @@
+[
+  { "name": "evaluate", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести аргумент x" },
+    { "kind": "process", "text": "Гілка branch = «не визначено»" },
+    { "kind": "if", "cond": "x < 0",
+      "then": { "stmts": [
+        { "kind": "process", "text": "result = x³" },
+        { "kind": "process", "text": "branch = «x < 0»" } ] },
+      "else": { "stmts": [
+        { "kind": "if", "cond": "x = 0",
+          "then": { "stmts": [
+            { "kind": "process", "text": "result = 0" },
+            { "kind": "process", "text": "branch = «x = 0»" } ] },
+          "else": { "stmts": [
+            { "kind": "if", "cond": "x < 4",
+              "then": { "stmts": [
+                { "kind": "process", "text": "result = 4 − x²" },
+                { "kind": "process", "text": "branch = «0 < x < 4»" } ] },
+              "else": { "stmts": [
+                { "kind": "if", "cond": "x > 4",
+                  "then": { "stmts": [
+                    { "kind": "process", "text": "result = 1" },
+                    { "kind": "process", "text": "branch = «x > 4»" } ] },
+                  "else": { "stmts": [
+                    { "kind": "process", "text": "branch = «не визначено»" } ] } }
+              ] } }
+          ] } }
+      ] } },
+    { "kind": "terminal", "text": "Повернути branch" }
+  ] } }
+]

@@ -1,0 +1,16 @@
+[
+  { "name": "sumOfEven", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив a, кількість n" },
+    { "kind": "process", "text": "Сума sum = 0" },
+    { "kind": "process", "text": "Кількість парних count = 0" },
+    { "kind": "for", "cond": "p від першого до останнього елемента", "body": { "stmts": [
+      { "kind": "if", "cond": "поточний елемент парний",
+        "then": { "stmts": [
+          { "kind": "process", "text": "Збільшити sum на поточний елемент" },
+          { "kind": "process", "text": "Збільшити count на 1" }
+        ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути sum" }
+  ] } }
+]

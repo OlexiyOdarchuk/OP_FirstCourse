@@ -1,0 +1,43 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи, автора і позначення" },
+    { "kind": "if", "cond": "Не вдалося ввести n або m від 1 до 20?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] }, "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести меню способів задання обсягів" },
+    { "kind": "if", "cond": "Не вдалося ввести спосіб від 1 до 2?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] }, "else": { "stmts": [] } },
+    { "kind": "process", "text": "Ручне введення byHand, якщо обрано спосіб 1" },
+    { "kind": "process", "text": "Нижня межа low = 0" },
+    { "kind": "process", "text": "Верхня межа high = 0" },
+    { "kind": "if", "cond": "Не ручне введення?",
+      "then": { "stmts": [
+        { "kind": "if", "cond": "Не вдалося ввести межі low і high?",
+          "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] }, "else": { "stmts": [] } },
+        { "kind": "process", "text": "Ініціалізувати генератор випадкових чисел" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести меню режимів виведення" },
+    { "kind": "if", "cond": "Не вдалося ввести режим від 1 до 2?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] }, "else": { "stmts": [] } },
+    { "kind": "process", "text": "Детальний режим verbose, якщо обрано режим 2" },
+    { "kind": "if", "cond": "Не вдалося заповнити матрицю A або B?",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути 1" } ] }, "else": { "stmts": [] } },
+    { "kind": "call", "text": "Вивести матрицю A за I квартал" },
+    { "kind": "call", "text": "Вивести матрицю B за II квартал" },
+    { "kind": "if", "cond": "Детальний режим?",
+      "then": { "stmts": [
+        { "kind": "call", "text": "Обчислити матрицю сум A + B" },
+        { "kind": "call", "text": "Вивести проміжну матрицю A + B" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "call", "text": "Вивести сумарні обсяги по підприємствах" },
+    { "kind": "if", "cond": "Детальний режим?",
+      "then": { "stmts": [
+        { "kind": "call", "text": "Обчислити матрицю змін B − A" },
+        { "kind": "call", "text": "Вивести проміжну матрицю B − A" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "call", "text": "Вивести приріст або зменшення обсягів" },
+    { "kind": "terminal", "text": "Повернути 0" }
+  ] } }
+]

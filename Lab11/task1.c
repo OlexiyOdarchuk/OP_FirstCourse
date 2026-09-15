@@ -181,7 +181,9 @@ bool createFileRandom(const char *fileName, int count, int low, int high)
     }
 
     /* Розмах рахується в double: для меж на кшталт INT_MIN..INT_MAX значення
-       high - low + 1 не вміщується в int. */
+       high - low + 1 не вміщується в int. Зсув від нижньої межі теж
+       обчислюється в double, а floor() округлює результат униз до цілого з
+       [low; high], тож проміжний цілий тип, ширший за int, не потрібен. */
     const double range = (double)high - low + 1.0;
 
     /* Масштабування rand() на діапазон замість rand() % range: стандарт гарантує
@@ -190,7 +192,7 @@ bool createFileRandom(const char *fileName, int count, int low, int high)
     for (int i = 0; i < count; ++i)
     {
         const int value =
-            (int)(low + (long long)((double)rand() / ((double)RAND_MAX + 1.0) * range));
+            (int)floor(low + (double)rand() / ((double)RAND_MAX + 1.0) * range);
         fprintf(file, "%d\n", value);
     }
 

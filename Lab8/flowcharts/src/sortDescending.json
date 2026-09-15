@@ -1,0 +1,24 @@
+[
+  { "name": "sortDescending", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести масив source, кількість n" },
+    { "kind": "process", "text": "Масив result = копія source" },
+    { "kind": "process", "text": "Кількість обмінів swaps = 0" },
+    { "kind": "for", "cond": "i := 0, n − 2", "body": { "stmts": [
+      { "kind": "process", "text": "Позиція максимуму maxPos = i" },
+      { "kind": "for", "cond": "j := i + 1, n − 1", "body": { "stmts": [
+        { "kind": "if", "cond": "елемент j > елемент maxPos",
+          "then": { "stmts": [ { "kind": "process", "text": "maxPos = j" } ] },
+          "else": { "stmts": [] } }
+      ] } },
+      { "kind": "if", "cond": "maxPos ≠ i",
+        "then": { "stmts": [
+          { "kind": "process", "text": "Проміжне temp = i-й елемент" },
+          { "kind": "process", "text": "i-й елемент = елемент maxPos" },
+          { "kind": "process", "text": "Елемент maxPos = temp" },
+          { "kind": "process", "text": "Збільшити swaps на 1" }
+        ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути масив result" }
+  ] } }
+]

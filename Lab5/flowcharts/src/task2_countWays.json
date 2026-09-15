@@ -1,0 +1,28 @@
+[
+  { "name": "countWays", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести суму m і номінали x, y, z" },
+    { "kind": "process", "text": "Збільшити кількість викликів на 1" },
+    { "kind": "process", "text": "Збільшити поточну глибину на 1" },
+    { "kind": "if", "cond": "поточна глибина > максимальної",
+      "then": { "stmts": [ { "kind": "process", "text": "Максимальна глибина = поточна" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Кількість способів ways = 0" },
+    { "kind": "if", "cond": "m = 0",
+      "then": { "stmts": [ { "kind": "process", "text": "ways = 1" } ] },
+      "else": { "stmts": [
+        { "kind": "if", "cond": "m < 0",
+          "then": { "stmts": [ { "kind": "process", "text": "ways = 0" } ] },
+          "else": { "stmts": [
+            { "kind": "process", "text": "ways = кількість способів для суми m − x" },
+            { "kind": "if", "cond": "y ≠ x",
+              "then": { "stmts": [ { "kind": "process", "text": "Додати до ways способи для суми m − y" } ] },
+              "else": { "stmts": [] } },
+            { "kind": "if", "cond": "z ≠ x і z ≠ y",
+              "then": { "stmts": [ { "kind": "process", "text": "Додати до ways способи для суми m − z" } ] },
+              "else": { "stmts": [] } }
+          ] } }
+      ] } },
+    { "kind": "process", "text": "Зменшити поточну глибину на 1" },
+    { "kind": "terminal", "text": "Повернути ways" }
+  ] } }
+]

@@ -43,6 +43,12 @@
 #define MAX_ROWS 20 /* видів продукції   */
 #define MAX_COLS 20 /* підприємств       */
 
+/* Найбільший обсяг продукції одного виду на одному підприємстві за квартал.
+   Найбільший можливий підсумок - загальний обсяг за два квартали:
+   2 * MAX_ROWS * MAX_COLS * MAX_VOLUME = 2 * 20 * 20 * 1 000 000 = 8 * 10^8,
+   що менше за INT_MAX, тож усі матриці й підсумки зберігаються в int. */
+#define MAX_VOLUME 1000000
+
 /* Ширини колонок таблиць у символах. */
 enum
 {
@@ -208,8 +214,8 @@ bool readInt(const char *prompt, int *value, int low, int high)
       low, high [вхідні] - межі діапазону для генерації.
   Повертає : true - заповнено; false - вхідні дані вичерпано.
 ------------------------------------------------------------------------------*/
-bool fillMatrix(long long a[][MAX_COLS], int n, int m, const char *name, bool byHand,
-                int low, int high)
+bool fillMatrix(int a[][MAX_COLS], int n, int m, const char *name, bool byHand, int low,
+                int high)
 {
     if (byHand)
     {
@@ -225,7 +231,7 @@ bool fillMatrix(long long a[][MAX_COLS], int n, int m, const char *name, bool by
                 snprintf(prompt, sizeof prompt,
                          "  продукція %d, підприємство %d: ", i + 1, j + 1);
                 int volume = 0;
-                if (!readInt(prompt, &volume, 0, INT_MAX))
+                if (!readInt(prompt, &volume, 0, MAX_VOLUME))
                 {
                     return false;
                 }
@@ -242,10 +248,10 @@ bool fillMatrix(long long a[][MAX_COLS], int n, int m, const char *name, bool by
         {
             for (int j = 0; j < m; ++j)
             {
-                /* Розмах у double: high - low + 1 може не вміститися в int. */
-                const double range = (double)high - low + 1.0;
-                a[i][j] = low + (long long)((double)rand() / ((double)RAND_MAX + 1.0) *
-                                            range);
+                /* Розмах не перевищує MAX_VOLUME + 1 і вміщується в int. */
+                const int range = high - low + 1;
+                a[i][j] =
+                    low + (int)((double)rand() / ((double)RAND_MAX + 1.0) * range);
             }
         }
     }
@@ -282,9 +288,9 @@ void printSeparator(int width)
       label      - підпис рядка ("Продукція N").
 
   Параметр-матрицю оголошено без const: у C до редакції C23 масив
-  long long a[N][M] неявно не перетворюється на const long long (*)[M].
+  int a[N][M] неявно не перетворюється на const int (*)[M].
 ------------------------------------------------------------------------------*/
-void printMatrix(const char *title, long long a[][MAX_COLS], int n, int m)
+void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
 {
     printf("\n%s\n", title);
 
@@ -292,15 +298,15 @@ void printMatrix(const char *title, long long a[][MAX_COLS], int n, int m)
        тож за довжиною її запису зі знаком обирається ширина стовпців: для
        звичайних обсягів лишаються стандартні ширини, для великих стовпці
        розширюються, щоб числа не зливалися. */
-    long long bound = 0;
+    int bound = 0;
     for (int i = 0; i < n; ++i)
     {
         for (int j = 0; j < m; ++j)
         {
-            bound += llabs(a[i][j]);
+            bound += abs(a[i][j]);
         }
     }
-    const int needed = snprintf(NULL, 0, "%lld", -bound) + 2;
+    const int needed = snprintf(NULL, 0, "%d", -bound) + 2;
     const int columnWidth = needed > COLUMN_WIDTH ? needed : COLUMN_WIDTH;
     const int totalWidth = needed > TOTAL_WIDTH ? needed : TOTAL_WIDTH;
 
@@ -324,31 +330,31 @@ void printMatrix(const char *title, long long a[][MAX_COLS], int n, int m)
         printf("  ");
         printPadded(label, LABEL_WIDTH, true);
 
-        long long rowTotal = 0;
+        int rowTotal = 0;
         for (int j = 0; j < m; ++j)
         {
-            printf("%*lld", columnWidth, a[i][j]);
+            printf("%*d", columnWidth, a[i][j]);
             rowTotal += a[i][j];
         }
-        printf("%*lld\n", totalWidth, rowTotal);
+        printf("%*d\n", totalWidth, rowTotal);
     }
 
     printSeparator(tableWidth);
     printf("  ");
     printPadded("Разом", LABEL_WIDTH, true);
 
-    long long grandTotal = 0;
+    int grandTotal = 0;
     for (int j = 0; j < m; ++j)
     {
-        long long columnTotal = 0;
+        int columnTotal = 0;
         for (int i = 0; i < n; ++i)
         {
             columnTotal += a[i][j];
         }
-        printf("%*lld", columnWidth, columnTotal);
+        printf("%*d", columnWidth, columnTotal);
         grandTotal += columnTotal;
     }
-    printf("%*lld\n", totalWidth, grandTotal);
+    printf("%*d\n", totalWidth, grandTotal);
 }
 
 /*------------------------------------------------------------------------------
@@ -359,8 +365,7 @@ void printMatrix(const char *title, long long a[][MAX_COLS], int n, int m)
       c    [вихідний] - результат;
       n, m [вхідні]   - кількість рядків і стовпців.
 ------------------------------------------------------------------------------*/
-void addMatrices(long long a[][MAX_COLS], long long b[][MAX_COLS],
-                 long long c[][MAX_COLS], int n, int m)
+void addMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], int n, int m)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -380,8 +385,8 @@ void addMatrices(long long a[][MAX_COLS], long long b[][MAX_COLS],
       c    [вихідний] - результат;
       n, m [вхідні]   - кількість рядків і стовпців.
 ------------------------------------------------------------------------------*/
-void subtractMatrices(long long a[][MAX_COLS], long long b[][MAX_COLS],
-                      long long c[][MAX_COLS], int n, int m)
+void subtractMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], int n,
+                      int m)
 {
     for (int i = 0; i < n; ++i)
     {
@@ -406,10 +411,10 @@ void subtractMatrices(long long a[][MAX_COLS], long long b[][MAX_COLS],
       grandTotal   - підсумок по всіх підприємствах;
       label        - підпис рядка таблиці ("Підприємство N").
 ------------------------------------------------------------------------------*/
-void reportTotalsByPlant(long long a[][MAX_COLS], long long b[][MAX_COLS], int n, int m)
+void reportTotalsByPlant(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
 {
-    long long totalByPlant[MAX_COLS];
-    long long grandTotal = 0;
+    int totalByPlant[MAX_COLS];
+    int grandTotal = 0;
 
     for (int j = 0; j < m; ++j)
     {
@@ -435,13 +440,13 @@ void reportTotalsByPlant(long long a[][MAX_COLS], long long b[][MAX_COLS], int n
         snprintf(label, sizeof label, "Підприємство %d", j + 1);
         printf("  ");
         printPadded(label, NAME_WIDTH, true);
-        printf("%*lld\n", VALUE_WIDTH, totalByPlant[j]);
+        printf("%*d\n", VALUE_WIDTH, totalByPlant[j]);
     }
 
     printSeparator(NAME_WIDTH + VALUE_WIDTH);
     printf("  ");
     printPadded("Разом", NAME_WIDTH, true);
-    printf("%*lld\n", VALUE_WIDTH, grandTotal);
+    printf("%*d\n", VALUE_WIDTH, grandTotal);
 }
 
 /*------------------------------------------------------------------------------
@@ -451,7 +456,7 @@ void reportTotalsByPlant(long long a[][MAX_COLS], long long b[][MAX_COLS], int n
   Повертає : "приріст" для додатної зміни, "зменшення" для від'ємної,
              "без змін" для нульової.
 ------------------------------------------------------------------------------*/
-const char *changeLabel(long long delta)
+const char *changeLabel(int delta)
 {
     if (delta > 0)
     {
@@ -478,10 +483,10 @@ const char *changeLabel(long long delta)
       deltaByPlant   - зміна обсягу по кожному підприємству;
       label          - підпис рядка таблиці.
 ------------------------------------------------------------------------------*/
-void reportChanges(long long a[][MAX_COLS], long long b[][MAX_COLS], int n, int m)
+void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
 {
-    long long deltaByProduct[MAX_ROWS];
-    long long deltaByPlant[MAX_COLS];
+    int deltaByProduct[MAX_ROWS];
+    int deltaByPlant[MAX_COLS];
 
     for (int i = 0; i < n; ++i)
     {
@@ -517,7 +522,7 @@ void reportChanges(long long a[][MAX_COLS], long long b[][MAX_COLS], int n, int 
         snprintf(label, sizeof label, "Продукція %d", i + 1);
         printf("  ");
         printPadded(label, NAME_WIDTH, true);
-        printf("%+*lld   %s\n", DELTA_WIDTH, deltaByProduct[i],
+        printf("%+*d   %s\n", DELTA_WIDTH, deltaByProduct[i],
                changeLabel(deltaByProduct[i]));
     }
 
@@ -533,7 +538,7 @@ void reportChanges(long long a[][MAX_COLS], long long b[][MAX_COLS], int n, int 
         snprintf(label, sizeof label, "Підприємство %d", j + 1);
         printf("  ");
         printPadded(label, NAME_WIDTH, true);
-        printf("%+*lld   %s\n", DELTA_WIDTH, deltaByPlant[j],
+        printf("%+*d   %s\n", DELTA_WIDTH, deltaByPlant[j],
                changeLabel(deltaByPlant[j]));
     }
 }
@@ -583,8 +588,8 @@ int main(void)
 
     if (!byHand)
     {
-        if (!readInt("Уведіть нижню межу обсягу: ", &low, 0, INT_MAX) ||
-            !readInt("Уведіть верхню межу обсягу: ", &high, low, INT_MAX))
+        if (!readInt("Уведіть нижню межу обсягу: ", &low, 0, MAX_VOLUME) ||
+            !readInt("Уведіть верхню межу обсягу: ", &high, low, MAX_VOLUME))
         {
             return 1;
         }
@@ -603,10 +608,10 @@ int main(void)
 
     const bool verbose = (modeChoice == 2);
 
-    /* Обсяги зберігаються в long long: кожен уводиться як int, але сума двох
-       кварталів і різниця можуть вийти за межі int. */
-    long long a[MAX_ROWS][MAX_COLS];
-    long long b[MAX_ROWS][MAX_COLS];
+    /* Обсяги обмежено MAX_VOLUME, тож матриці, їх сума, різниця й усі
+       підсумки вміщуються в int. */
+    int a[MAX_ROWS][MAX_COLS];
+    int b[MAX_ROWS][MAX_COLS];
     if (!fillMatrix(a, n, m, "A (I квартал)", byHand, low, high) ||
         !fillMatrix(b, n, m, "B (II квартал)", byHand, low, high))
     {
@@ -618,7 +623,7 @@ int main(void)
 
     if (verbose)
     {
-        long long sum[MAX_ROWS][MAX_COLS];
+        int sum[MAX_ROWS][MAX_COLS];
         addMatrices(a, b, sum, n, m);
         printMatrix("Проміжний результат: матриця A + B (обсяги за два квартали)\n"
                     "(підсумки стовпців - сумарні обсяги по підприємствах)",
@@ -629,7 +634,7 @@ int main(void)
 
     if (verbose)
     {
-        long long diff[MAX_ROWS][MAX_COLS];
+        int diff[MAX_ROWS][MAX_COLS];
         subtractMatrices(b, a, diff, n, m);
         printMatrix("Проміжний результат: матриця B - A (зміна обсягів)\n"
                     "(підсумки рядків - зміна за видами продукції, "

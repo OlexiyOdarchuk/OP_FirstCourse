@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <limits.h>
+#include <string.h>
 
 /* Глобальні лічильники глибини рекурсії. Рекурсивна функція має
    відповідати рекурентному означенню з умови задачі, тому службових
@@ -78,7 +79,8 @@ int countBitsRecursive(unsigned int n)
 
   Параметри:
       n          [вхідний]  - число, біти якого підраховуються;
-      iterations [вихідний] - адреса лічильника ітерацій циклу.
+      iterations [вихідний] - адреса лічильника ітерацій циклу (не більше
+                              кількості бітів числа, тому достатньо int).
 
   Повертає: кількість одиничних бітів числа n.
 
@@ -86,7 +88,7 @@ int countBitsRecursive(unsigned int n)
       count - накопичувана кількість одиниць;
       rest  - залишок числа з ще не погашеними одиничними бітами.
 ------------------------------------------------------------------------------*/
-int countBitsIterative(unsigned int n, unsigned long long *iterations)
+int countBitsIterative(unsigned int n, int *iterations)
 {
     int count = 0;
     unsigned int rest = n;
@@ -168,10 +170,60 @@ bool restOfLineOk(void)
 }
 
 /*------------------------------------------------------------------------------
+  parseUnsigned - перетворити рядок десяткових цифр на число unsigned int.
+
+  Число читається як рядок, а не через scanf("%u"): scanf приймає знак мінус,
+  мовчки перетворює від'ємне число на велике додатне і не виявляє
+  переповнення. Тут кожна цифра додається лише після перевірки, що результат
+  не перевищить UINT_MAX, тож ширший тип для контролю діапазону не потрібен.
+
+  Параметри:
+      text  [вхідний]  - рядок, що перевіряється;
+      value [вихідний] - адреса змінної для числа.
+
+  Повертає: true - рядок є числом від 0 до UINT_MAX; false - інакше.
+
+  Локальні змінні:
+      result - накопичуване значення;
+      digit  - значення чергової цифри.
+------------------------------------------------------------------------------*/
+bool parseUnsigned(const char *text, unsigned int *value)
+{
+    if (*text == '+')
+    {
+        ++text; /* необов'язковий знак плюс */
+    }
+    if (*text == '\0')
+    {
+        return false;
+    }
+
+    unsigned int result = 0;
+    for (const char *p = text; *p != '\0'; ++p)
+    {
+        if (!isdigit((unsigned char)*p))
+        {
+            return false;
+        }
+        const unsigned int digit = (unsigned int)(*p - '0');
+        if (result > (UINT_MAX - digit) / 10)
+        {
+            return false; /* число більше за UINT_MAX */
+        }
+        result = result * 10 + digit;
+    }
+
+    *value = result;
+    return true;
+}
+
+/*------------------------------------------------------------------------------
   Головна функція. Читає число, виводить його двійкове представлення,
   обчислює кількість одиниць двома способами та порівнює їх ефективність.
 
   Локальні змінні:
+      token        - введене слово (найдовше допустиме число 4294967295
+                     має 10 цифр, ще один символ - щоб виявити довше слово);
       n            - введене число;
       recResult    - результат рекурсивного обчислення;
       iterResult   - результат ітеративного обчислення;
@@ -185,30 +237,29 @@ int main(void)
     printf("    f(n) = 0,                  якщо n = 0\n");
     printf("    f(n) = 1 + f(n & (n-1)),   якщо n != 0\n\n");
 
-    long long input = 0;
+    char token[12];
+    unsigned int n = 0;
     printf("Уведіть ціле невід'ємне число n: ");
 
     for (;;)
     {
-        const int scanned = scanf("%lld", &input);
+        const int scanned = scanf("%11s", token);
 
         if (scanned == EOF)
         {
             printf("\nВхідні дані вичерпано.\n");
             return 1;
         }
-        if (scanned == 0)
+        if (strlen(token) > 10)
         {
-            skipLine();
+            skipLine(); /* слово довше за найбільше допустиме число */
         }
-        else if (restOfLineOk() && input >= 0 && input <= (long long)UINT_MAX)
+        else if (restOfLineOk() && parseUnsigned(token, &n))
         {
             break;
         }
         printf("Помилка: потрібне ціле число від 0 до %u. Повторіть: ", UINT_MAX);
     }
-
-    const unsigned int n = (unsigned int)input;
 
     printf("\nЧисло у десятковій системі: %u\n", n);
     printf("Число у двійковій системі:  ");
@@ -228,7 +279,7 @@ int main(void)
     const int recResult = countBitsRecursive(n);
 
     /* Ітеративний варіант. */
-    unsigned long long iterations = 0;
+    int iterations = 0;
     const int iterResult = countBitsIterative(n, &iterations);
 
     printf("\nРезультат\n");
@@ -239,7 +290,7 @@ int main(void)
 
     printf("\nПорівняння ефективності\n");
     printf("  Глибина рекурсії: %d\n", g_maxDepth);
-    printf("  Ітерацій циклу:   %llu\n", iterations);
+    printf("  Ітерацій циклу:   %d\n", iterations);
 
     return 0;
 }

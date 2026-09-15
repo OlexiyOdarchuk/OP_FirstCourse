@@ -1,0 +1,41 @@
+[
+  { "name": "blockSearch", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести впорядкований масив a, n, ключ key" },
+    { "kind": "process", "text": "Лічильник порівнянь = 0" },
+    { "kind": "process", "text": "Лічильник блоків = 0" },
+    { "kind": "if", "cond": "n ≤ 0",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути −1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Довжина блоку step = ⌊√n⌋" },
+    { "kind": "if", "cond": "step < 1",
+      "then": { "stmts": [ { "kind": "process", "text": "step = 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Початок блоку prev = 0" },
+    { "kind": "process", "text": "Межа блоку current = step − 1" },
+    { "kind": "if", "cond": "current ≥ n",
+      "then": { "stmts": [ { "kind": "process", "text": "current = n − 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "infloop", "body": { "stmts": [
+      { "kind": "process", "text": "Збільшити лічильник порівнянь на 1" },
+      { "kind": "process", "text": "Збільшити лічильник блоків на 1" },
+      { "kind": "if", "cond": "елемент current ≥ key",
+        "then": { "stmts": [ { "kind": "break", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "current = n − 1",
+        "then": { "stmts": [ { "kind": "terminal", "text": "Повернути −1" } ] },
+        "else": { "stmts": [] } },
+      { "kind": "process", "text": "prev = current + 1" },
+      { "kind": "process", "text": "Збільшити current на step" },
+      { "kind": "if", "cond": "current ≥ n",
+        "then": { "stmts": [ { "kind": "process", "text": "current = n − 1" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "for", "cond": "i := prev, current", "body": { "stmts": [
+      { "kind": "process", "text": "Збільшити лічильник порівнянь на 1" },
+      { "kind": "if", "cond": "елемент i = key",
+        "then": { "stmts": [ { "kind": "terminal", "text": "Повернути i" } ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути −1" }
+  ] } }
+]

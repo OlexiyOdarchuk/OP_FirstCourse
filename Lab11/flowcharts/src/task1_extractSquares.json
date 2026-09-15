@@ -1,0 +1,42 @@
+[
+  { "name": "extractSquares", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести імена вхідного та вихідного файлів" },
+    { "kind": "process", "text": "Відкрити вхідний файл для читання" },
+    { "kind": "if", "cond": "Вхідний файл не відкрито",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: файл не існує, спочатку створіть" },
+        { "kind": "terminal", "text": "Повернути −1" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Відкрити вихідний файл для запису" },
+    { "kind": "if", "cond": "Вихідний файл не відкрито",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: не вдалося створити файл" },
+        { "kind": "process", "text": "Закрити вхідний файл" },
+        { "kind": "terminal", "text": "Повернути −1" }
+      ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Число value = 0" },
+    { "kind": "process", "text": "Кількість знайдених квадратів = 0" },
+    { "kind": "process", "text": "Кількість переглянутих чисел = 0" },
+    { "kind": "io", "text": "Вивести заголовок списку квадратів" },
+    { "kind": "while", "cond": "Наступне число value прочитано з файлу", "body": { "stmts": [
+      { "kind": "process", "text": "Збільшити кількість переглянутих на 1" },
+      { "kind": "process", "text": "Корінь root = 0" },
+      { "kind": "if", "cond": "value — квадрат цілого числа root",
+        "then": { "stmts": [
+          { "kind": "io", "text": "Записати value у вихідний файл" },
+          { "kind": "io", "text": "Вивести value = root²" },
+          { "kind": "process", "text": "Збільшити кількість знайдених на 1" }
+        ] },
+        "else": { "stmts": [] } }
+    ] } },
+    { "kind": "call", "text": "Повідомити, якщо файл пошкоджено" },
+    { "kind": "process", "text": "Закрити вхідний файл" },
+    { "kind": "process", "text": "Закрити вихідний файл" },
+    { "kind": "if", "cond": "Кількість знайдених = 0",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: таких чисел у файлі немає" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "terminal", "text": "Повернути кількість знайдених" }
+  ] } }
+]

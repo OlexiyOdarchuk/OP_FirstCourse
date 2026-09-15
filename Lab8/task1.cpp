@@ -55,11 +55,14 @@
 #include <cstdlib>
 #include <ctime>
 
-/* Найбільше за модулем значення елемента масиву. Обмеження потрібне, щоб
-   квадрат елемента вміщався в тип int: 30000^2 = 9*10^8, тоді як межа int
-   близько 2,1*10^9. Застосовується однаково до введення з клавіатури та до
-   генерації псевдовипадкових чисел. */
-const int MAX_ABS_VALUE = 30000;
+/* Найбільше за модулем значення елемента і найбільша кількість елементів.
+   Після піднесення від'ємних чисел до квадрата елемент не перевищує
+   1000^2 = 10^6, а сума парних чисел - 2000 * 10^6 = 2 * 10^9, що менше за
+   межу int 2 147 483 647. Тому і квадрати, і сума вміщуються в int.
+   Межі застосовуються однаково до введення з клавіатури та до генерації
+   псевдовипадкових чисел. */
+const int MAX_ABS_VALUE = 1000;
+const int MAX_COUNT = 2000;
 
 /*==============================================================================
   Функції введення
@@ -373,9 +376,9 @@ int *sortDescending(const int *source, int n, int &swaps)
   йдеться в теоретичних відомостях: "щоб повертати з функцій більше одного
   значення, слід передати функції аргументи-посилання або аргументи-покажчики".
 ------------------------------------------------------------------------------*/
-long long sumOfEven(const int *a, int n, int &count)
+int sumOfEven(const int *a, int n, int &count)
 {
-    long long sum = 0;
+    int sum = 0;
     count = 0;
 
     for (const int *p = a; p < a + n; ++p)
@@ -413,7 +416,9 @@ void cmdCreate()
     char prompt[96];
     int n = 0;
 
-    if (!readInt("Уведіть кількість елементів масиву: ", &n, 1, INT_MAX))
+    std::snprintf(prompt, sizeof prompt,
+                  "Уведіть кількість елементів масиву (1..%d): ", MAX_COUNT);
+    if (!readInt(prompt, &n, 1, MAX_COUNT))
     {
         return;
     }
@@ -539,7 +544,7 @@ void cmdSumOfEven()
     }
 
     int count = 0;
-    const long long sum = sumOfEven(g_array, g_size, count);
+    const int sum = sumOfEven(g_array, g_size, count);
 
     printArray("Вхідний масив:", g_array, g_size);
     std::cout << "Парних чисел: " << count << '\n';
@@ -569,7 +574,7 @@ void cmdAll()
 
     int *const squared = squareNegatives(g_array, g_size, changed);
     int *const sorted = sortDescending(squared, g_size, swaps);
-    const long long sum = sumOfEven(sorted, g_size, count);
+    const int sum = sumOfEven(sorted, g_size, count);
 
     std::cout << "\nУсі перетворення вхідного масиву\n";
     printArray("  1. Вхідний масив:                       ", g_array, g_size);

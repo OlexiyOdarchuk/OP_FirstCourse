@@ -51,6 +51,7 @@
    задано директивами препроцесора. */
 #define MAX_RECORDS 200 /* записів у масиві структур */
 #define MAX_NAME 32     /* довжина текстового поля   */
+#define MAX_YEAR 9999   /* найбільший рік: число РРРРММДД вміщується в int */
 
 /* Допуск при порівнянні сум продажів. Суми накопичуються в типі double,
    тож дві математично рівні суми можуть відрізнятися похибкою округлення;
@@ -225,12 +226,15 @@ const char *kindName(ProductKind kind)
   Таке подання дозволяє порівнювати дати звичайними операціями відношення:
   хронологічний порядок дат збігається з числовим порядком цих чисел.
 
+  Рік не перевищує MAX_YEAR = 9999, тому найбільше таке число 99 991 231
+  вміщується в int.
+
   Параметри: d [вхідний] - покажчик на дату.
   Повертає : число виду РРРРММДД.
 ------------------------------------------------------------------------------*/
-long long dateToNumber(const Date *d)
+int dateToNumber(const Date *d)
 {
-    return (long long)d->year * 10000 + d->month * 100 + d->day;
+    return d->year * 10000 + d->month * 100 + d->day;
 }
 
 /*------------------------------------------------------------------------------
@@ -474,8 +478,8 @@ bool readDate(const char *indent, Date *date)
 {
     char prompt[64];
 
-    snprintf(prompt, sizeof prompt, "%sрік: ", indent);
-    if (!readInt(prompt, &date->year, 1, INT_MAX))
+    snprintf(prompt, sizeof prompt, "%sрік (1..%d): ", indent, MAX_YEAR);
+    if (!readInt(prompt, &date->year, 1, MAX_YEAR))
     {
         return false;
     }
@@ -810,8 +814,8 @@ void cmdSoftwareValueByPeriod(const Sale *sales, int count)
         return;
     }
 
-    const long long fromNumber = dateToNumber(&from);
-    const long long toNumber = dateToNumber(&to);
+    const int fromNumber = dateToNumber(&from);
+    const int toNumber = dateToNumber(&to);
 
     if (fromNumber > toNumber)
     {
@@ -838,7 +842,7 @@ void cmdSoftwareValueByPeriod(const Sale *sales, int count)
             continue;
         }
 
-        const long long deliveryNumber = dateToNumber(&sale->delivery);
+        const int deliveryNumber = dateToNumber(&sale->delivery);
         if (deliveryNumber < fromNumber || deliveryNumber > toNumber)
         {
             continue;

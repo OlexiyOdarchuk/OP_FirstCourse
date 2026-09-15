@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 /* Найбільша припустима кількість елементів масиву. Межа масиву в мові C має бути сталим виразом часу компіляції,
    а змінна з модифікатором const ним не є, тому розмір задано директивою
@@ -148,7 +149,9 @@ bool fillFromKeyboard(int a[], int n)
 void fillRandom(int a[], int n, int low, int high)
 {
     /* Розмах рахується в double: для меж на кшталт INT_MIN..INT_MAX значення
-       high - low + 1 не вміщується в int. */
+       high - low + 1 не вміщується в int. Зсув від нижньої межі теж
+       обчислюється в double, а floor() округлює результат униз до цілого з
+       [low; high], тож проміжний цілий тип, ширший за int, не потрібен. */
     const double range = (double)high - low + 1.0;
 
     /* Масштабування rand() на діапазон замість rand() % range: стандарт гарантує
@@ -156,8 +159,7 @@ void fillRandom(int a[], int n, int low, int high)
        усіх значень. */
     for (int i = 0; i < n; ++i)
     {
-        a[i] =
-            (int)(low + (long long)((double)rand() / ((double)RAND_MAX + 1.0) * range));
+        a[i] = (int)floor(low + (double)rand() / ((double)RAND_MAX + 1.0) * range);
     }
 }
 

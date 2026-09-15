@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 /* Найбільша припустима кількість елементів масиву. Межа масиву в мові C має бути сталим виразом часу компіляції,
    а змінна з модифікатором const ним не є, тому розмір задано директивою
@@ -38,8 +39,11 @@
 
 /* Лічильники ефективності. Оголошені глобально, щоб не захаращувати
    заголовки функцій сортування службовими параметрами. */
-unsigned long long g_comparisons = 0; /* порівнянь під час сортування */
-unsigned long long g_swaps = 0;       /* обмінів під час сортування   */
+/* Пірамідальне сортування масиву з MAX_SIZE = 1000 елементів робить не більше
+   2 * n * log2(n), тобто близько 20 000 порівнянь і 10 000 обмінів, тож
+   лічильникам достатньо типу unsigned int. */
+unsigned int g_comparisons = 0; /* порівнянь під час сортування */
+unsigned int g_swaps = 0;       /* обмінів під час сортування   */
 
 /*------------------------------------------------------------------------------
   skipLine - відкинути залишок рядка введення разом із символом '\n'.
@@ -182,7 +186,9 @@ bool fillFromKeyboard(int a[], int n)
 void fillRandom(int a[], int n, int low, int high)
 {
     /* Розмах рахується в double: для меж на кшталт INT_MIN..INT_MAX значення
-       high - low + 1 не вміщується в int. */
+       high - low + 1 не вміщується в int. Зсув від нижньої межі теж
+       обчислюється в double, а floor() округлює результат униз до цілого з
+       [low; high], тож проміжний цілий тип, ширший за int, не потрібен. */
     const double range = (double)high - low + 1.0;
 
     /* Масштабування rand() на діапазон замість rand() % range: стандарт гарантує
@@ -190,8 +196,7 @@ void fillRandom(int a[], int n, int low, int high)
        усіх значень. */
     for (int i = 0; i < n; ++i)
     {
-        a[i] =
-            (int)(low + (long long)((double)rand() / ((double)RAND_MAX + 1.0) * range));
+        a[i] = (int)floor(low + (double)rand() / ((double)RAND_MAX + 1.0) * range);
     }
 }
 
@@ -361,8 +366,7 @@ void heapSort(int a[], int n, bool verbose)
       current - межа поточного блоку;
       prev    - початок поточного блоку.
 ------------------------------------------------------------------------------*/
-int blockSearch(const int a[], int n, int key, unsigned long long *comparisons,
-                int *blocks)
+int blockSearch(const int a[], int n, int key, unsigned int *comparisons, int *blocks)
 {
     *comparisons = 0;
     *blocks = 0;
@@ -508,8 +512,8 @@ int main(void)
 
     printf("\nЕфективність пірамідального сортування\n");
     printf("  Елементів у масиві: %d\n", n);
-    printf("  Порівнянь:          %llu\n", g_comparisons);
-    printf("  Обмінів:            %llu\n", g_swaps);
+    printf("  Порівнянь:          %u\n", g_comparisons);
+    printf("  Обмінів:            %u\n", g_swaps);
 
     /* Пошук у вже впорядкованому масиві. */
     int key = 0;
@@ -518,7 +522,7 @@ int main(void)
         return 1;
     }
 
-    unsigned long long searchComparisons = 0;
+    unsigned int searchComparisons = 0;
     int blocks = 0;
     const int found = blockSearch(a, n, key, &searchComparisons, &blocks);
 
@@ -534,7 +538,7 @@ int main(void)
 
     printf("  Довжина блоку (цілий корінь з n): %d\n", integerSqrt(n));
     printf("  Переглянуто блоків:       %d\n", blocks);
-    printf("  Порівнянь під час пошуку: %llu\n", searchComparisons);
+    printf("  Порівнянь під час пошуку: %u\n", searchComparisons);
 
     return 0;
 }

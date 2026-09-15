@@ -1,0 +1,48 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Вивести назву роботи, автора і меню фігур" },
+    { "kind": "process", "text": "choice = 0" },
+    { "kind": "if", "cond": "Ввести номер фігури choice не вдалося?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+        { "kind": "terminal", "text": "Повернути код 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "x = 0" },
+    { "kind": "process", "text": "y = 0" },
+    { "kind": "if", "cond": "Ввести координати x, y не вдалося?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+        { "kind": "terminal", "text": "Повернути код 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "r = 0" },
+    { "kind": "process", "text": "measure = 0" },
+    { "kind": "process", "text": "ring = належність кільцю, обчислити r" },
+    { "kind": "process", "text": "rhomb = належність ромбу, обчислити measure" },
+    { "kind": "process", "text": "Задати вивід із 4 знаками після коми" },
+    { "kind": "io", "text": "Вивести точку x, y, відстань r і measure" },
+    { "kind": "process", "text": "belongs = хибність" },
+    { "kind": "process", "text": "Назва фігури figure порожня" },
+    { "kind": "if", "cond": "choice = 1",
+      "then": { "stmts": [
+        { "kind": "process", "text": "belongs = ring" },
+        { "kind": "process", "text": "figure = «кільцю»" } ] },
+      "else": { "stmts": [
+        { "kind": "if", "cond": "choice = 2",
+          "then": { "stmts": [
+            { "kind": "process", "text": "belongs = rhomb" },
+            { "kind": "process", "text": "figure = «ромбу»" } ] },
+          "else": { "stmts": [
+            { "kind": "if", "cond": "choice = 3",
+              "then": { "stmts": [
+                { "kind": "process", "text": "belongs = ring або rhomb" },
+                { "kind": "process", "text": "figure = «об'єднанню кільця та ромба»" } ] },
+              "else": { "stmts": [] } }
+          ] } }
+      ] } },
+    { "kind": "if", "cond": "belongs = істина",
+      "then": { "stmts": [ { "kind": "io", "text": "Вивести: точка належить фігурі figure" } ] },
+      "else": { "stmts": [ { "kind": "io", "text": "Вивести: точка не належить фігурі figure" } ] } },
+    { "kind": "io", "text": "Вивести довідково належність кільцю і ромбу" },
+    { "kind": "terminal", "text": "Повернути код 0" }
+  ] } }
+]

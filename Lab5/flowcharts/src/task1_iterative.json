@@ -1,0 +1,14 @@
+[
+  { "name": "countBitsIterative", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести число n" },
+    { "kind": "process", "text": "Кількість одиниць count = 0" },
+    { "kind": "process", "text": "Остача rest = n" },
+    { "kind": "process", "text": "Лічильник ітерацій = 0" },
+    { "kind": "while", "cond": "rest ≠ 0", "body": { "stmts": [
+      { "kind": "process", "text": "Погасити наймолодший одиничний біт rest" },
+      { "kind": "process", "text": "Збільшити count на 1" },
+      { "kind": "process", "text": "Збільшити лічильник ітерацій на 1" }
+    ] } },
+    { "kind": "terminal", "text": "Повернути count" }
+  ] } }
+]

@@ -1,0 +1,43 @@
+[
+  { "name": "main", "main": true, "block": { "kind": "block", "stmts": [
+    { "kind": "process", "text": "a = 0" },
+    { "kind": "process", "text": "b = 0" },
+    { "kind": "process", "text": "c = 0" },
+    { "kind": "process", "text": "d = 0" },
+    { "kind": "io", "text": "Вивести назву роботи, автора і вираз" },
+    { "kind": "if", "cond": "Ввести a, b, c, d не вдалося?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: вхідні дані вичерпано" },
+        { "kind": "terminal", "text": "Повернути код 1" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести вихідні дані a, b, c, d" },
+    { "kind": "if", "cond": "c ≤ 0",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: ln c не існує" },
+        { "kind": "terminal", "text": "Повернути код 2" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "if", "cond": "d = 0",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: ділення на нуль" },
+        { "kind": "terminal", "text": "Повернути код 2" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "cosB = cos b" },
+    { "kind": "process", "text": "Підкореневий вираз radicand = a·cos²b + 1" },
+    { "kind": "if", "cond": "radicand < 0",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: підкореневий вираз від'ємний" },
+        { "kind": "terminal", "text": "Повернути код 2" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Корінь root = √radicand" },
+    { "kind": "process", "text": "lnC = ln c" },
+    { "kind": "process", "text": "x = root · lnC / d" },
+    { "kind": "io", "text": "Вивести проміжні результати обчислень" },
+    { "kind": "if", "cond": "x не є скінченним числом?",
+      "then": { "stmts": [
+        { "kind": "io", "text": "Вивести: значення виходить за допустимі межі" },
+        { "kind": "terminal", "text": "Повернути код 2" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "io", "text": "Вивести результат x" },
+    { "kind": "terminal", "text": "Повернути код 0" }
+  ] } }
+]

@@ -25,11 +25,20 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <limits.h>
+
+/* Найбільша вартість відправлення. Рекурсія без запам'ятовування має
+   експоненційну трудомісткість: для марок 1, 2, 3 при m = 35 виконується
+   4 047 854 365 викликів, а при m = 36 - уже 7 445 164 921, що перевищує
+   UINT_MAX = 4 294 967 295. Тому з цією межею і кількість способів, і
+   лічильник викликів гарантовано вміщуються в unsigned int, а більшу суму
+   така рекурсія однаково не обчислила б за прийнятний час. */
+#define MAX_COST 35
 
 /* Лічильник викликів рекурсивної функції - характеристика трудомісткості.
    Оголошений глобально, щоб не додавати службовий параметр до функції,
    яка має відповідати рекурентному означенню з умови. */
-unsigned long long g_calls = 0;
+unsigned int g_calls = 0;
 
 /* Поточна та максимальна глибина вкладеності рекурсивних викликів. */
 int g_currentDepth = 0;
@@ -70,7 +79,7 @@ int g_maxDepth = 0;
   Однакові номінали враховуються лише один раз: інакше один і той самий
   спосіб було б підраховано двічі.
 ------------------------------------------------------------------------------*/
-unsigned long long countWays(int m, int x, int y, int z)
+unsigned int countWays(int m, int x, int y, int z)
 {
     ++g_calls;
     ++g_currentDepth;
@@ -79,7 +88,7 @@ unsigned long long countWays(int m, int x, int y, int z)
         g_maxDepth = g_currentDepth;
     }
 
-    unsigned long long ways = 0;
+    unsigned int ways = 0;
 
     if (m == 0)
     {
@@ -151,18 +160,20 @@ bool restOfLineOk(void)
 }
 
 /*------------------------------------------------------------------------------
-  readNatural - прочитати натуральне число з контролем коректності введення.
+  readNatural - прочитати натуральне число, не більше за задану межу,
+                з контролем коректності введення.
 
   Цикли в завданні заборонені, тому при помилці запит повторюється
   рекурсивним викликом.
 
   Параметри:
       prompt [вхідний]  - текст запрошення;
-      value  [вихідний] - адреса змінної для введеного числа.
+      value  [вихідний] - адреса змінної для введеного числа;
+      high   [вхідний]  - найбільше допустиме значення.
 
   Повертає: true - число прочитано; false - вхідні дані вичерпано.
 ------------------------------------------------------------------------------*/
-bool readNatural(const char *prompt, int *value)
+bool readNatural(const char *prompt, int *value, int high)
 {
     printf("%s: ", prompt);
     const int scanned = scanf("%d", value);
@@ -176,13 +187,13 @@ bool readNatural(const char *prompt, int *value)
     {
         skipLine();
     }
-    else if (restOfLineOk() && *value >= 1)
+    else if (restOfLineOk() && *value >= 1 && *value <= high)
     {
         return true;
     }
 
-    printf("Помилка: потрібне натуральне число.\n");
-    return readNatural(prompt, value);
+    printf("Помилка: потрібне натуральне число від 1 до %d.\n", high);
+    return readNatural(prompt, value, high);
 }
 
 /*------------------------------------------------------------------------------
@@ -198,10 +209,10 @@ bool readNatural(const char *prompt, int *value)
 ------------------------------------------------------------------------------*/
 bool readInput(int *m, int *x, int *y, int *z)
 {
-    return readNatural("Уведіть вартість відправлення m", m) &&
-           readNatural("Уведіть номінал першої марки x", x) &&
-           readNatural("Уведіть номінал другої марки y", y) &&
-           readNatural("Уведіть номінал третьої марки z", z);
+    return readNatural("Уведіть вартість відправлення m (1..35)", m, MAX_COST) &&
+           readNatural("Уведіть номінал першої марки x", x, INT_MAX) &&
+           readNatural("Уведіть номінал другої марки y", y, INT_MAX) &&
+           readNatural("Уведіть номінал третьої марки z", z, INT_MAX);
 }
 
 /*------------------------------------------------------------------------------
@@ -241,11 +252,11 @@ int main(void)
     g_currentDepth = 0;
     g_maxDepth = 0;
 
-    const unsigned long long ways = countWays(m, x, y, z);
+    const unsigned int ways = countWays(m, x, y, z);
 
     printf("\nВартість відправлення: %d коп.\n", m);
     printf("Номінали марок:        %d, %d, %d коп.\n", x, y, z);
-    printf("\nКількість способів оплати: %llu\n", ways);
+    printf("\nКількість способів оплати: %u\n", ways);
 
     if (ways == 0)
     {
@@ -253,7 +264,7 @@ int main(void)
     }
 
     printf("\nХарактеристики рекурсії\n");
-    printf("  Викликів рекурсивної функції: %llu\n", g_calls);
+    printf("  Викликів рекурсивної функції: %u\n", g_calls);
     printf("  Глибина рекурсії:             %d\n", g_maxDepth);
 
     return 0;

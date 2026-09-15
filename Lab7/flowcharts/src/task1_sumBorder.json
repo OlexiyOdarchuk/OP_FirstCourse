@@ -1,0 +1,18 @@
+[
+  { "name": "sumOnShadedBorder", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести матрицю a, вимірність m" },
+    { "kind": "process", "text": "Сума елементів межі sum = 0" },
+    { "kind": "process", "text": "Кількість елементів межі count = 0" },
+    { "kind": "for", "cond": "i := 0, m − 1", "body": { "stmts": [
+      { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
+        { "kind": "if", "cond": "Елемент (i, j) на межі заштрихованої частини?",
+          "then": { "stmts": [
+            { "kind": "process", "text": "Збільшити sum на елемент рядка i, стовпця j" },
+            { "kind": "process", "text": "Збільшити count на 1" }
+          ] },
+          "else": { "stmts": [] } }
+      ] } }
+    ] } },
+    { "kind": "terminal", "text": "Повернути sum" }
+  ] } }
+]

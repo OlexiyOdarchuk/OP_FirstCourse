@@ -1,0 +1,16 @@
+[
+  { "name": "countVowelsConsonants", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести слово" },
+    { "kind": "process", "text": "Кількість голосних = 0" },
+    { "kind": "process", "text": "Кількість приголосних = 0" },
+    { "kind": "for", "cond": "Для кожного символу слова", "body": { "stmts": [
+      { "kind": "process", "text": "Визначити код символу" },
+      { "kind": "if", "cond": "Символ не літера або м'який знак",
+        "then": { "stmts": [ { "kind": "continue", "depth": 0 } ] },
+        "else": { "stmts": [] } },
+      { "kind": "if", "cond": "Літера голосна",
+        "then": { "stmts": [ { "kind": "process", "text": "Збільшити кількість голосних на 1" } ] },
+        "else": { "stmts": [ { "kind": "process", "text": "Збільшити кількість приголосних на 1" } ] } }
+    ] } }
+  ] } }
+]

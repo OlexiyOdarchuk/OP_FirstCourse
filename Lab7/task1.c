@@ -51,6 +51,12 @@
    препроцесора. */
 #define MAX_SIZE 20
 
+/* Найбільше за модулем значення елемента. Межа заштрихованої частини матриці
+   20x20 містить менше 80 елементів, тож сума по межі за модулем не перевищує
+   80 * 1 000 000 = 8 * 10^7 і вміщується в int разом із модулем будь-якого
+   елемента. Без такої межі для суми знадобився б ширший тип. */
+#define MAX_ABS_VALUE 1000000
+
 /*------------------------------------------------------------------------------
   skipLine - відкинути залишок рядка введення разом із символом '\n'.
 ------------------------------------------------------------------------------*/
@@ -264,7 +270,7 @@ void printMatrix(const char *title, int a[][MAX_SIZE], int m, bool mark)
 ------------------------------------------------------------------------------*/
 int findMaxByModulus(int a[][MAX_SIZE], int m, int *row, int *col, int *count)
 {
-    long long maxAbs = -1;
+    int maxAbs = -1;
     int maxValue = 0;
 
     *row = -1;
@@ -281,7 +287,7 @@ int findMaxByModulus(int a[][MAX_SIZE], int m, int *row, int *col, int *count)
             }
 
             ++(*count);
-            const long long absValue = llabs((long long)a[i][j]);
+            const int absValue = abs(a[i][j]);
 
             if (absValue > maxAbs)
             {
@@ -305,9 +311,9 @@ int findMaxByModulus(int a[][MAX_SIZE], int m, int *row, int *col, int *count)
       count [вихідний] - адреса лічильника елементів межі.
   Повертає : суму елементів межі.
 ------------------------------------------------------------------------------*/
-long long sumOnShadedBorder(int a[][MAX_SIZE], int m, int *count)
+int sumOnShadedBorder(int a[][MAX_SIZE], int m, int *count)
 {
-    long long sum = 0;
+    int sum = 0;
 
     *count = 0;
 
@@ -374,7 +380,7 @@ int main(void)
             {
                 char prompt[40];
                 snprintf(prompt, sizeof prompt, "  a[%d][%d] = ", i, j);
-                if (!readInt(prompt, &a[i][j], INT_MIN, INT_MAX))
+                if (!readInt(prompt, &a[i][j], -MAX_ABS_VALUE, MAX_ABS_VALUE))
                 {
                     return 1;
                 }
@@ -385,8 +391,10 @@ int main(void)
     {
         int low = 0;
         int high = 0;
-        if (!readInt("Уведіть нижню межу діапазону (від'ємну): ", &low, INT_MIN, -1) ||
-            !readInt("Уведіть верхню межу діапазону (додатну): ", &high, 1, INT_MAX))
+        if (!readInt("Уведіть нижню межу діапазону (від'ємну): ", &low, -MAX_ABS_VALUE,
+                     -1) ||
+            !readInt("Уведіть верхню межу діапазону (додатну): ", &high, 1,
+                     MAX_ABS_VALUE))
         {
             return 1;
         }
@@ -400,10 +408,10 @@ int main(void)
         {
             for (int j = 0; j < m; ++j)
             {
-                /* Розмах у double: high - low + 1 може не вміститися в int. */
-                const double range = (double)high - low + 1.0;
-                a[i][j] = (int)(low + (long long)((double)rand() /
-                                                  ((double)RAND_MAX + 1.0) * range));
+                /* Розмах не перевищує 2 * MAX_ABS_VALUE + 1 і вміщується в int. */
+                const int range = high - low + 1;
+                a[i][j] =
+                    low + (int)((double)rand() / ((double)RAND_MAX + 1.0) * range);
             }
         }
     }
@@ -416,16 +424,16 @@ int main(void)
     int shadedCount = 0;
     int borderCount = 0;
     const int maxValue = findMaxByModulus(a, m, &maxRow, &maxCol, &shadedCount);
-    const long long borderSum = sumOnShadedBorder(a, m, &borderCount);
+    const int borderSum = sumOnShadedBorder(a, m, &borderCount);
 
     printf("\nРезультати\n");
     printf("  Елементів у заштрихованій частині: %d\n", shadedCount);
-    printf("  Найбільший за модулем елемент:     %d (модуль %lld)\n", maxValue,
-           llabs((long long)maxValue));
+    printf("  Найбільший за модулем елемент:     %d (модуль %d)\n", maxValue,
+           abs(maxValue));
     printf("  Його індекси:                      рядок %d, стовпець %d\n", maxRow,
            maxCol);
     printf("  Елементів на межі:                 %d\n", borderCount);
-    printf("  Сума елементів по межі:            %lld\n", borderSum);
+    printf("  Сума елементів по межі:            %d\n", borderSum);
 
     return 0;
 }

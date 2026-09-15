@@ -96,7 +96,9 @@
           <b>Термін постачання</b> подано вкладеною структурою <code>Date</code> (день, місяць,
           рік). Найбільший день, який можна ввести, залежить від місяця й року (функція
           <code>daysInMonth()</code> враховує високосні роки), тож неіснуючу дату на кшталт 31.02
-          ввести неможливо. Для порівняння дату зведено до числа виду РРРРММДД:
+          ввести неможливо. Рік обмежено діапазоном 1..9999, тому число виду РРРРММДД не перевищує
+          99 991 231 і вміщується в <code>int</code>. Для порівняння дату зведено до числа виду
+          РРРРММДД:
         </p>
         <pre class="formula">dateToNumber(d) = d.year·10000 + d.month·100 + d.day</pre>
         <p>
@@ -246,9 +248,9 @@
           </figcaption>
         </figure>
         <p>
-          Схеми побудовано з текстів програм за допомогою rombik (<a href="https://rombik.app"
-            >rombik.app</a
-          >) відповідно до ДСТУ 19.701-90 (ISO 5807).
+          Схеми побудовано за текстами програм у rombik (<a href="https://rombik.app">rombik.app</a
+          >) відповідно до ДСТУ 19.701-90 (ISO 5807). Структура кожної схеми точно відповідає коду
+          функції, а блоки описують дії словами, як у методичних вказівках, без фрагментів коду.
         </p>
       </section>
 
@@ -311,6 +313,7 @@
 <span class="cm">   задано директивами препроцесора. */</span>
 <span class="cp">#define MAX_RECORDS 200 </span><span class="cm">/* записів у масиві структур */</span>
 <span class="cp">#define MAX_NAME 32     </span><span class="cm">/* довжина текстового поля   */</span>
+<span class="cp">#define MAX_YEAR 9999   </span><span class="cm">/* найбільший рік: число РРРРММДД вміщується в int */</span>
 
 <span class="cm">/* Допуск при порівнянні сум продажів. Суми накопичуються в типі double,</span>
 <span class="cm">   тож дві математично рівні суми можуть відрізнятися похибкою округлення;</span>
@@ -485,12 +488,15 @@
 <span class="cm">  Таке подання дозволяє порівнювати дати звичайними операціями відношення:</span>
 <span class="cm">  хронологічний порядок дат збігається з числовим порядком цих чисел.</span>
 
+<span class="cm">  Рік не перевищує MAX_YEAR = 9999, тому найбільше таке число 99 991 231</span>
+<span class="cm">  вміщується в int.</span>
+
 <span class="cm">  Параметри: d [вхідний] - покажчик на дату.</span>
 <span class="cm">  Повертає : число виду РРРРММДД.</span>
 <span class="cm">------------------------------------------------------------------------------*/</span>
-<span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">dateToNumber</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">dateToNumber</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Date</span><span class="w"> </span><span class="o">*</span><span class="n">d</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="p">)</span><span class="n">d</span><span class="o">-&gt;</span><span class="n">year</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">month</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">day</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">year</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10000</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">month</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">d</span><span class="o">-&gt;</span><span class="n">day</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="cm">/*------------------------------------------------------------------------------</span>
@@ -734,8 +740,8 @@
 <span class="p">{</span>
 <span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
 
-<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"%sрік: "</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">))</span>
+<span class="w">    </span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"%sрік (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_YEAR</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">date</span><span class="o">-&gt;</span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_YEAR</span><span class="p">))</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -1070,8 +1076,8 @@
 <span class="w">        </span><span class="k">return</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">fromNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">from</span><span class="p">);</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">toNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">to</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">fromNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">from</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">toNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">to</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fromNumber</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">toNumber</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
@@ -1098,7 +1104,7 @@
 <span class="w">            </span><span class="k">continue</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dateToNumber</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sale</span><span class="o">-&gt;</span><span class="n">delivery</span><span class="p">);</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">fromNumber</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">deliveryNumber</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">toNumber</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">continue</span><span class="p">;</span>

@@ -1,0 +1,14 @@
+[
+  { "name": "isPerfectSquare", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести число n" },
+    { "kind": "if", "cond": "n < 0",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути: не квадрат" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Обчислити цілий корінь k = ⌊√n⌋" },
+    { "kind": "if", "cond": "k² ≠ n",
+      "then": { "stmts": [ { "kind": "terminal", "text": "Повернути: не квадрат" } ] },
+      "else": { "stmts": [] } },
+    { "kind": "process", "text": "Корінь числа = k" },
+    { "kind": "terminal", "text": "Повернути: квадрат" }
+  ] } }
+]

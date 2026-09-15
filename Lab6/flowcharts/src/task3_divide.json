@@ -1,0 +1,17 @@
+[
+  { "name": "dividePolynomials", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести коефіцієнти a, b, степені n, m" },
+    { "kind": "for", "cond": "i := 0, n", "body": { "stmts": [
+      { "kind": "process", "text": "i-й елемент work = i-й коефіцієнт a" }
+    ] } },
+    { "kind": "for", "cond": "i := 0, n − m", "body": { "stmts": [
+      { "kind": "process", "text": "i-й коефіцієнт частки q = i-й елемент work / старший коефіцієнт b" },
+      { "kind": "for", "cond": "j := 0, m", "body": { "stmts": [
+        { "kind": "process", "text": "Зменшити (i + j)-й елемент work на добуток i-го q і j-го b" }
+      ] } }
+    ] } },
+    { "kind": "for", "cond": "i := 0, m − 1", "body": { "stmts": [
+      { "kind": "process", "text": "i-й коефіцієнт остачі r = (n − m + 1 + i)-й елемент work" }
+    ] } }
+  ] } }
+]

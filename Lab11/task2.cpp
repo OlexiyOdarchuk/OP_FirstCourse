@@ -48,6 +48,7 @@
 /* Обмеження на розміри даних та імена бінарних файлів. */
 const int MAX_RECORDS = 200; /* найбільша кількість записів у файлі даних */
 const int MAX_NAME = 32;
+const int MAX_YEAR = 9999; /* найбільший рік: число РРРРММДД вміщується в int */
 const char *const DATA_FILE = "sales.dat";
 const char *const COMPUTERS_FILE = "computers.dat"; /* результат запиту 1 */
 const char *const SOFTWARE_FILE = "software.dat";   /* результат запиту 2 */
@@ -181,11 +182,12 @@ const char *kindName(ProductKind kind)
 
 /*------------------------------------------------------------------------------
   dateToNumber - звести дату до числа виду РРРРММДД для порівняння.
+  Рік не перевищує MAX_YEAR, тому число не більше 99 991 231 і вміщується в int.
   Параметри: d [вхідний] - покажчик на дату.  Повертає: число РРРРММДД.
 ------------------------------------------------------------------------------*/
-long long dateToNumber(const Date *d)
+int dateToNumber(const Date *d)
 {
-    return static_cast<long long>(d->year) * 10000 + d->month * 100 + d->day;
+    return d->year * 10000 + d->month * 100 + d->day;
 }
 
 /*------------------------------------------------------------------------------
@@ -390,8 +392,8 @@ bool readDate(const char *indent, Date *date)
 {
     char prompt[64];
 
-    std::snprintf(prompt, sizeof prompt, "%sрік: ", indent);
-    if (!readInt(prompt, &date->year, 1, INT_MAX))
+    std::snprintf(prompt, sizeof prompt, "%sрік (1..%d): ", indent, MAX_YEAR);
+    if (!readInt(prompt, &date->year, 1, MAX_YEAR))
     {
         return false;
     }
@@ -1068,8 +1070,8 @@ void cmdQuerySoftware()
         return;
     }
 
-    const long long fromNumber = dateToNumber(&from);
-    const long long toNumber = dateToNumber(&to);
+    const int fromNumber = dateToNumber(&from);
+    const int toNumber = dateToNumber(&to);
 
     if (fromNumber > toNumber)
     {
@@ -1105,7 +1107,7 @@ void cmdQuerySoftware()
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
         terminateStrings(&sale);
-        const long long deliveryNumber = dateToNumber(&sale.delivery);
+        const int deliveryNumber = dateToNumber(&sale.delivery);
 
         if (sale.kind == ProductKind::Software && deliveryNumber >= fromNumber &&
             deliveryNumber <= toNumber)

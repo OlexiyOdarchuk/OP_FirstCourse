@@ -1,0 +1,20 @@
+[
+  { "name": "scanRange", "main": false, "block": { "kind": "block", "stmts": [
+    { "kind": "io", "text": "Ввести розрядність digits і місткість масиву" },
+    { "kind": "process", "text": "Нижня межа low = 0" },
+    { "kind": "process", "text": "Верхня межа high = 0" },
+    { "kind": "process", "text": "Кількість знайдених count = 0" },
+    { "kind": "call", "text": "Визначити межі low, high для digits цифр" },
+    { "kind": "process", "text": "Число n = low" },
+    { "kind": "while", "cond": "n ≤ high і count < місткості", "body": { "stmts": [
+      { "kind": "if", "cond": "n — число Армстронга?",
+        "then": { "stmts": [
+          { "kind": "process", "text": "Записати n у масив знайдених" },
+          { "kind": "process", "text": "Збільшити count на 1" }
+        ] },
+        "else": { "stmts": [] } },
+      { "kind": "process", "text": "Збільшити n на 1" }
+    ] } },
+    { "kind": "terminal", "text": "Повернути count" }
+  ] } }
+]
