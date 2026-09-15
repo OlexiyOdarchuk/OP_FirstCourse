@@ -46,13 +46,18 @@
 /* Найбільший обсяг продукції одного виду на одному підприємстві за квартал.
    Найбільший можливий підсумок - загальний обсяг за два квартали:
    2 * MAX_ROWS * MAX_COLS * MAX_VOLUME = 2 * 20 * 20 * 1 000 000 = 8 * 10^8,
-   що менше за INT_MAX, тож усі матриці й підсумки зберігаються в int. */
+   що менше за INT_MAX, тож усі матриці й підсумки зберігаються в int. Тип
+   short (до 32767) для них замалий навіть при обсягах до 1000: загальний
+   підсумок сягав би 2 * 20 * 20 * 1000 = 800 000. Вимірності, індекси, пункти
+   меню, межі генерації та ширини стовпців не перевищують 10000 і мають тип
+   short. */
 #define MAX_VOLUME 1000000
 
 /* Межі генерації псевдовипадкових чисел. Функція rand() гарантовано повертає
    числа лише від 0 до 32767 (RAND_MAX у Visual Studio), тому ширина діапазону
    high - low + 1 не повинна перевищувати 32768: інакше вираз
-   low + rand() % (high - low + 1) охопив би не всі значення діапазону. */
+   low + rand() % (high - low + 1) охопив би не всі значення діапазону.
+   Межі генерації вміщуються в short. */
 #define MAX_RANDOM 10000
 
 /* Ширини колонок таблиць у символах. */
@@ -79,9 +84,9 @@ enum
   Параметри: s [вхідний] - рядок у кодуванні UTF-8.
   Повертає : кількість символів рядка.
 */
-int utf8Width(const char *s)
+short utf8Width(const char *s)
 {
-    int width = 0; //кількість символів рядка
+    short width = 0; //кількість символів рядка
 
     //перебрати байти рядка
     for (const unsigned char *p = (const unsigned char *)s; *p != '\0'; ++p)
@@ -109,13 +114,13 @@ int utf8Width(const char *s)
   Локальні змінні:
       pad - кількість пропусків, які треба додати.
 */
-void printPadded(const char *s, int width, bool left)
+void printPadded(const char *s, short width, bool left)
 {
-    const int pad = width - utf8Width(s); //обчислити кількість пропусків
+    const short pad = width - utf8Width(s); //обчислити кількість пропусків
 
     if (!left) //якщо вирівнювання праворуч
     {
-        for (int i = 0; i < pad; ++i) //повторити pad разів
+        for (short i = 0; i < pad; ++i) //повторити pad разів
         {
             putchar(' '); //вивести пропуск
         }
@@ -125,7 +130,7 @@ void printPadded(const char *s, int width, bool left)
 
     if (left) //якщо вирівнювання ліворуч
     {
-        for (int i = 0; i < pad; ++i) //повторити pad разів
+        for (short i = 0; i < pad; ++i) //повторити pad разів
         {
             putchar(' '); //вивести пропуск
         }
@@ -216,6 +221,31 @@ bool readInt(const char *prompt, int *value, int low, int high)
     }
 }
 
+//==== readShort: прочитати ціле число з діапазону типу short з контролем введення =====
+/*
+  readShort - прочитати ціле число з діапазону типу short з контролем введення.
+
+  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
+  Повертає : true - число прочитано; false - вхідні дані вичерпано.
+
+  Число читається функцією readInt у змінну типу int і записується в short
+  лише після перевірки діапазону: формат %hd зберіг би обрізане при
+  переповненні значення (65540 як 4), і хибне введення пройшло б перевірку.
+
+  Локальні змінні: number - прочитане число.
+*/
+bool readShort(const char *prompt, short *value, short low, short high)
+{
+    int number = 0;                           //прочитане число
+    if (!readInt(prompt, &number, low, high)) //якщо число не прочитано
+    {
+        return false; //повернути ознаку невдачі
+    }
+
+    *value = (short)number; //записати перевірене число
+    return true;            //повернути ознаку успіху
+}
+
 //================== fillMatrix: заповнити матрицю обсягів продукції ===================
 /*
   fillMatrix - заповнити матрицю обсягів продукції.
@@ -229,8 +259,8 @@ bool readInt(const char *prompt, int *value, int low, int high)
       low, high [вхідні] - межі діапазону для генерації.
   Повертає : true - заповнено; false - вхідні дані вичерпано.
 */
-bool fillMatrix(int a[][MAX_COLS], int n, int m, const char *name, bool byHand, int low,
-                int high)
+bool fillMatrix(int a[][MAX_COLS], short n, short m, const char *name, bool byHand,
+                short low, short high)
 {
     if (byHand) //якщо введення з клавіатури
     {
@@ -238,28 +268,27 @@ bool fillMatrix(int a[][MAX_COLS], int n, int m, const char *name, bool byHand, 
                "стовпець - підприємство:\n",
                name); //вивести запрошення до введення
 
-        for (int i = 0; i < n; ++i) //перебрати рядки матриці
+        for (short i = 0; i < n; ++i) //перебрати рядки матриці
         {
-            for (int j = 0; j < m; ++j) //перебрати стовпці матриці
+            for (short j = 0; j < m; ++j) //перебрати стовпці матриці
             {
                 char prompt[80]; //запрошення для елемента
                 //сформувати запрошення
                 snprintf(prompt, sizeof prompt,
                          "  продукція %d, підприємство %d: ", i + 1, j + 1);
-                int volume = 0;                               //введений обсяг продукції
-                if (!readInt(prompt, &volume, 0, MAX_VOLUME)) //якщо обсяг не введено
+                //якщо обсяг не введено
+                if (!readInt(prompt, &a[i][j], 0, MAX_VOLUME))
                 {
                     return false; //повернути ознаку невдачі
                 }
-                a[i][j] = volume; //записати обсяг у матрицю
             }
         }
     }
     else //інакше згенерувати матрицю
     {
-        for (int i = 0; i < n; ++i) //перебрати рядки матриці
+        for (short i = 0; i < n; ++i) //перебрати рядки матриці
         {
-            for (int j = 0; j < m; ++j) //перебрати стовпці матриці
+            for (short j = 0; j < m; ++j) //перебрати стовпці матриці
             {
                 a[i][j] = low + rand() % (high - low + 1); //обсяг від low до high
             }
@@ -273,10 +302,10 @@ bool fillMatrix(int a[][MAX_COLS], int n, int m, const char *name, bool byHand, 
   printSeparator - вивести розділювальну лінію таблиці.
   Параметри: width [вхідний] - довжина лінії в символах.
 */
-void printSeparator(int width)
+void printSeparator(short width)
 {
-    printf("  ");                   //вивести відступ лінії
-    for (int i = 0; i < width; ++i) //повторити width разів
+    printf("  ");                     //вивести відступ лінії
+    for (short i = 0; i < width; ++i) //повторити width разів
     {
         putchar('-'); //вивести символ лінії
     }
@@ -296,13 +325,20 @@ void printSeparator(int width)
       n, m  [вхідні]  - кількість рядків і стовпців.
 
   Локальні змінні:
-      tableWidth - повна ширина таблиці для розділювальних ліній;
-      label      - підпис рядка ("Продукція N").
+      bound       - сума модулів елементів (int: до 8 * 10^8);
+      needed      - ширина запису bound зі знаком і відступом;
+      columnWidth - ширина стовпця підприємства;
+      totalWidth  - ширина колонки підсумків;
+      tableWidth  - повна ширина таблиці для розділювальних ліній;
+      label       - підпис рядка ("Продукція N");
+      rowTotal, columnTotal, grandTotal - підсумки рядка, стовпця й таблиці
+                    (int: сягають 8 * 10^8).
+  Ширини вміщуються в short: не більше 16 + 20 * 12 + 12 = 268 символів.
 
   Параметр-матрицю оголошено без const: у C до редакції C23 масив
   int a[N][M] неявно не перетворюється на const int (*)[M].
 */
-void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
+void printMatrix(const char *title, int a[][MAX_COLS], short n, short m)
 {
     printf("\n%s\n", title); //вивести заголовок таблиці
 
@@ -310,27 +346,27 @@ void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
        тож за довжиною її запису зі знаком обирається ширина стовпців: для
        звичайних обсягів лишаються стандартні ширини, для великих стовпці
        розширюються, щоб числа не зливалися. */
-    int bound = 0;              //сума модулів елементів
-    for (int i = 0; i < n; ++i) //перебрати рядки матриці
+    int bound = 0;                //сума модулів елементів
+    for (short i = 0; i < n; ++i) //перебрати рядки матриці
     {
-        for (int j = 0; j < m; ++j) //перебрати стовпці матриці
+        for (short j = 0; j < m; ++j) //перебрати стовпці матриці
         {
             bound += abs(a[i][j]); //накопичити суму модулів
         }
     }
     //обчислити потрібну ширину стовпця
-    const int needed = snprintf(NULL, 0, "%d", -bound) + 2;
+    const short needed = (short)(snprintf(NULL, 0, "%d", -bound) + 2);
     //вибрати ширину стовпця підприємства
-    const int columnWidth = needed > COLUMN_WIDTH ? needed : COLUMN_WIDTH;
+    const short columnWidth = needed > COLUMN_WIDTH ? needed : COLUMN_WIDTH;
     //вибрати ширину колонки підсумків
-    const int totalWidth = needed > TOTAL_WIDTH ? needed : TOTAL_WIDTH;
+    const short totalWidth = needed > TOTAL_WIDTH ? needed : TOTAL_WIDTH;
 
     //обчислити повну ширину таблиці
-    const int tableWidth = LABEL_WIDTH + columnWidth * m + totalWidth;
+    const short tableWidth = (short)(LABEL_WIDTH + columnWidth * m + totalWidth);
 
     printf("  ");                                        //вивести відступ заголовка
     printPadded("Продукція \\ П-во", LABEL_WIDTH, true); //вивести підпис кута таблиці
-    for (int j = 0; j < m; ++j)                          //перебрати номери підприємств
+    for (short j = 0; j < m; ++j)                        //перебрати номери підприємств
     {
         printf("%*d", columnWidth, j + 1); //вивести номер підприємства
     }
@@ -339,15 +375,15 @@ void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
 
     printSeparator(tableWidth); //вивести розділювальну лінію
 
-    for (int i = 0; i < n; ++i) //перебрати види продукції
+    for (short i = 0; i < n; ++i) //перебрати види продукції
     {
         char label[LABEL_WIDTH * 2];                          //підпис рядка таблиці
         snprintf(label, sizeof label, "Продукція %d", i + 1); //сформувати підпис рядка
         printf("  ");                                         //вивести відступ рядка
         printPadded(label, LABEL_WIDTH, true);                //вивести підпис рядка
 
-        int rowTotal = 0;           //підсумок рядка
-        for (int j = 0; j < m; ++j) //перебрати підприємства
+        int rowTotal = 0;             //підсумок рядка
+        for (short j = 0; j < m; ++j) //перебрати підприємства
         {
             printf("%*d", columnWidth, a[i][j]); //вивести обсяг
             rowTotal += a[i][j];                 //накопичити підсумок рядка
@@ -359,11 +395,11 @@ void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
     printf("  ");                            //вивести відступ рядка підсумків
     printPadded("Разом", LABEL_WIDTH, true); //вивести підпис рядка підсумків
 
-    int grandTotal = 0;         //загальний підсумок таблиці
-    for (int j = 0; j < m; ++j) //перебрати підприємства
+    int grandTotal = 0;           //загальний підсумок таблиці
+    for (short j = 0; j < m; ++j) //перебрати підприємства
     {
-        int columnTotal = 0;        //підсумок стовпця
-        for (int i = 0; i < n; ++i) //перебрати види продукції
+        int columnTotal = 0;          //підсумок стовпця
+        for (short i = 0; i < n; ++i) //перебрати види продукції
         {
             columnTotal += a[i][j]; //накопичити підсумок стовпця
         }
@@ -382,11 +418,12 @@ void printMatrix(const char *title, int a[][MAX_COLS], int n, int m)
       c    [вихідний] - результат;
       n, m [вхідні]   - кількість рядків і стовпців.
 */
-void addMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], int n, int m)
+void addMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], short n,
+                 short m)
 {
-    for (int i = 0; i < n; ++i) //перебрати рядки матриці
+    for (short i = 0; i < n; ++i) //перебрати рядки матриці
     {
-        for (int j = 0; j < m; ++j) //перебрати стовпці матриці
+        for (short j = 0; j < m; ++j) //перебрати стовпці матриці
         {
             c[i][j] = a[i][j] + b[i][j]; //обчислити суму елементів
         }
@@ -403,12 +440,12 @@ void addMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], int n,
       c    [вихідний] - результат;
       n, m [вхідні]   - кількість рядків і стовпців.
 */
-void subtractMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], int n,
-                      int m)
+void subtractMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], short n,
+                      short m)
 {
-    for (int i = 0; i < n; ++i) //перебрати рядки матриці
+    for (short i = 0; i < n; ++i) //перебрати рядки матриці
     {
-        for (int j = 0; j < m; ++j) //перебрати стовпці матриці
+        for (short j = 0; j < m; ++j) //перебрати стовпці матриці
         {
             c[i][j] = a[i][j] - b[i][j]; //обчислити різницю елементів
         }
@@ -426,19 +463,19 @@ void subtractMatrices(int a[][MAX_COLS], int b[][MAX_COLS], int c[][MAX_COLS], i
       m    [вхідний] - кількість підприємств (стовпців).
 
   Локальні змінні:
-      totalByPlant - сумарний обсяг по кожному підприємству;
-      grandTotal   - підсумок по всіх підприємствах;
+      totalByPlant - сумарний обсяг по кожному підприємству (int: до 4 * 10^7);
+      grandTotal   - підсумок по всіх підприємствах (int: до 8 * 10^8);
       label        - підпис рядка таблиці ("Підприємство N").
 */
-void reportTotalsByPlant(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
+void reportTotalsByPlant(int a[][MAX_COLS], int b[][MAX_COLS], short n, short m)
 {
     int totalByPlant[MAX_COLS]; //сумарні обсяги підприємств
     int grandTotal = 0;         //загальний обсяг
 
-    for (int j = 0; j < m; ++j) //перебрати підприємства
+    for (short j = 0; j < m; ++j) //перебрати підприємства
     {
-        totalByPlant[j] = 0;        //обнулити обсяг підприємства
-        for (int i = 0; i < n; ++i) //перебрати види продукції
+        totalByPlant[j] = 0;          //обнулити обсяг підприємства
+        for (short i = 0; i < n; ++i) //перебрати види продукції
         {
             totalByPlant[j] += a[i][j] + b[i][j]; //накопичити обсяг за два квартали
         }
@@ -456,7 +493,7 @@ void reportTotalsByPlant(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
     printf("\n");                             //завершити рядок заголовка
     printSeparator(NAME_WIDTH + VALUE_WIDTH); //вивести розділювальну лінію
 
-    for (int j = 0; j < m; ++j) //перебрати підприємства
+    for (short j = 0; j < m; ++j) //перебрати підприємства
     {
         char label[48]; //підпис рядка таблиці
         //сформувати підпис рядка
@@ -504,28 +541,29 @@ const char *changeLabel(int delta)
       n, m [вхідні] - кількість видів продукції та підприємств.
 
   Локальні змінні:
-      deltaByProduct - зміна обсягу за кожним видом продукції;
-      deltaByPlant   - зміна обсягу по кожному підприємству;
+      deltaByProduct - зміна обсягу за кожним видом продукції (int: до 2 * 10^7
+                       за модулем);
+      deltaByPlant   - зміна обсягу по кожному підприємству (int: до 2 * 10^7);
       label          - підпис рядка таблиці.
 */
-void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
+void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], short n, short m)
 {
     int deltaByProduct[MAX_ROWS]; //зміни за видами продукції
     int deltaByPlant[MAX_COLS];   //зміни по підприємствах
 
-    for (int i = 0; i < n; ++i) //перебрати види продукції
+    for (short i = 0; i < n; ++i) //перебрати види продукції
     {
-        deltaByProduct[i] = 0;      //обнулити зміну виду продукції
-        for (int j = 0; j < m; ++j) //перебрати підприємства
+        deltaByProduct[i] = 0;        //обнулити зміну виду продукції
+        for (short j = 0; j < m; ++j) //перебрати підприємства
         {
             deltaByProduct[i] += b[i][j] - a[i][j]; //накопичити зміну обсягу
         }
     }
 
-    for (int j = 0; j < m; ++j) //перебрати підприємства
+    for (short j = 0; j < m; ++j) //перебрати підприємства
     {
-        deltaByPlant[j] = 0;        //обнулити зміну підприємства
-        for (int i = 0; i < n; ++i) //перебрати види продукції
+        deltaByPlant[j] = 0;          //обнулити зміну підприємства
+        for (short i = 0; i < n; ++i) //перебрати види продукції
         {
             deltaByPlant[j] += b[i][j] - a[i][j]; //накопичити зміну обсягу
         }
@@ -543,7 +581,7 @@ void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
     printf("   Оцінка\n");                           //вивести заголовок стовпця оцінок
     printSeparator(CHANGES_WIDTH);                   //вивести розділювальну лінію
 
-    for (int i = 0; i < n; ++i) //перебрати види продукції
+    for (short i = 0; i < n; ++i) //перебрати види продукції
     {
         char label[48];                                       //підпис рядка таблиці
         snprintf(label, sizeof label, "Продукція %d", i + 1); //сформувати підпис рядка
@@ -559,7 +597,7 @@ void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
     printf("   Оцінка\n");                           //вивести заголовок стовпця оцінок
     printSeparator(CHANGES_WIDTH);                   //вивести розділювальну лінію
 
-    for (int j = 0; j < m; ++j) //перебрати підприємства
+    for (short j = 0; j < m; ++j) //перебрати підприємства
     {
         char label[48]; //підпис рядка таблиці
         //сформувати підпис рядка
@@ -577,13 +615,13 @@ void reportChanges(int a[][MAX_COLS], int b[][MAX_COLS], int n, int m)
   за два квартали та приріст/зменшення за другий квартал.
 
   Локальні змінні:
-      a, b       - обсяги продукції за перший та другий квартали;
-      sum, diff  - проміжні матриці A + B та B - A;
-      n, m       - кількість видів продукції та підприємств;
-      fillChoice - пункт меню способу задання елементів (1 або 2);
+      a, b       - обсяги продукції за перший та другий квартали (int);
+      sum, diff  - проміжні матриці A + B та B - A (int);
+      n, m       - кількість видів продукції та підприємств (short);
+      fillChoice - пункт меню способу задання елементів (1 або 2, short);
       byHand     - спосіб задання елементів матриць;
-      low, high  - межі діапазону для генерації;
-      modeChoice - пункт меню режиму виведення (1 або 2);
+      low, high  - межі діапазону для генерації (short);
+      modeChoice - пункт меню режиму виведення (1 або 2, short);
       verbose    - режим виведення: true - з проміжними обчисленнями.
 */
 int main(void)
@@ -595,11 +633,11 @@ int main(void)
     //вивести пояснення до матриць
     printf("Рядок матриці - вид продукції, стовпець - підприємство.\n\n");
 
-    int n = 0; //кількість видів продукції
-    int m = 0; //кількість підприємств
+    short n = 0; //кількість видів продукції
+    short m = 0; //кількість підприємств
     //якщо вимірності не введено
-    if (!readInt("Уведіть кількість видів продукції n (1..20): ", &n, 1, MAX_ROWS) ||
-        !readInt("Уведіть кількість підприємств m (1..20):   ", &m, 1, MAX_COLS))
+    if (!readShort("Уведіть кількість видів продукції n (1..20): ", &n, 1, MAX_ROWS) ||
+        !readShort("Уведіть кількість підприємств m (1..20):   ", &m, 1, MAX_COLS))
     {
         return 1; //завершити через кінець введення
     }
@@ -609,23 +647,23 @@ int main(void)
            "  1 - введення з клавіатури\n"
            "  2 - генерація псевдовипадкових чисел у заданому діапазоні\n");
 
-    int fillChoice = 0; //обраний спосіб задання
+    short fillChoice = 0; //обраний спосіб задання
     //якщо спосіб не введено
-    if (!readInt("Оберіть спосіб (1..2): ", &fillChoice, 1, 2))
+    if (!readShort("Оберіть спосіб (1..2): ", &fillChoice, 1, 2))
     {
         return 1; //завершити через кінець введення
     }
 
     const bool byHand = (fillChoice == 1); //визначити спосіб задання
-    int low = 0;                           //нижня межа генерації
-    int high = 0;                          //верхня межа генерації
+    short low = 0;                         //нижня межа генерації
+    short high = 0;                        //верхня межа генерації
 
     if (!byHand) //якщо обрано генерацію
     {
         //якщо межі діапазону не введено
-        if (!readInt("Уведіть нижню межу обсягу (0..10000): ", &low, 0, MAX_RANDOM) ||
-            !readInt("Уведіть верхню межу обсягу (не більше 10000): ", &high, low,
-                     MAX_RANDOM))
+        if (!readShort("Уведіть нижню межу обсягу (0..10000): ", &low, 0, MAX_RANDOM) ||
+            !readShort("Уведіть верхню межу обсягу (не більше 10000): ", &high, low,
+                       MAX_RANDOM))
         {
             return 1; //завершити через кінець введення
         }
@@ -637,8 +675,8 @@ int main(void)
            "  1 - тільки кінцевий результат\n"
            "  2 - з проміжними обчисленнями\n");
 
-    int modeChoice = 0;                                        //обраний режим виведення
-    if (!readInt("Оберіть режим (1..2): ", &modeChoice, 1, 2)) //якщо режим не введено
+    short modeChoice = 0; //обраний режим виведення
+    if (!readShort("Оберіть режим (1..2): ", &modeChoice, 1, 2)) //якщо режим не введено
     {
         return 1; //завершити через кінець введення
     }

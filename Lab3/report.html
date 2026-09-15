@@ -126,6 +126,91 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
           Точність вводиться з клавіатури як додатне дійсне число. Сторонні символи після числа
           (наприклад, <code>1e-6abc</code>) відхиляються функцією <code>restOfLineOk()</code>.
         </p>
+        <h3>Вибір типів даних</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Змінні</th>
+              <th>Тип</th>
+              <th>Чому</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>параметр зовнішньої суми <code>x</code></td>
+              <td><code>short</code></td>
+              <td>значення від 1 до 5</td>
+            </tr>
+            <tr>
+              <td>
+                точність <code>eps</code>, пороги <code>OVERFLOW_LIMIT</code>,
+                <code>UNDERFLOW_LIMIT</code>, знаменник першого доданка
+                <code>firstDenominator</code>
+              </td>
+              <td><code>float</code></td>
+              <td>значення 1e-38, 1e+38 і 27 вміщуються в діапазон <code>float</code></td>
+            </tr>
+            <tr>
+              <td>номер доданка <code>k</code>, кількість доданків <code>terms</code></td>
+              <td><code>int</code></td>
+              <td>
+                при <code>eps</code> &lt; 1e-16 номер доданка перевищує 32767, тому
+                <code>short</code> не підходить
+              </td>
+            </tr>
+            <tr>
+              <td>елемент ряду <code>term</code></td>
+              <td><code>double</code></td>
+              <td>
+                |a(k)| сягає 3,6·10³⁸, це більше за найбільше значення <code>float</code> (FLT_MAX ≈
+                3,4·10³⁸)
+              </td>
+            </tr>
+            <tr>
+              <td>внутрішня сума <code>sum</code>, <code>inner</code></td>
+              <td><code>double</code></td>
+              <td>
+                <code>float</code> не дає потрібної точності суми для <code>eps</code> &lt; 1e-7
+              </td>
+            </tr>
+            <tr>
+              <td>загальна сума <code>total</code></td>
+              <td><code>double</code></td>
+              <td>проміжна сума сягає -3,8·10³⁸, це менше за -FLT_MAX</td>
+            </tr>
+            <tr>
+              <td>
+                проміжні величини <code>kd</code>, <code>numerator</code>,
+                <code>denominator</code> у <code>nextTerm()</code>
+              </td>
+              <td><code>double</code></td>
+              <td>
+                відношення множиться на кожному з сотень кроків; похибка <code>float</code> (~1e-7
+                на крок) зсуває суму для x = 1 на 1,5·10⁻¹¹ і члени ряду в 7-й цифрі
+              </td>
+            </tr>
+            <tr>
+              <td>ознака <code>divergent</code></td>
+              <td><code>bool</code></td>
+              <td>логічне значення</td>
+            </tr>
+            <tr>
+              <td>
+                символ <code>c</code> у <code>skipLine()</code> і <code>restOfLineOk()</code>;
+                <code>scanned</code>
+              </td>
+              <td><code>int</code></td>
+              <td>
+                <code>getchar()</code> і <code>scanf()</code> повертають <code>int</code>, зокрема
+                значення <code>EOF</code>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Члени ряду та суми виводяться у форматі <code>%.12e</code>, тому <code>double</code>
+          лишено для всіх величин, через які проходить накопичення похибки.
+        </p>
         <p>
           Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
           - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
@@ -216,8 +301,8 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
 
 <span class="cm">/* Межі контролю переповнення комірки пам'яті, задані умовою варіанта. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e+38</span><span class="p">;</span><span class="w">  </span><span class="c1">//поріг переповнення</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-38</span><span class="p">;</span><span class="w"> </span><span class="c1">//поріг машинного нуля</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e+38f</span><span class="p">;</span><span class="w">  </span><span class="c1">//поріг переповнення</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-38f</span><span class="p">;</span><span class="w"> </span><span class="c1">//поріг машинного нуля</span>
 
 <span class="cm">/* Причина припинення внутрішнього циклу. У мові C ім'я переліку саме по собі</span>
 <span class="cm">   не є іменем типу, тому оголошення загорнуто в typedef. */</span>
@@ -291,8 +376,10 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      kd - номер елемента у дійсному вигляді (для формул).</span>
 <span class="cm">*/</span>
-<span class="kt">double</span><span class="w"> </span><span class="nf">nextTerm</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">)</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">nextTerm</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">)</span>
 <span class="p">{</span>
+<span class="w">    </span><span class="cm">/* double: відношення множиться на кожному з сотень кроків, і похибка float</span>
+<span class="cm">       (~1e-7 на крок) зсуває суму для x = 1 на 1.5e-11 і члени ряду в 7-й цифрі. */</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">kd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">k</span><span class="p">;</span><span class="w"> </span><span class="c1">//номер елемента як дійсне число</span>
 <span class="w">    </span><span class="c1">//чисельник відношення a(k+1)/a(k)</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">numerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">kd</span><span class="p">);</span>
@@ -315,7 +402,7 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      eps  [вхідний] - задана точність.</span>
 <span class="cm">  Повертає : причину припинення або STOP_NONE, якщо підсумовування триває.</span>
 <span class="cm">*/</span>
-<span class="n">StopReason</span><span class="w"> </span><span class="nf">checkStop</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span>
+<span class="n">StopReason</span><span class="w"> </span><span class="nf">checkStop</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо досягнуто заданої точності</span>
 <span class="w">    </span><span class="p">{</span>
@@ -355,14 +442,16 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      term - значення поточного елемента ряду a(k);</span>
 <span class="cm">      k    - номер поточного елемента ряду.</span>
 <span class="cm">*/</span>
-<span class="kt">double</span><span class="w"> </span><span class="nf">innerSum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="n">StopReason</span><span class="w"> </span><span class="o">*</span><span class="n">reason</span><span class="p">)</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">innerSum</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="n">StopReason</span><span class="w"> </span><span class="o">*</span><span class="n">reason</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичувана сума ряду</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">        </span><span class="c1">//номер поточного елемента</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: float не дає точності суми для eps &lt; 1e-7</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">        </span><span class="c1">//номер елемента: при eps &lt; 1e-16 перевищує 32767</span>
 <span class="w">    </span><span class="cm">/* a(1) = -x / ((1+2)^3 * sqrt(1)) = -x / 27: перший знаменник обчислено явно. */</span>
 <span class="w">    </span><span class="c1">//знаменник першого елемента</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">firstDenominator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">firstDenominator</span><span class="p">;</span><span class="w"> </span><span class="c1">//поточний елемент ряду a(k)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">firstDenominator</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="p">(</span><span class="mf">1.0f</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0f</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0f</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0f</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrtf</span><span class="p">(</span><span class="mf">1.0f</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//поточний елемент ряду a(k); double: |a(k)| сягає 3.6e+38 &gt; FLT_MAX</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">firstDenominator</span><span class="p">;</span>
 
 <span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//обнулити лічильник доданків</span>
 
@@ -376,7 +465,7 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">);</span><span class="w">  </span><span class="c1">//збільшити лічильник доданків</span>
 
 <span class="w">        </span><span class="c1">//вивести рядок таблиці</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %6d | %6d | %22.12e | %22.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %6hd | %6d | %22.12e | %22.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
 
 <span class="w">        </span><span class="cm">/* Умова припинення перевіряється до обчислення наступного елемента,</span>
 <span class="cm">           щоб не втратити причину зупинки. */</span>
@@ -454,12 +543,12 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      scanned - результат scanf(): 1 - число прочитано, 0 - не число,</span>
 <span class="cm">                EOF - вхідні дані вичерпано.</span>
 <span class="cm">*/</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">readPrecision</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readPrecision</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                    </span><span class="c1">//вивести запрошення</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//результат введення числа</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                   </span><span class="c1">//вивести запрошення</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%f"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//результат введення числа</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
 <span class="w">        </span><span class="p">{</span>
@@ -467,7 +556,7 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="c1">//якщо введено коректне додатне число</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isfinite</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isfinite</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку успіху</span>
 <span class="w">        </span><span class="p">}</span>
@@ -504,7 +593,7 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Увага: при k = 0 елемент ряду не визначено (sqrt(0) = 0 у знаменнику),</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">           </span><span class="s">"       тому внутрішнє підсумовування починається з k = 1.</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//точність обчислення елемента</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//точність обчислення елемента</span>
 <span class="w">    </span><span class="c1">//якщо не вдалося ввести точність</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readPrecision</span><span class="p">(</span><span class="s">"Уведіть точність обчислення елемента ряду (наприклад 1e-6): "</span><span class="p">,</span>
 <span class="w">                       </span><span class="o">&amp;</span><span class="n">eps</span><span class="p">))</span>
@@ -515,23 +604,24 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Задана точність: %.3e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести задану точність</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">     </span><span class="c1">//загальна сума ряду</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">     </span><span class="c1">//double: проміжна сума сягає -3.8e+38 &lt; -FLT_MAX</span>
 <span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">divergent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//ознака розбіжності ряду</span>
 
 <span class="w">    </span><span class="cm">/* Зовнішня сума - цикл з лічильником (for), параметр x = 1..5 за умовою. */</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати значення параметра x</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати значення параметра x</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//вивести заголовок блоку для x</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Зовнішній параметр x = %d ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Зовнішній параметр x = %hd ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">//кількість доданків внутрішньої суми</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">//кількість доданків: при малій eps &gt; 32767</span>
 <span class="w">        </span><span class="n">StopReason</span><span class="w"> </span><span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">;</span><span class="w"> </span><span class="c1">//причина припинення циклу</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">innerSum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reason</span><span class="p">);</span><span class="w"> </span><span class="c1">//внутрішня сума для x</span>
+<span class="w">        </span><span class="c1">//внутрішня сума для x; double: float не дає точності для eps &lt; 1e-7</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">innerSum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reason</span><span class="p">);</span>
 
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Доданків обчислено: %d; зупинка: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">,</span>
 <span class="w">               </span><span class="n">stopReasonText</span><span class="p">(</span><span class="n">reason</span><span class="p">));</span><span class="w"> </span><span class="c1">//вивести кількість доданків і причину</span>
 <span class="w">        </span><span class="c1">//вивести внутрішню суму</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Внутрішня сума при x = %d: %.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">inner</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Внутрішня сума при x = %hd: %.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">inner</span><span class="p">);</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_OVERFLOW</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо ряд розбігся</span>
 <span class="w">        </span><span class="p">{</span>

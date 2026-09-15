@@ -21,7 +21,9 @@
   (strtok, strlen) використовуються для побайтових дій.
 
   Пам'ять: рядок читається в динамічний буфер, що збільшується під час
-  введення, тому його довжина та кількість слів нічим не обмежені.
+  введення лише до потрібного розміру. Довжина рядка обмежена значенням
+  MAX_LINE_LENGTH = 32767 байтів: тоді довжини слів, кількість слів, номери
+  та лічильники літер гарантовано вміщуються в тип short.
 
   Виконав: Одарчук Олексій, КНУ імені Тараса Шевченка, ФІТ, група ІПЗ-11.
 
@@ -34,6 +36,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+
+/* Найбільша довжина рядка в байтах. З такою межею будь-яка довжина, позиція
+   чи кількість, пов'язана з рядком, не перевищує SHRT_MAX. */
+static const size_t MAX_LINE_LENGTH = SHRT_MAX; //найбільша довжина рядка в байтах
 
 /* Розділові символи, якими відділяються слова (за умовою варіанта). */
 static const char *const DELIMITERS = " \t\n,."; //рядок розділових символів
@@ -76,10 +82,10 @@ static const unsigned SOFT_SIGN = 0x044C; //код м'якого знака
       length - кількість байтів, яку задає перший байт;
       code   - накопичуваний код символу.
 */
-unsigned utf8Decode(const char *s, int *bytes)
+unsigned utf8Decode(const char *s, short *bytes)
 {
     const unsigned char *p = (const unsigned char *)s; //байти символу без знака
-    int length = 1;                                    //кількість байтів символу
+    short length = 1;                                  //кількість байтів символу
     unsigned code = p[0];                              //накопичуваний код символу
 
     /* Маска лишає старші біти першого байта, решта бітів - початок коду. */
@@ -110,7 +116,7 @@ unsigned utf8Decode(const char *s, int *bytes)
     }
 
     /* Кожен продовжувальний байт додає до коду шість молодших бітів. */
-    for (int i = 1; i < length; ++i) //перебрати продовжувальні байти
+    for (short i = 1; i < length; ++i) //перебрати продовжувальні байти
     {
         if ((p[i] & 0xC0) != 0x80) //якщо байт не продовжувальний
         {
@@ -232,10 +238,10 @@ bool isVowelCode(unsigned code)
       count - лічильник символів;
       bytes - довжина поточного символу в байтах.
 */
-int charCount(const char *s)
+short charCount(const char *s)
 {
-    int count = 0; //лічильник символів
-    int bytes = 0; //довжина символу в байтах
+    short count = 0; //лічильник символів
+    short bytes = 0; //довжина символу в байтах
 
     for (const char *p = s; *p != '\0'; p += bytes) //перебрати символи рядка
     {
@@ -259,11 +265,11 @@ int charCount(const char *s)
       s     [вхідний] - рядок, що виводиться;
       width [вхідний] - потрібна ширина поля в символах.
 */
-void printPadded(const char *s, int width)
+void printPadded(const char *s, short width)
 {
     printf("%s", s); //вивести рядок
 
-    for (int i = charCount(s); i < width; ++i) //перебрати бракуючі позиції
+    for (short i = charCount(s); i < width; ++i) //перебрати бракуючі позиції
     {
         putchar(' '); //вивести пропуск
     }
@@ -282,12 +288,12 @@ void printPadded(const char *s, int width)
   в жодному з лічильників. М'який знак є літерою слова, але не позначає
   звука, тому теж не потрапляє до жодного лічильника.
 */
-void countVowelsConsonants(const char *word, int *vowels, int *consonants)
+void countVowelsConsonants(const char *word, short *vowels, short *consonants)
 {
     *vowels = 0;     //обнулити лічильник голосних
     *consonants = 0; //обнулити лічильник приголосних
 
-    int bytes = 0;                                     //довжина символу в байтах
+    short bytes = 0;                                   //довжина символу в байтах
     for (const char *p = word; *p != '\0'; p += bytes) //перебрати символи слова
     {
         const unsigned code = utf8Decode(p, &bytes); //код поточного символу
@@ -330,8 +336,8 @@ unsigned penultimateLetter(const char *word, bool *found)
 {
     unsigned last = 0; //код останньої літери
     unsigned prev = 0; //код передостанньої літери
-    int total = 0;     //кількість знайдених літер
-    int bytes = 0;     //довжина символу в байтах
+    short total = 0;   //кількість знайдених літер
+    short bytes = 0;   //довжина символу в байтах
 
     for (const char *p = word; *p != '\0'; p += bytes) //перебрати символи слова
     {
@@ -358,15 +364,20 @@ unsigned penultimateLetter(const char *word, bool *found)
 /* Слова вхідного рядка: масив покажчиків на слова всередині самого рядка
    та кількість слів. */
 char **g_words = NULL; //масив покажчиків на слова
-int g_count = 0;       //кількість слів
+short g_count = 0;     //кількість слів
 
 //=========== readLine: прочитати рядок довільної довжини в динамічний буфер ===========
 /*
-  readLine - прочитати рядок довільної довжини в динамічний буфер.
+  readLine - прочитати рядок у динамічний буфер.
 
   Символи читаються по одному; коли буфер заповнено, його ємність
   подвоюється функцією realloc(). Символ '\n' до рядка не потрапляє.
+  До рядка записується не більше MAX_LINE_LENGTH байтів, решта рядка
+  введення відкидається, тому ємність буфера не перевищує
+  MAX_LINE_LENGTH + 1 = 32768 байтів.
 
+  Параметри: tooLong [вихідний] - адреса ознаки: true, якщо рядок введення
+                                  довший за MAX_LINE_LENGTH і його обрізано.
   Повертає : покажчик на рядок, який після використання треба звільнити
              функцією free(); NULL - вхідні дані вичерпано до початку рядка
              або не вистачило пам'яті (їх розрізняє feof(stdin)).
@@ -378,7 +389,7 @@ int g_count = 0;       //кількість слів
       bigger   - буфер після збільшення;
       c        - черговий прочитаний символ.
 */
-char *readLine(void)
+char *readLine(bool *tooLong)
 {
     size_t capacity = 64;          //ємність буфера
     size_t length = 0;             //кількість прочитаних символів
@@ -396,8 +407,15 @@ char *readLine(void)
         return NULL; //повернути ознаку кінця даних
     }
 
+    *tooLong = false;             //рядок поки не задовгий
     while (c != '\n' && c != EOF) //повторювати до кінця рядка
     {
+        if (length == MAX_LINE_LENGTH) //якщо досягнуто межі довжини
+        {
+            *tooLong = true; //позначити, що рядок обрізано
+            c = getchar();   //відкинути символ і прочитати наступний
+            continue;        //продовжити читання до кінця рядка
+        }
         if (length + 1 == capacity) //якщо буфер заповнено
         {
             capacity *= 2;                          //подвоїти ємність буфера
@@ -429,7 +447,8 @@ char *readLine(void)
 
   Масив покажчиків виділяється одразу на найбільшу можливу кількість слів:
   сусідні слова розділяє щонайменше один символ, тому в рядку довжиною
-  length слів не більше за length / 2 + 1.
+  length слів не більше за length / 2 + 1 (при межі довжини рядка
+  MAX_LINE_LENGTH - не більше 16384, тому кількість має тип short).
 
   Параметри: line [вхідний/вихідний] - рядок, що розбирається на слова.
   Повертає : кількість слів або -1, якщо не вистачило пам'яті.
@@ -438,7 +457,7 @@ char *readLine(void)
       token - покажчик на чергове слово;
       count - лічильник слів.
 */
-int splitIntoWords(char *line)
+short splitIntoWords(char *line)
 {
     //виділити масив покажчиків
     g_words = malloc((strlen(line) / 2 + 1) * sizeof(char *));
@@ -447,7 +466,7 @@ int splitIntoWords(char *line)
         return -1; //повернути ознаку помилки
     }
 
-    int count = 0;                          //лічильник слів
+    short count = 0;                        //лічильник слів
     char *token = strtok(line, DELIMITERS); //виділити перше слово
 
     while (token != NULL) //повторювати, доки є слова
@@ -467,7 +486,7 @@ int splitIntoWords(char *line)
 */
 void printWords(const char *title)
 {
-    printf("\n%s (слів: %d)\n", title, g_count); //вивести заголовок таблиці
+    printf("\n%s (слів: %hd)\n", title, g_count); //вивести заголовок таблиці
 
     if (g_count == 0) //якщо список порожній
     {
@@ -475,16 +494,16 @@ void printWords(const char *title)
         return;                        //завершити виведення
     }
 
-    for (int i = 0; i < g_count; ++i) //перебрати слова списку
+    for (short i = 0; i < g_count; ++i) //перебрати слова списку
     {
-        int vowels = 0;     //кількість голосних слова
-        int consonants = 0; //кількість приголосних слова
+        short vowels = 0;     //кількість голосних слова
+        short consonants = 0; //кількість приголосних слова
         //підрахувати голосні та приголосні
         countVowelsConsonants(g_words[i], &vowels, &consonants);
 
         printf("  %2d. ", i + 1);    //вивести номер слова
         printPadded(g_words[i], 22); //вивести слово з вирівнюванням
-        printf(" довжина %2d, голосних %d, приголосних %d\n", charCount(g_words[i]),
+        printf(" довжина %2hd, голосних %hd, приголосних %hd\n", charCount(g_words[i]),
                vowels, consonants); //вивести характеристики слова
     }
 }
@@ -499,17 +518,17 @@ void printWords(const char *title)
                      і приголосних літер.
   Повертає : кількість таких слів.
 */
-int cmdCountBalanced(void)
+short cmdCountBalanced(void)
 {
-    int found = 0; //кількість знайдених слів
+    short found = 0; //кількість знайдених слів
 
     //вивести заголовок результату
     printf("\nСлова з однаковою кількістю голосних і приголосних:\n");
 
-    for (int i = 0; i < g_count; ++i) //перебрати слова списку
+    for (short i = 0; i < g_count; ++i) //перебрати слова списку
     {
-        int vowels = 0;     //кількість голосних слова
-        int consonants = 0; //кількість приголосних слова
+        short vowels = 0;     //кількість голосних слова
+        short consonants = 0; //кількість приголосних слова
         //підрахувати голосні та приголосні
         countVowelsConsonants(g_words[i], &vowels, &consonants);
 
@@ -517,7 +536,7 @@ int cmdCountBalanced(void)
            що має однакову кількість голосних і приголосних. */
         if (vowels > 0 && vowels == consonants) //якщо голосних і приголосних порівну
         {
-            printf("  %s (голосних %d = приголосних %d)\n", g_words[i], vowels,
+            printf("  %s (голосних %hd = приголосних %hd)\n", g_words[i], vowels,
                    consonants); //вивести знайдене слово
             ++found;            //збільшити кількість знайдених
         }
@@ -529,7 +548,7 @@ int cmdCountBalanced(void)
     }
 
     //вивести кількість слів
-    printf("Кількість слів з однаковою кількістю голосних і приголосних: %d\n", found);
+    printf("Кількість слів з однаковою кількістю голосних і приголосних: %hd\n", found);
     return found; //повернути кількість слів
 }
 
@@ -540,20 +559,20 @@ int cmdCountBalanced(void)
   Параметри: limit [вхідний] - гранична довжина у символах.
   Повертає : кількість виведених слів.
 */
-int cmdShorterThan(int limit)
+short cmdShorterThan(short limit)
 {
-    int found = 0; //кількість знайдених слів
+    short found = 0; //кількість знайдених слів
 
     //вивести заголовок результату
-    printf("\nСлова, довжина яких менша за %d:\n", limit);
+    printf("\nСлова, довжина яких менша за %hd:\n", limit);
 
-    for (int i = 0; i < g_count; ++i) //перебрати слова списку
+    for (short i = 0; i < g_count; ++i) //перебрати слова списку
     {
-        const int length = charCount(g_words[i]); //довжина слова в символах
+        const short length = charCount(g_words[i]); //довжина слова в символах
 
         if (length < limit) //якщо слово коротше за межу
         {
-            printf("  %s (довжина %d)\n", g_words[i], length); //вивести знайдене слово
+            printf("  %s (довжина %hd)\n", g_words[i], length); //вивести знайдене слово
             ++found; //збільшити кількість знайдених
         }
     }
@@ -581,15 +600,15 @@ int cmdShorterThan(int limit)
       kept    - кількість слів, що лишилися;
       removed - кількість видалених слів.
 */
-int cmdDeletePenultimateVowel(void)
+short cmdDeletePenultimateVowel(void)
 {
-    int kept = 0;    //кількість збережених слів
-    int removed = 0; //кількість видалених слів
+    short kept = 0;    //кількість збережених слів
+    short removed = 0; //кількість видалених слів
 
     //вивести заголовок результату
     printf("\nВидалення слів, передостання літера яких голосна:\n");
 
-    for (int i = 0; i < g_count; ++i) //перебрати слова списку
+    for (short i = 0; i < g_count; ++i) //перебрати слова списку
     {
         bool found = false; //ознака наявності передостанньої літери
         //код передостанньої літери
@@ -669,22 +688,31 @@ bool restOfLineOk(void)
     return false; //повернути ознаку помилки
 }
 
-//================ readInt: прочитати ціле число із заданого діапазону =================
+//============== readShort: прочитати ціле число із заданого діапазону ===============
 /*
-  readInt - прочитати ціле число із заданого діапазону.
+  readShort - прочитати ціле число типу short із заданого діапазону.
 
-  Символ переведення рядка після числа з'їдається, тому наступний fgets
+  Символ переведення рядка після числа з'їдається, тому наступний виклик
   читає вже новий рядок. Число з "хвостом" (12abc, 3.7) відхиляється.
+
+  Число читається в змінну типу int і лише після перевірки діапазону
+  записується в short: специфікатор %hd мовчки обрізав би старші біти,
+  і, наприклад, 65537 перетворилося б на припустиме 1.
 
   Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
   Повертає : true - число прочитано; false - вхідні дані вичерпано.
+
+  Локальні змінні:
+      number  - прочитане число до перевірки діапазону;
+      scanned - результат функції scanf.
 */
-bool readInt(const char *prompt, int *value, int low, int high)
+bool readShort(const char *prompt, short *value, short low, short high)
 {
     for (;;) //повторювати до коректного введення
     {
-        printf("%s", prompt);                   //вивести запрошення
-        const int scanned = scanf("%d", value); //увести число
+        int number = 0;       //прочитане число (int, щоб не обрізати старші біти)
+        printf("%s", prompt); //вивести запрошення
+        const int scanned = scanf("%d", &number); //увести число
 
         if (scanned == EOF) //якщо дані вичерпано
         {
@@ -695,13 +723,14 @@ bool readInt(const char *prompt, int *value, int low, int high)
         {
             skipLine(); //відкинути хибний рядок
         }
-        else if (restOfLineOk() && *value >= low && *value <= high) //число коректне
+        else if (restOfLineOk() && number >= low && number <= high) //число коректне
         {
-            return true; //повернути ознаку успіху
+            *value = (short)number; //записати число, яке вміщується в short
+            return true;            //повернути ознаку успіху
         }
 
         //вивести повідомлення про помилку
-        printf("Помилка: потрібне ціле число від %d до %d.\n", low, high);
+        printf("Помилка: потрібне ціле число від %hd до %hd.\n", low, high);
     }
 }
 
@@ -710,9 +739,10 @@ bool readInt(const char *prompt, int *value, int low, int high)
   Головна функція. Читає рядок, розбиває його на слова та виконує команди меню.
 
   Локальні змінні:
-      line   - вхідний рядок у динамічному буфері;
-      choice - обраний пункт меню;
-      limit  - гранична довжина слова для другої команди.
+      line    - вхідний рядок у динамічному буфері;
+      tooLong - чи довший вхідний рядок за MAX_LINE_LENGTH;
+      choice  - обраний пункт меню;
+      limit   - гранична довжина слова для другої команди.
 */
 int main(void)
 {
@@ -723,8 +753,9 @@ int main(void)
     printf("Слова відділяються пропусками, комами та крапками.\n");
     printf("Уведіть рядок: "); //вивести запрошення
 
-    char *line = readLine(); //увести рядок
-    if (line == NULL)        //якщо рядок не прочитано
+    bool tooLong = false;            //ознака задовгого рядка
+    char *line = readLine(&tooLong); //увести рядок
+    if (line == NULL)                //якщо рядок не прочитано
     {
         if (feof(stdin)) //якщо дані вичерпано
         {
@@ -736,6 +767,14 @@ int main(void)
             printf("\nПомилка: не вистачило пам'яті.\n");
         }
         return 1; //завершити з помилкою
+    }
+
+    if (tooLong) //якщо рядок довший за межу
+    {
+        //повідомити про задовгий рядок
+        printf("\nПомилка: рядок довший за %zu байтів.\n", MAX_LINE_LENGTH);
+        free(line); //звільнити рядок
+        return 1;   //завершити з помилкою
     }
 
     g_count = splitIntoWords(line); //розбити рядок на слова
@@ -772,8 +811,9 @@ int main(void)
         printf("  4 - вивести поточний список слів\n"); //вивести пункт 4
         printf("  5 - вихід\n");                        //вивести пункт 5
 
-        int choice = 0;                                          //обраний пункт меню
-        if (!readInt("Оберіть команду (1..5): ", &choice, 1, 5)) //увести номер команди
+        short choice = 0; //обраний пункт меню
+        //увести номер команди
+        if (!readShort("Оберіть команду (1..5): ", &choice, 1, 5))
         {
             //повідомити про кінець даних
             printf("\nВхідні дані вичерпано. Завершення роботи.\n");
@@ -786,9 +826,9 @@ int main(void)
         }
         else if (choice == 2) //якщо обрано команду 2
         {
-            int limit = 0; //гранична довжина слова
+            short limit = 0; //гранична довжина слова
             //увести граничну довжину
-            if (!readInt("Уведіть граничну довжину слова: ", &limit, 1, INT_MAX))
+            if (!readShort("Уведіть граничну довжину слова: ", &limit, 1, SHRT_MAX))
             {
                 break; //перервати цикл меню
             }
@@ -796,10 +836,9 @@ int main(void)
         }
         else if (choice == 3) //якщо обрано команду 3
         {
-            //видалити слова, підрахувати видалені
-            const int removed = cmdDeletePenultimateVowel();
-            printf("Видалено слів: %d\n", removed); //вивести кількість видалених
-            printWords("Список після видалення");   //вивести оновлений список
+            //видалити слова й вивести кількість видалених
+            printf("Видалено слів: %hd\n", cmdDeletePenultimateVowel());
+            printWords("Список після видалення"); //вивести оновлений список
         }
         else if (choice == 4) //якщо обрано команду 4
         {

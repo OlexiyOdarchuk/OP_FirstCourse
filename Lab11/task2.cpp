@@ -37,7 +37,6 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
-#include <climits>
 #include <cctype>
 #include <cstdio>
 #include <cstring>
@@ -45,18 +44,23 @@
 #include <ctime>
 #include <cmath>
 
-/* Обмеження на розміри даних та імена бінарних файлів. */
-const int MAX_RECORDS = 200; //найбільша кількість записів у файлі даних
-const int MAX_NAME = 32;     //найбільша довжина назви
-const int MAX_YEAR = 9999;   //найбільший рік: число РРРРММДД вміщується в int
+/* Обмеження на розміри даних та імена бінарних файлів. Усі цілі межі
+   не перевищують 32 767, тож кількості, номери, індекси й поля дати - short. */
+const short MAX_RECORDS = 200; //найбільша кількість записів у файлі даних
+const short MAX_NAME = 32;     //розмір текстового поля разом із завершальним нулем
+const short MAX_YEAR = 9999;   //найбільший рік: число РРРРММДД вміщується в int
 const char *const DATA_FILE = "sales.dat";          //ім'я файлу даних
 const char *const COMPUTERS_FILE = "computers.dat"; //результат запиту 1
 const char *const SOFTWARE_FILE = "software.dat";   //результат запиту 2
 const char *const FIRMS_FILE = "firms.dat";         //результат запиту 3
 
+/* float зберігає 7 значущих цифр: вартість до 99 999,99 передається
+   без втрати копійок (похибка округлення не перевищує 0,004). */
+const float MAX_PRICE = 99999.99f; //найбільша вартість одного продажу
+
 /* Половина копійки: суми продажів накопичуються в double, тож дві математично
    рівні суми можуть відрізнятися похибкою округлення. */
-const double PRICE_TOLERANCE = 0.005; //допустима похибка порівняння сум
+const float PRICE_TOLERANCE = 0.005f; //допустима похибка порівняння сум
 
 /* Набори назв для генерації псевдовипадкових записів. */
 //назви фірм
@@ -68,34 +72,36 @@ const char *const COMPUTERS[] = {"Optima 5", "Nova Pro", "Titan X", "Bureau 300"
 //назви програмних продуктів
 const char *const SOFTWARE[] = {"OblikPro", "SklavSoft", "DocFlow", "AntiVirus U"};
 
-const int FIRMS_COUNT = sizeof FIRMS / sizeof FIRMS[0];       //кількість назв фірм
-const int REGIONS_COUNT = sizeof REGIONS / sizeof REGIONS[0]; //кількість назв регіонів
+const short FIRMS_COUNT = sizeof FIRMS / sizeof FIRMS[0]; //кількість назв фірм
+//кількість назв регіонів
+const short REGIONS_COUNT = sizeof REGIONS / sizeof REGIONS[0];
 //кількість назв комп'ютерів
-const int COMPUTERS_COUNT = sizeof COMPUTERS / sizeof COMPUTERS[0];
+const short COMPUTERS_COUNT = sizeof COMPUTERS / sizeof COMPUTERS[0];
 //кількість назв програм
-const int SOFTWARE_COUNT = sizeof SOFTWARE / sizeof SOFTWARE[0];
+const short SOFTWARE_COUNT = sizeof SOFTWARE / sizeof SOFTWARE[0];
 
 /* Ширини стовпців таблиці записів (у символах). */
-const int COL_NUMBER = 4;   //ширина стовпця номера
-const int COL_FIRM = 14;    //ширина стовпця фірми
-const int COL_PRODUCT = 16; //ширина стовпця продукту
-const int COL_KIND = 12;    //ширина стовпця виду
-const int COL_REGION = 16;  //ширина стовпця регіону
-const int COL_PRICE = 17;   //ширина стовпця вартості
-const int COL_DATE = 18;    //ширина стовпця терміну
+const short COL_NUMBER = 4;   //ширина стовпця номера
+const short COL_FIRM = 14;    //ширина стовпця фірми
+const short COL_PRODUCT = 16; //ширина стовпця продукту
+const short COL_KIND = 12;    //ширина стовпця виду
+const short COL_REGION = 16;  //ширина стовпця регіону
+const short COL_PRICE = 17;   //ширина стовпця вартості
+const short COL_DATE = 18;    //ширина стовпця терміну
 //загальна ширина таблиці
-const int TABLE_WIDTH =
+const short TABLE_WIDTH =
     COL_NUMBER + COL_FIRM + COL_PRODUCT + COL_KIND + COL_REGION + COL_PRICE + COL_DATE;
 
 /* Ширини стовпців таблиці сум продажів по фірмах. */
-const int COL_FIRM_NAME = 16;  //ширина стовпця назви фірми
-const int COL_FIRM_SALES = 12; //ширина стовпця кількості продажів
-const int COL_FIRM_TOTAL = 20; //ширина стовпця сумарної вартості
+const short COL_FIRM_NAME = 16;  //ширина стовпця назви фірми
+const short COL_FIRM_SALES = 12; //ширина стовпця кількості продажів
+const short COL_FIRM_TOTAL = 20; //ширина стовпця сумарної вартості
 //загальна ширина таблиці фірм
-const int FIRM_TABLE_WIDTH = COL_FIRM_NAME + COL_FIRM_SALES + COL_FIRM_TOTAL;
+const short FIRM_TABLE_WIDTH = COL_FIRM_NAME + COL_FIRM_SALES + COL_FIRM_TOTAL;
 
-/* Вид продукту: умова прямо називає два види. */
-enum class ProductKind
+/* Вид продукту: умова прямо називає два види. Базовий тип short замість
+   типового int зменшує запис на 4 байти. */
+enum class ProductKind : short
 {
     Computer,
     Software
@@ -104,9 +110,9 @@ enum class ProductKind
 /* Термін постачання. */
 struct Date
 {
-    int day;   //день
-    int month; //місяць
-    int year;  //рік
+    short day;   //день (1..31)
+    short month; //місяць (1..12)
+    short year;  //рік (1..MAX_YEAR)
 };
 
 //=============================== Sale: запис про продаж ===============================
@@ -116,26 +122,27 @@ struct Date
   в бінарний файл із прямим доступом: лише за сталого розміру запису
   його позицію можна обчислити множенням номера на sizeof(Sale).
 
-  Поля розміщено за спаданням вирівнювання (double, потім int, потім масиви
+  Поля розміщено за спаданням вирівнювання (float, потім short, потім масиви
   символів), щоб компілятор не вставляв між ними байти-заповнювачі:
-  розмір структури дорівнює сумі розмірів полів, 120 байтів.
+  розмір структури дорівнює сумі розмірів полів, 108 байтів.
 */
 struct Sale
 {
-    double price;           //вартість продажу
-    Date delivery;          //термін постачання
+    float price;            //вартість продажу (0..MAX_PRICE): 7 цифр float досить
     ProductKind kind;       //вид продукту
+    Date delivery;          //термін постачання
     char firm[MAX_NAME];    //назва фірми
     char product[MAX_NAME]; //назва продукту
     char region[MAX_NAME];  //регіон збуту
 };
 
-/* Сумарні продажі однієї фірми - запис файлу результатів запиту 3. */
+/* Сумарні продажі однієї фірми - запис файлу результатів запиту 3.
+   Розмір структури 48 байтів: 8 + 2 + 32 і 6 байтів вирівнювання до кратного 8. */
 struct FirmTotal
 {
+    double total;        //сумарна вартість: до 200 * 99 999,99, для float забагато цифр
+    short sales;         //кількість продажів (0..MAX_RECORDS)
     char firm[MAX_NAME]; //назва фірми
-    long sales;          //кількість продажів
-    double total;        //сумарна вартість продажів
 };
 
 /*==============================================================================
@@ -146,11 +153,12 @@ struct FirmTotal
 /*
   utf8Width - ширина рядка в символах, а не в байтах (кирилиця в UTF-8
               займає два байти на літеру).
+  Рядки програми (назви, заголовки, запрошення) коротші за 32 767 байтів.
   Параметри: s [вхідний] - рядок.  Повертає: кількість символів.
 */
-int utf8Width(const char *s)
+short utf8Width(const char *s)
 {
-    int width = 0; //кількість символів у рядку
+    short width = 0; //кількість символів у рядку
 
     for (const unsigned char *p = reinterpret_cast<const unsigned char *>(s);
          *p != '\0'; ++p) //перебрати байти рядка
@@ -171,11 +179,11 @@ int utf8Width(const char *s)
   printPadded - вивести рядок, доповнивши пропусками до ширини в символах.
   Параметри: s [вхідний], width [вхідний].
 */
-void printPadded(const char *s, int width)
+void printPadded(const char *s, short width)
 {
     std::cout << s; //вивести рядок
 
-    for (int i = utf8Width(s); i < width; ++i) //доповнити до заданої ширини
+    for (short i = utf8Width(s); i < width; ++i) //доповнити до заданої ширини
     {
         std::cout << ' '; //вивести пропуск
     }
@@ -207,7 +215,7 @@ int dateToNumber(const Date *d)
   formatDate - записати дату до рядка у вигляді ДД.ММ.РРРР.
   Параметри: d [вхідний] - покажчик на дату; buffer [вихідний], size [вхідний].
 */
-void formatDate(const Date *d, char *buffer, size_t size)
+void formatDate(const Date *d, char *buffer, short size)
 {
     //записати дату до рядка
     std::snprintf(buffer, size, "%02d.%02d.%d", d->day, d->month, d->year);
@@ -218,7 +226,7 @@ void formatDate(const Date *d, char *buffer, size_t size)
   daysInMonth - кількість днів у місяці з урахуванням високосного року.
   Параметри: month, year [вхідні].  Повертає: кількість днів.
 */
-int daysInMonth(int month, int year)
+short daysInMonth(short month, short year)
 {
     if (month == 2) //якщо лютий
     {
@@ -256,7 +264,7 @@ void skipLine()
 */
 bool restOfLineOk()
 {
-    int c = std::cin.peek(); //наступний символ введення
+    int c = std::cin.peek(); //наступний символ або EOF: int, бо EOF не є символом
 
     while (c == ' ' || c == '\t' || c == '\r') //пропустити пробільні символи
     {
@@ -278,13 +286,16 @@ bool restOfLineOk()
     return false; //повернути ознаку зайвих символів
 }
 
-//================ readInt: прочитати ціле число із заданого діапазону =================
+//=============== readShort: прочитати ціле число із заданого діапазону ================
 /*
-  readInt - прочитати ціле число із заданого діапазону.
+  readShort - прочитати ціле число типу short із заданого діапазону.
+  Усі цілі, що вводяться (пункт меню, кількість і номер запису, вид продукту,
+  складові дати), не перевищують 9999. Число поза межами short потік
+  не приймає, і запит повторюється.
   Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
 */
-bool readInt(const char *prompt, int *value, int low, int high)
+bool readShort(const char *prompt, short *value, short low, short high)
 {
     for (;;) //повторювати до коректного введення
     {
@@ -311,13 +322,13 @@ bool readInt(const char *prompt, int *value, int low, int high)
     }
 }
 
-//============ readDouble: прочитати дійсне число, не менше за задану межу =============
+//============== readFloat: прочитати дійсне число із заданого діапазону ===============
 /*
-  readDouble - прочитати дійсне число, не менше за задану межу.
-  Параметри: prompt [вхідний], value [вихідний], low [вхідний].
+  readFloat - прочитати дійсне число із заданого діапазону.
+  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
 */
-bool readDouble(const char *prompt, double *value, double low)
+bool readFloat(const char *prompt, float *value, float low, float high)
 {
     for (;;) //повторювати до коректного введення
     {
@@ -334,13 +345,14 @@ bool readDouble(const char *prompt, double *value, double low)
             skipLine(); //відкинути помилковий рядок
         }
         //якщо число коректне
-        else if (restOfLineOk() && std::isfinite(*value) && *value >= low)
+        else if (restOfLineOk() && *value >= low && *value <= high)
         {
             return true; //повернути ознаку успішного введення
         }
 
-        //вивести повідомлення про помилку
-        std::cout << "Помилка: потрібне дійсне число, не менше за " << low << ".\n";
+        std::cout << "Помилка: потрібне дійсне число від " << std::fixed
+                  << std::setprecision(2) << low << " до " << high
+                  << ".\n"; //вивести повідомлення про помилку
     }
 }
 
@@ -352,7 +364,7 @@ bool readDouble(const char *prompt, double *value, double low)
 */
 void trimSpaces(char *s)
 {
-    size_t length = std::strlen(s); //довжина рядка без кінцевих пропусків
+    short length = std::strlen(s); //довжина рядка без кінцевих пропусків (< MAX_NAME)
 
     //поки в кінці рядка пропуск
     while (length > 0 && std::isspace(static_cast<unsigned char>(s[length - 1])))
@@ -361,7 +373,7 @@ void trimSpaces(char *s)
     }
     s[length] = '\0'; //завершити рядок нулем
 
-    size_t start = 0; //індекс першого непробільного символу
+    short start = 0; //індекс першого непробільного символу
     //пропустити початкові пропуски
     while (std::isspace(static_cast<unsigned char>(s[start])))
     {
@@ -380,7 +392,7 @@ void trimSpaces(char *s)
   Параметри: prompt [вхідний], buffer [вихідний], size [вхідний].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
 */
-bool readLine(const char *prompt, char *buffer, int size)
+bool readLine(const char *prompt, char *buffer, short size)
 {
     for (;;) //повторювати до коректного введення
     {
@@ -426,22 +438,23 @@ bool readDate(const char *indent, Date *date)
 
     //сформувати запрошення для року
     std::snprintf(prompt, sizeof prompt, "%sрік (1..%d): ", indent, MAX_YEAR);
-    if (!readInt(prompt, &date->year, 1, MAX_YEAR)) //увести рік
+    if (!readShort(prompt, &date->year, 1, MAX_YEAR)) //увести рік
     {
         return false; //повернути ознаку кінця даних
     }
 
     //сформувати запрошення для місяця
     std::snprintf(prompt, sizeof prompt, "%sмісяць (1..12): ", indent);
-    if (!readInt(prompt, &date->month, 1, 12)) //увести місяць
+    if (!readShort(prompt, &date->month, 1, 12)) //увести місяць
     {
         return false; //повернути ознаку кінця даних
     }
 
-    const int lastDay = daysInMonth(date->month, date->year); //найбільший день місяця
+    const short lastDay = daysInMonth(date->month, date->year); //найбільший день місяця
     //сформувати запрошення для дня
     std::snprintf(prompt, sizeof prompt, "%sдень (1..%d): ", indent, lastDay);
-    return readInt(prompt, &date->day, 1, lastDay); //увести день і повернути результат
+    //увести день і повернути результат
+    return readShort(prompt, &date->day, 1, lastDay);
 }
 
 /*==============================================================================
@@ -454,19 +467,24 @@ bool readDate(const char *indent, Date *date)
 
   Обчислюється як розмір файлу, поділений на розмір однієї структури.
   Такий спосіб можливий саме тому, що всі записи мають однаковий розмір.
+  Програма не створює файлів, більших за MAX_RECORDS записів; більший файл
+  повідомляється окремою ознакою, тож кількість записів вміщується в short.
 
   Параметри: fileName [вхідний] - ім'я файлу.
-  Повертає : кількість записів; FILE_MISSING, якщо файл не існує;
-             FILE_CORRUPTED, якщо розмір файлу не кратний розміру запису.
+  Повертає : кількість записів (0..MAX_RECORDS); FILE_MISSING, якщо файл
+             не існує; FILE_CORRUPTED, якщо розмір файлу не кратний розміру
+             запису; FILE_TOO_LARGE, якщо записів більше за MAX_RECORDS.
 
   Локальні змінні:
-      file - вхідний файловий потік;
-      size - розмір файлу в байтах.
+      file    - вхідний файловий потік;
+      size    - розмір файлу в байтах;
+      records - кількість записів до перевірки межі.
 */
-const long FILE_MISSING = -1;   //ознака відсутнього файлу
-const long FILE_CORRUPTED = -2; //ознака пошкодженого файлу
+const short FILE_MISSING = -1;   //ознака відсутнього файлу
+const short FILE_CORRUPTED = -2; //ознака пошкодженого файлу
+const short FILE_TOO_LARGE = -3; //ознака файлу з більш ніж MAX_RECORDS записами
 
-long recordCount(const char *fileName)
+short recordCount(const char *fileName)
 {
     //відкрити файл, ставши в кінець
     std::ifstream file(fileName, std::ios::binary | std::ios::ate);
@@ -485,19 +503,26 @@ long recordCount(const char *fileName)
         return FILE_CORRUPTED; //повернути ознаку пошкодженого файлу
     }
 
-    //повернути кількість записів
-    return static_cast<long>(size / static_cast<std::streamoff>(sizeof(Sale)));
+    //кількість записів у файлі
+    const std::streamoff records = size / static_cast<std::streamoff>(sizeof(Sale));
+    if (records > MAX_RECORDS) //якщо записів більше за допустиму кількість
+    {
+        return FILE_TOO_LARGE; //повернути ознаку завеликого файлу
+    }
+
+    return static_cast<short>(records); //повернути кількість записів
 }
 
 //================== dataFileRecords: кількість записів у файлі даних ==================
 /*
   dataFileRecords - кількість записів у файлі даних. Якщо файл не існує або
                     пошкоджений, виводиться повідомлення.
-  Повертає : кількість записів або -1, якщо файл непридатний до обробки.
+  Повертає : кількість записів (0..MAX_RECORDS) або -1, якщо файл
+             непридатний до обробки.
 */
-long dataFileRecords()
+short dataFileRecords()
 {
-    const long count = recordCount(DATA_FILE); //кількість записів у файлі даних
+    const short count = recordCount(DATA_FILE); //кількість записів у файлі даних
 
     if (count == FILE_MISSING) //якщо файл не існує
     {
@@ -511,6 +536,13 @@ long dataFileRecords()
         std::cout << "Файл " << DATA_FILE
                   << " пошкоджено: його розмір не кратний розміру запису ("
                   << sizeof(Sale) << " байтів). Створіть файл заново.\n";
+        return -1; //повернути ознаку непридатного файлу
+    }
+    if (count == FILE_TOO_LARGE) //якщо записів забагато
+    {
+        //вивести повідомлення про межу
+        std::cout << "Файл " << DATA_FILE << " містить більше " << MAX_RECORDS
+                  << " записів - обробка неможлива. Створіть файл заново.\n";
         return -1; //повернути ознаку непридатного файлу
     }
 
@@ -532,6 +564,20 @@ void terminateStrings(Sale *sale)
     sale->region[MAX_NAME - 1] = '\0';  //завершити нулем назву регіону
 }
 
+//============= centsPrice: вартість, округлена до копійок, для підсумків ==============
+/*
+  centsPrice - вартість запису, округлена до копійок, для накопичення сум.
+  Значення float відрізняється від введеної вартості на частку копійки;
+  без округлення ці частки накопичувалися б у сумі сотень записів
+  і могли б змінити копійки підсумку.
+  Параметри: price [вхідний] - вартість запису.
+  Повертає : вартість із точністю до копійки (double, як і суми).
+*/
+double centsPrice(float price)
+{
+    return std::round(price * 100.0) / 100.0; //повернути округлену вартість
+}
+
 //================ printTableHeader: вивести заголовок таблиці записів =================
 /*
   printTableHeader - вивести заголовок таблиці записів.
@@ -551,7 +597,7 @@ void printTableHeader()
     printPadded("Термін постачання", COL_DATE); //вивести заголовок терміну
     std::cout << "\n  ";                        //перейти на новий рядок
 
-    for (int i = 0; i < TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
+    for (short i = 0; i < TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
     {
         std::cout << '-'; //вивести символ лінії
     }
@@ -563,13 +609,13 @@ void printTableHeader()
   printRecord - вивести один запис рядком таблиці.
   Параметри: sale [вхідний] - покажчик на структуру; index [вхідний] - номер рядка.
 */
-void printRecord(const Sale *sale, long index)
+void printRecord(const Sale *sale, short index)
 {
     char buffer[MAX_NAME]; //буфер для перетворення в текст
 
     std::cout << "  "; //вивести відступ
     //записати номер рядка до буфера
-    std::snprintf(buffer, sizeof buffer, "%ld.", index);
+    std::snprintf(buffer, sizeof buffer, "%d.", index);
     printPadded(buffer, COL_NUMBER);             //вивести номер
     printPadded(sale->firm, COL_FIRM);           //вивести назву фірми
     printPadded(sale->product, COL_PRODUCT);     //вивести назву продукту
@@ -594,10 +640,13 @@ void printRecord(const Sale *sale, long index)
 
   Параметри:
       fileName [вхідний] - ім'я файлу;
-      total    [вихідний] - сумарна вартість виведених записів.
+      total    [вихідний] - сумарна вартість виведених записів; double, бо сума
+                          до MAX_RECORDS * MAX_PRICE має більше 7 значущих цифр.
+  Файл містить не більше MAX_RECORDS записів: це перевіряє dataFileRecords()
+  перед кожним викликом, а файли результатів не більші за файл даних.
   Повертає : кількість записів або -1, якщо файл не існує.
 */
-long printSalesFile(const char *fileName, double *total)
+short printSalesFile(const char *fileName, double *total)
 {
     std::ifstream file(fileName, std::ios::binary); //відкрити файл для читання
 
@@ -606,9 +655,9 @@ long printSalesFile(const char *fileName, double *total)
         return -1; //повернути ознаку відсутнього файлу
     }
 
-    Sale sale{};    //поточний запис
-    long count = 0; //кількість виведених записів
-    *total = 0.0;   //обнулити сумарну вартість
+    Sale sale{};     //поточний запис
+    short count = 0; //кількість виведених записів
+    *total = 0.0;    //обнулити сумарну вартість
 
     //читати записи до кінця файлу
     while (file.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
@@ -619,8 +668,8 @@ long printSalesFile(const char *fileName, double *total)
             printTableHeader(); //вивести заголовок таблиці
         }
 
-        printRecord(&sale, ++count); //вивести запис таблиці
-        *total += sale.price;        //накопичити сумарну вартість
+        printRecord(&sale, ++count);      //вивести запис таблиці
+        *total += centsPrice(sale.price); //накопичити сумарну вартість
     }
 
     file.close(); //закрити файл
@@ -640,7 +689,7 @@ void printFirmHeader()
     printPadded("Сумарна вартість", COL_FIRM_TOTAL);
     std::cout << "\n  "; //перейти на новий рядок
 
-    for (int i = 0; i < FIRM_TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
+    for (short i = 0; i < FIRM_TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
     {
         std::cout << '-'; //вивести символ лінії
     }
@@ -660,7 +709,7 @@ void printFirmRow(const FirmTotal *firm)
     printPadded(firm->firm, COL_FIRM_NAME); //вивести назву фірми
 
     //записати кількість продажів до буфера
-    std::snprintf(buffer, sizeof buffer, "%ld", firm->sales);
+    std::snprintf(buffer, sizeof buffer, "%d", firm->sales);
     printPadded(buffer, COL_FIRM_SALES); //вивести кількість продажів
 
     std::snprintf(buffer, sizeof buffer, "%.2f", firm->total); //записати суму до буфера
@@ -695,7 +744,7 @@ void generateRecord(Sale *sale)
 
     /* Вартість від 1000,00 до 9999,99 грн з копійками, постачання у 2025 році. */
     //згенерувати вартість продажу
-    sale->price = 1000 + (std::rand() % 9000) + (std::rand() % 100) / 100.0;
+    sale->price = 1000 + (std::rand() % 9000) + (std::rand() % 100) / 100.0f;
 
     sale->delivery.year = 2025;                  //задати рік постачання
     sale->delivery.month = 1 + std::rand() % 12; //згенерувати місяць постачання
@@ -717,9 +766,9 @@ bool inputRecord(Sale *sale)
         return false; //повернути ознаку кінця даних
     }
 
-    int kind = 0; //номер виду продукту
+    short kind = 0; //номер виду продукту
     //увести вид продукту
-    if (!readInt("  Вид продукту (1 - комп'ютери, 2 - ПЗ): ", &kind, 1, 2))
+    if (!readShort("  Вид продукту (1 - комп'ютери, 2 - ПЗ): ", &kind, 1, 2))
     {
         return false; //повернути ознаку кінця даних
     }
@@ -729,7 +778,7 @@ bool inputRecord(Sale *sale)
     //увести продукт, регіон і вартість
     if (!readLine("  Назва продукту: ", sale->product, MAX_NAME) ||
         !readLine("  Регіон збуту: ", sale->region, MAX_NAME) ||
-        !readDouble("  Вартість продажу: ", &sale->price, 0.0))
+        !readFloat("  Вартість продажу (0..99999.99): ", &sale->price, 0.0f, MAX_PRICE))
     {
         return false; //повернути ознаку кінця даних
     }
@@ -749,12 +798,12 @@ bool inputRecord(Sale *sale)
 void cmdCreateFile()
 {
     char prompt[64]; //текст запрошення
-    int n = 0;       //кількість записів
+    short n = 0;     //кількість записів
 
     //сформувати запрошення
     std::snprintf(prompt, sizeof prompt,
                   "Уведіть кількість записів (1..%d): ", MAX_RECORDS);
-    if (!readInt(prompt, &n, 1, MAX_RECORDS)) //увести кількість записів
+    if (!readShort(prompt, &n, 1, MAX_RECORDS)) //увести кількість записів
     {
         return; //завершити команду
     }
@@ -763,8 +812,8 @@ void cmdCreateFile()
                  "  1 - введення з клавіатури\n"
                  "  2 - генерація псевдовипадкових даних\n"; //вивести способи створення
 
-    int choice = 0;                                         //обраний спосіб створення
-    if (!readInt("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
+    short choice = 0;                                         //обраний спосіб створення
+    if (!readShort("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
     {
         return; //завершити команду
     }
@@ -775,7 +824,7 @@ void cmdCreateFile()
 
     if (choice == 1) //якщо введення з клавіатури
     {
-        for (int i = 0; i < n; ++i) //перебрати записи масиву
+        for (short i = 0; i < n; ++i) //перебрати записи масиву
         {
             std::cout << "\n  --- запис " << (i + 1) << " ---\n"; //вивести номер запису
             if (!inputRecord(&records[i]))                        //увести запис
@@ -786,7 +835,7 @@ void cmdCreateFile()
     }
     else //інакше - генерація
     {
-        for (int i = 0; i < n; ++i) //перебрати записи масиву
+        for (short i = 0; i < n; ++i) //перебрати записи масиву
         {
             generateRecord(&records[i]); //згенерувати запис
         }
@@ -827,9 +876,9 @@ void cmdPrintFile()
     //вивести заголовок вмісту файлу
     std::cout << "\nВміст бінарного файлу " << DATA_FILE << "\n\n";
 
-    double total = 0.0; //сумарна вартість записів
+    double total = 0.0; //сумарна вартість записів: сотні записів, float замало
     //вивести файл і отримати кількість
-    const long count = printSalesFile(DATA_FILE, &total);
+    const short count = printSalesFile(DATA_FILE, &total);
 
     std::cout << "\n  Записів у файлі: " << count
               << ", сумарна вартість: " << std::fixed << std::setprecision(2) << total
@@ -845,8 +894,8 @@ void cmdPrintFile()
 */
 void cmdAppend()
 {
-    const long total = dataFileRecords(); //кількість записів у файлі
-    if (total < 0)                        //якщо файл непридатний
+    const short total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                         //якщо файл непридатний
     {
         return; //завершити команду
     }
@@ -859,15 +908,14 @@ void cmdAppend()
 
     /* Кількість записів у файлі не може перевищити MAX_RECORDS: на цю межу
        розраховано масиви у функціях видалення та запиту 3. */
-    //кількість вільних місць у файлі
-    const int freeSlots = MAX_RECORDS - static_cast<int>(total);
-    int n = 0;       //кількість нових записів
-    char prompt[80]; //текст запрошення
+    const short freeSlots = MAX_RECORDS - total; //кількість вільних місць у файлі
+    short n = 0;                                 //кількість нових записів
+    char prompt[80];                             //текст запрошення
     //сформувати запрошення
     std::snprintf(prompt, sizeof prompt,
                   "Скільки записів дописати (1..%d): ", freeSlots);
 
-    if (!readInt(prompt, &n, 1, freeSlots)) //увести кількість нових записів
+    if (!readShort(prompt, &n, 1, freeSlots)) //увести кількість нових записів
     {
         return; //завершити команду
     }
@@ -882,7 +930,7 @@ void cmdAppend()
         return; //завершити команду
     }
 
-    for (int i = 0; i < n; ++i) //перебрати нові записи
+    for (short i = 0; i < n; ++i) //перебрати нові записи
     {
         //вивести номер нового запису
         std::cout << "\n  --- новий запис " << (i + 1) << " ---\n";
@@ -917,8 +965,8 @@ void cmdAppend()
 */
 void cmdReplace()
 {
-    const long total = dataFileRecords(); //кількість записів у файлі
-    if (total < 0)                        //якщо файл непридатний
+    const short total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                         //якщо файл непридатний
     {
         return; //завершити команду
     }
@@ -929,12 +977,12 @@ void cmdReplace()
         return; //завершити команду
     }
 
-    int number = 0;  //номер запису для заміни
-    char prompt[80]; //текст запрошення
+    short number = 0; //номер запису для заміни
+    char prompt[80];  //текст запрошення
     //сформувати запрошення
-    std::snprintf(prompt, sizeof prompt, "Номер запису для заміни (1..%ld): ", total);
+    std::snprintf(prompt, sizeof prompt, "Номер запису для заміни (1..%d): ", total);
 
-    if (!readInt(prompt, &number, 1, static_cast<int>(total))) //увести номер запису
+    if (!readShort(prompt, &number, 1, total)) //увести номер запису
     {
         return; //завершити команду
     }
@@ -980,8 +1028,8 @@ void cmdReplace()
 */
 void cmdDelete()
 {
-    const long total = dataFileRecords(); //кількість записів у файлі
-    if (total < 0)                        //якщо файл непридатний
+    const short total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                         //якщо файл непридатний
     {
         return; //завершити команду
     }
@@ -991,21 +1039,13 @@ void cmdDelete()
         std::cout << "Файл порожній - видаляти нічого.\n";
         return; //завершити команду
     }
-    if (total > MAX_RECORDS) //якщо записів забагато
-    {
-        //вивести повідомлення про межу
-        std::cout << "Файл містить більше " << MAX_RECORDS
-                  << " записів - видалення неможливе.\n";
-        return; //завершити команду
-    }
 
-    int number = 0;  //номер запису для видалення
-    char prompt[80]; //текст запрошення
+    short number = 0; //номер запису для видалення
+    char prompt[80];  //текст запрошення
     //сформувати запрошення
-    std::snprintf(prompt, sizeof prompt,
-                  "Номер запису для видалення (1..%ld): ", total);
+    std::snprintf(prompt, sizeof prompt, "Номер запису для видалення (1..%d): ", total);
 
-    if (!readInt(prompt, &number, 1, static_cast<int>(total))) //увести номер запису
+    if (!readShort(prompt, &number, 1, total)) //увести номер запису
     {
         return; //завершити команду
     }
@@ -1021,8 +1061,8 @@ void cmdDelete()
     }
 
     Sale records[MAX_RECORDS] = {}; //записи, що залишаються
-    long kept = 0;                  //кількість збережених записів
-    long index = 0;                 //номер прочитаного запису
+    short kept = 0;                 //кількість збережених записів
+    short index = 0;                //номер прочитаного запису
     Sale sale{};                    //поточний запис
 
     //прочитати записи до кінця файлу
@@ -1133,9 +1173,9 @@ void cmdQueryComputers()
               << "\" фірмою \"" << firm << "\"\n"
               << "Результат записано до бінарного файлу " << COMPUTERS_FILE << "\n\n";
 
-    double total = 0.0; //сумарна вартість знайденого
+    double total = 0.0; //сумарна вартість знайденого: сотні записів, float замало
     //вивести файл результатів
-    const long found = printSalesFile(COMPUTERS_FILE, &total);
+    const short found = printSalesFile(COMPUTERS_FILE, &total);
 
     if (found <= 0) //якщо нічого не знайдено
     {
@@ -1180,8 +1220,8 @@ void cmdQuerySoftware()
         return; //завершити команду
     }
 
-    const int fromNumber = dateToNumber(&from); //початок періоду як число
-    const int toNumber = dateToNumber(&to);     //кінець періоду як число
+    const int fromNumber = dateToNumber(&from); //початок періоду як число РРРРММДД
+    const int toNumber = dateToNumber(&to);     //кінець періоду як число РРРРММДД
 
     if (fromNumber > toNumber) //якщо початок пізніший за кінець
     {
@@ -1237,8 +1277,10 @@ void cmdQuerySoftware()
     input.close();  //закрити файл даних
     output.close(); //закрити файл результатів
 
-    char fromText[16];                            //початок періоду текстом
-    char toText[16];                              //кінець періоду текстом
+    /* Розмір 21: компілятор перевіряє snprintf для всього діапазону short
+       (три числа по 6 символів, дві крапки й завершальний нуль). */
+    char fromText[21];                            //початок періоду текстом
+    char toText[21];                              //кінець періоду текстом
     formatDate(&from, fromText, sizeof fromText); //записати початок періоду до рядка
     formatDate(&to, toText, sizeof toText);       //записати кінець періоду до рядка
 
@@ -1247,8 +1289,9 @@ void cmdQuerySoftware()
               << fromText << " до " << toText << "\n"
               << "Результат записано до бінарного файлу " << SOFTWARE_FILE << "\n\n";
 
-    double total = 0.0;                                       //вартість проданого ПЗ
-    const long found = printSalesFile(SOFTWARE_FILE, &total); //вивести файл результатів
+    double total = 0.0; //вартість проданого ПЗ: сотні записів, float замало
+    //вивести файл результатів
+    const short found = printSalesFile(SOFTWARE_FILE, &total);
 
     if (found <= 0) //якщо нічого не знайдено
     {
@@ -1295,16 +1338,16 @@ void cmdQueryFirms()
     }
 
     FirmTotal firms[MAX_RECORDS] = {}; //сумарні продажі фірм
-    int firmCount = 0;                 //кількість різних фірм
+    short firmCount = 0;               //кількість різних фірм
     Sale sale{};                       //поточний запис
 
     //прочитати записи до кінця файлу
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
         terminateStrings(&sale); //завершити текстові поля нулем
-        int position = -1;       //позиція фірми в масиві
+        short position = -1;     //позиція фірми в масиві
 
-        for (int j = 0; j < firmCount; ++j) //перебрати знайдені фірми
+        for (short j = 0; j < firmCount; ++j) //перебрати знайдені фірми
         {
             if (std::strcmp(firms[j].firm, sale.firm) == 0) //якщо фірма вже є в масиві
             {
@@ -1326,8 +1369,9 @@ void cmdQueryFirms()
             firms[position].total = 0.0;                  //обнулити суму продажів
         }
 
-        firms[position].total += sale.price; //накопичити суму продажів фірми
-        ++firms[position].sales;             //збільшити кількість продажів
+        //накопичити суму продажів фірми
+        firms[position].total += centsPrice(sale.price);
+        ++firms[position].sales; //збільшити кількість продажів
     }
 
     input.close(); //закрити файл даних
@@ -1339,8 +1383,8 @@ void cmdQueryFirms()
         return; //завершити команду
     }
 
-    double maxTotal = firms[0].total;   //найбільша сумарна вартість
-    for (int j = 1; j < firmCount; ++j) //перебрати решту фірм
+    double maxTotal = firms[0].total; //найбільша сумарна вартість: тип як у сум фірм
+    for (short j = 1; j < firmCount; ++j) //перебрати решту фірм
     {
         if (firms[j].total > maxTotal) //якщо сума фірми більша
         {
@@ -1350,8 +1394,8 @@ void cmdQueryFirms()
 
     //вивести заголовок запиту
     std::cout << "\nЗапит 3. Сумарна вартість продажів по фірмах\n\n";
-    printFirmHeader();                  //вивести заголовок таблиці
-    for (int j = 0; j < firmCount; ++j) //перебрати всі фірми
+    printFirmHeader();                    //вивести заголовок таблиці
+    for (short j = 0; j < firmCount; ++j) //перебрати всі фірми
     {
         printFirmRow(&firms[j]); //вивести рядок фірми
     }
@@ -1366,7 +1410,7 @@ void cmdQueryFirms()
         return; //завершити команду
     }
 
-    for (int j = 0; j < firmCount; ++j) //перебрати всі фірми
+    for (short j = 0; j < firmCount; ++j) //перебрати всі фірми
     {
         if (firms[j].total >= maxTotal - PRICE_TOLERANCE) //якщо сума фірми найбільша
         {
@@ -1437,8 +1481,9 @@ int main()
                      "  8 - запит: найрентабельніші фірми\n"
                      "  9 - вихід\n"; //вивести пункти меню 5-9
 
-        int choice = 0;                                          //номер обраної команди
-        if (!readInt("Оберіть команду (1..9): ", &choice, 1, 9)) //увести номер команди
+        short choice = 0; //номер обраної команди
+        if (!readShort("Оберіть команду (1..9): ", &choice, 1,
+                       9)) //увести номер команди
         {
             //вивести повідомлення про кінець даних
             std::cout << "\nВхідні дані вичерпано. Завершення роботи.\n";

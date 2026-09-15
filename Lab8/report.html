@@ -116,10 +116,10 @@
               <td>2. Динамічна пам'ять</td>
               <td>
                 Масиви створюються оператором <code>new[]</code> (у <code>createArray()</code> -
-                <code>new (std::nothrow) int[n]</code>, щоб за браку пам'яті повідомити про це, а не
-                завершитися аварійно) і звільняються оператором <code>delete[]</code>. Кожен масив
-                адресується покажчиком; попередній масив звільняється перед створенням нового, а
-                перед виходом з програми звільняється поточний.
+                <code>new (std::nothrow) short[n]</code>, щоб за браку пам'яті повідомити про це, а
+                не завершитися аварійно) і звільняються оператором <code>delete[]</code>. Кожен
+                масив адресується покажчиком; попередній масив звільняється перед створенням нового,
+                а перед виходом з програми звільняється поточний.
               </td>
               <td>
                 <code>createArray()</code>, <code>copyArray()</code>, <code>cmdCreate()</code>,
@@ -129,8 +129,13 @@
             <tr>
               <td>3. Передача масивів через покажчики</td>
               <td>
-                Функції обробки приймають масив параметром <code>int *</code> або
-                <code>const int *</code> (<code>const</code> - якщо масив не змінюється).
+                Функції обробки приймають масив параметром-покажчиком.
+                <code>squareNegatives()</code> приймає <code>const short *</code> (вхідний масив).
+                Функції <code>copyArray()</code>, <code>printArray()</code>,
+                <code>sortDescending()</code> і <code>sumOfEven()</code> записано шаблонами з
+                параметром <code>const T *</code>: той самий код працює і з вхідним масивом
+                <code>short</code>, і з масивом квадратів <code>int</code>.
+                <code>const</code> означає, що функція масив не змінює.
               </td>
               <td>
                 <code>printArray()</code>, <code>squareNegatives()</code>,
@@ -140,9 +145,11 @@
             <tr>
               <td>4. Повернення масивів через покажчики</td>
               <td>
-                Функції <code>createArray()</code>, <code>copyArray()</code>,
-                <code>squareNegatives()</code>, <code>sortDescending()</code> повертають
-                <code>int *</code> - покажчик на новий масив у динамічній пам'яті.
+                Функції повертають покажчик на новий масив у динамічній пам'яті:
+                <code>createArray()</code> - <code>short *</code>, <code>squareNegatives()</code> -
+                <code>int *</code>, шаблони <code>copyArray()</code> і
+                <code>sortDescending()</code> - <code>T *</code> (масив того самого типу, що й
+                вихідний).
               </td>
               <td>заголовки відповідних функцій</td>
             </tr>
@@ -150,7 +157,7 @@
               <td>5. Доступ до елементів через покажчики</td>
               <td>
                 Елементи адресуються розіменуванням покажчика: <code>*(a + i)</code> або рухомим
-                покажчиком у циклі <code>for (int *p = a; p &lt; a + n; ++p)</code>; у функціях
+                покажчиком у циклі <code>for (const T *p = a; p &lt; a + n; ++p)</code>; у функціях
                 обробки масиву запису <code>a[i]</code> немає.
               </td>
               <td>усі функції обробки</td>
@@ -162,12 +169,12 @@
           Масиви передаються й повертаються лише через покажчики, як вимагають пункти 3-5. Для
           скалярних значень, які функції повертають додатково (кількість замінених елементів,
           обмінів, парних чисел), використано параметри-посилання виду
-          <code>int &amp;changed</code>.
+          <code>short &amp;changed</code>.
         </p>
         <p>
           Так рекомендують і теоретичні відомості: "щоб повертати з функцій більше одного значення,
           слід передати функції аргументи-посилання або аргументи-покажчики". Параметр-покажчик має
-          функція <code>readInt()</code>, тож у програмі є обидва способи:
+          функція <code>readShort()</code>, тож у програмі є обидва способи:
         </p>
         <table>
           <thead>
@@ -180,17 +187,17 @@
           <tbody>
             <tr>
               <td>Оголошення</td>
-              <td><code>int *changed</code></td>
-              <td><code>int &amp;changed</code></td>
+              <td><code>short *value</code></td>
+              <td><code>short &amp;changed</code></td>
             </tr>
             <tr>
               <td>У виклику</td>
-              <td><code>f(..., &amp;changed)</code> - потрібна операція взяття адреси</td>
+              <td><code>readShort(..., &amp;n, ...)</code> - потрібна операція взяття адреси</td>
               <td><code>f(..., changed)</code> - просто ім'я змінної</td>
             </tr>
             <tr>
               <td>У тілі функції</td>
-              <td><code>++(*changed)</code> - потрібне розіменування</td>
+              <td><code>std::cin &gt;&gt; *value</code> - потрібне розіменування</td>
               <td><code>++changed</code> - як зі звичайною змінною</td>
             </tr>
             <tr>
@@ -200,7 +207,7 @@
             </tr>
             <tr>
               <td>Де в програмі</td>
-              <td><code>readInt()</code>, усі функції роботи з масивами</td>
+              <td><code>readShort()</code>, усі функції роботи з масивами</td>
               <td>
                 <code>squareNegatives()</code>, <code>sortDescending()</code>,
                 <code>sumOfEven()</code>
@@ -229,27 +236,93 @@
         </p>
         <h3>Обмеження діапазону введення</h3>
         <p>
-          Значення елементів обмежено 1 000 за модулем, а кількість елементів - 2 000. Після
-          піднесення від'ємних чисел до квадрата елемент не перевищує 1 000² = 10⁶, а сума парних
-          чисел - 2 000 · 10⁶ = 2 · 10⁹ &lt; 2,15 · 10⁹. Тому і квадрати, і сума вміщуються в
-          <code>int</code>, і ширший тип не потрібен. Межі <code>MAX_ABS_VALUE</code> і
+          Значення елементів обмежено 1 000 за модулем, а кількість елементів - 2 000. Обидві межі
+          менші за 32 767, тому вхідний масив і кількість мають тип <code>short</code>. Після
+          піднесення від'ємних чисел до квадрата елемент сягає 1 000² = 10⁶ і в
+          <code>short</code> уже не вміщується, тому квадрати записуються в окремий масив
+          <code>int</code>. Сума парних чисел не перевищує 2 000 · 10⁶ = 2 · 10⁹ &lt; 2,15 · 10⁹ і
+          теж вміщується в <code>int</code>. Межі <code>MAX_ABS_VALUE</code> і
           <code>MAX_COUNT</code> однакові для введення з клавіатури і для генерації.
         </p>
         <p>
-          Кількість елементів умова не обмежує, тому програма приймає будь-яке натуральне число.
-          Пам'ять виділяється оператором <code>new (std::nothrow) int[n]</code>, який за браку
-          пам'яті повертає <code>nullptr</code> замість аварійного завершення, і програма повідомляє
-          про це.
+          Кількість елементів обмежено числом 2 000, яке вміщується в <code>short</code>. Пам'ять
+          виділяється оператором <code>new (std::nothrow) short[n]</code>, який за браку пам'яті
+          повертає <code>nullptr</code> замість аварійного завершення, і програма повідомляє про це.
+        </p>
+        <h3>Вибір типів даних</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Змінні</th>
+              <th>Тип</th>
+              <th>Чому</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                елементи вхідного масиву <code>g_array</code>, межі генерації <code>low</code>,
+                <code>high</code>
+              </td>
+              <td><code>short</code></td>
+              <td>значення до ±1 000, у 16 біт вміщується</td>
+            </tr>
+            <tr>
+              <td>
+                кількість <code>n</code>, <code>g_size</code>, індекси <code>i</code>,
+                <code>j</code>, <code>maxPos</code>, пункт меню <code>choice</code>
+              </td>
+              <td><code>short</code></td>
+              <td>не більше 2 000</td>
+            </tr>
+            <tr>
+              <td>лічильники <code>changed</code>, <code>swaps</code>, <code>count</code></td>
+              <td><code>short</code></td>
+              <td>не більші за кількість елементів (2 000)</td>
+            </tr>
+            <tr>
+              <td>елементи масиву квадратів (результат <code>squareNegatives()</code>)</td>
+              <td><code>int</code></td>
+              <td>квадрат сягає 10⁶, а <code>short</code> - лише до 32 767</td>
+            </tr>
+            <tr>
+              <td>сума парних <code>sum</code></td>
+              <td><code>int</code></td>
+              <td>
+                сягає 2 · 10⁹; <code>unsigned short</code> і <code>short</code> замалі, а в
+                <code>int</code> вміщується
+              </td>
+            </tr>
+            <tr>
+              <td>код символу <code>c</code> у <code>restOfLineOk()</code></td>
+              <td><code>int</code></td>
+              <td>
+                <code>std::cin.peek()</code> повертає <code>int</code>: код символу або окреме
+                значення кінця введення
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Вхідний масив має тип <code>short</code>, а масив квадратів - <code>int</code>. Щоб не
+          писати копії функцій виведення, копіювання, сортування й суми для кожного типу, їх
+          записано шаблонами (<code>template &lt;typename T&gt;</code>) з параметром
+          <code>const T *</code>. Компілятор сам створює варіант для <code>short</code> і для
+          <code>int</code>, тож кожен масив займає стільки пам'яті, скільки потрібно його елементам.
+          Сума в <code>sumOfEven()</code> має тип <code>int</code> незалежно від <code>T</code>.
         </p>
         <h3>Контроль введення</h3>
         <p>
-          Усі числа читає функція <code>readInt()</code>: після успішного читання допоміжна функція
-          <code>restOfLineOk()</code> перевіряє залишок рядка. Припустимі лише пропуски до кінця
-          рядка або початок наступного числа, тому елементи можна вводити як по одному, так і
-          кількома в одному рядку ("1 2 3" читається трьома послідовними запитами). Сторонні символи
-          після числа ("5abc", "3.7") вважаються помилкою: залишок рядка відкидається і запит
-          повторюється. Перевірка відсутності масиву перед операціями зібрана у функції
-          <code>haveArray()</code>, яка виводить повідомлення й повертає результат перевірки.
+          Усі числа читає функція <code>readShort()</code> одразу в змінну типу <code>short</code>.
+          Число поза межами <code>short</code> (наприклад, -100000) потік не прочитає, і програма
+          повідомить про помилку так само, як про нечисловий текст. Після успішного читання
+          допоміжна функція <code>restOfLineOk()</code> перевіряє залишок рядка. Припустимі лише
+          пропуски до кінця рядка або початок наступного числа, тому елементи можна вводити як по
+          одному, так і кількома в одному рядку ("1 2 3" читається трьома послідовними запитами).
+          Сторонні символи після числа ("5abc", "3.7") вважаються помилкою: залишок рядка
+          відкидається і запит повторюється. Перевірка відсутності масиву перед операціями зібрана у
+          функції <code>haveArray()</code>, яка виводить повідомлення й повертає результат
+          перевірки.
         </p>
         <p>
           Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
@@ -346,15 +419,25 @@
 <span class="cm">       вибору команди немає.</span>
 <span class="cm">    2. Масиви створюються оператором new[] і звільняються оператором</span>
 <span class="cm">       delete[]; кожен масив адресується покажчиком.</span>
-<span class="cm">    3. Усі функції обробки приймають масив параметром типу int * / const int *.</span>
+<span class="cm">    3. Усі функції обробки приймають масив параметром-покажчиком</span>
+<span class="cm">       (short * / const short * для вхідного масиву, int * для масиву</span>
+<span class="cm">       квадратів; спільні функції записано шаблонами з параметром-покажчиком</span>
+<span class="cm">       const T *).</span>
 <span class="cm">    4. Функції createArray(), copyArray(), squareNegatives() і sortDescending()</span>
 <span class="cm">       повертають покажчик на новий масив.</span>
 <span class="cm">    5. Звертання до елементів виконується через розіменування покажчика</span>
 <span class="cm">       з адресною арифметикою: *(a + i) або рухомий покажчик *p, а не a[i].</span>
 
 <span class="cm">  Посилання: скалярні результати функцій (кількості замінених елементів,</span>
-<span class="cm">  обмінів, парних чисел) повертаються через параметри-посилання виду int &amp;,</span>
-<span class="cm">  а функція readInt() повертає число через параметр-покажчик.</span>
+<span class="cm">  обмінів, парних чисел) повертаються через параметри-посилання виду short &amp;,</span>
+<span class="cm">  а функція readShort() повертає число через параметр-покажчик.</span>
+
+<span class="cm">  Типи даних обрано за доведеним діапазоном значень:</span>
+<span class="cm">    short - елементи вхідного масиву (до ±1000), кількість елементів (до 2000),</span>
+<span class="cm">            індекси, межі генерації, пункти меню, лічильники замін, обмінів</span>
+<span class="cm">            і парних чисел (не більше 2000) - усе вміщується в 16 біт;</span>
+<span class="cm">    int   - елементи масиву квадратів (до 10^6), сума парних чисел</span>
+<span class="cm">            (до 2 * 10^9) та код символу, повернутий std::cin.peek().</span>
 
 <span class="cm">  ОБМЕЖЕННЯ УМОВИ: забороняється використовувати STL, методи класів колекцій</span>
 <span class="cm">  (сортування, пошуку та інші).</span>
@@ -373,13 +456,16 @@
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ctime&gt;</span>
 
 <span class="cm">/* Найбільше за модулем значення елемента і найбільша кількість елементів.</span>
-<span class="cm">   Після піднесення від'ємних чисел до квадрата елемент не перевищує</span>
-<span class="cm">   1000^2 = 10^6, а сума парних чисел - 2000 * 10^6 = 2 * 10^9, що менше за</span>
-<span class="cm">   межу int 2 147 483 647. Тому і квадрати, і сума вміщуються в int.</span>
+<span class="cm">   Обидві межі менші за 32 767, тому елементи вхідного масиву, кількість</span>
+<span class="cm">   елементів та індекси зберігаються в short.</span>
+<span class="cm">   Після піднесення від'ємних чисел до квадрата елемент сягає 1000^2 = 10^6 -</span>
+<span class="cm">   це вже не short, тому квадрати записуються в окремий масив типу int.</span>
+<span class="cm">   Сума парних чисел не перевищує 2000 * 10^6 = 2 * 10^9, що менше за межу int</span>
+<span class="cm">   2 147 483 647, тому сума має тип int.</span>
 <span class="cm">   Межі застосовуються однаково до введення з клавіатури та до генерації</span>
 <span class="cm">   псевдовипадкових чисел. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="c1">//найбільший модуль елемента</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2000</span><span class="p">;</span><span class="w">     </span><span class="c1">//найбільша кількість елементів</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span><span class="w"> </span><span class="c1">//найбільший модуль елемента</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2000</span><span class="p">;</span><span class="w">     </span><span class="c1">//найбільша кількість елементів</span>
 
 <span class="cm">/*==============================================================================</span>
 <span class="cm">  Функції введення</span>
@@ -393,13 +479,14 @@
 <span class="cm">  Пропуски й табуляції після числа пропускаються. Далі припустимі: кінець</span>
 <span class="cm">  рядка (він поглинається), кінець вхідних даних або початок наступного числа</span>
 <span class="cm">  (цифра, знак '-' чи '+'), який лишається в потоці, тож рядок "1 2 3"</span>
-<span class="cm">  читається трьома послідовними викликами readInt(). Будь-який інший символ</span>
+<span class="cm">  читається трьома послідовними викликами readShort(). Будь-який інший символ</span>
 <span class="cm">  ("5abc", "3.7") означає помилку: залишок рядка відкидається.</span>
 
 <span class="cm">  Повертає: true - за числом нічого зайвого; false - виявлено сторонній текст.</span>
 
 <span class="cm">  Локальні змінні:</span>
-<span class="cm">      c - код наступного символу в потоці (без вилучення).</span>
+<span class="cm">      c - код наступного символу в потоці (без вилучення); має тип int, бо</span>
+<span class="cm">          peek() повертає або код символу, або окреме значення EOF.</span>
 <span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">()</span>
 <span class="p">{</span>
@@ -430,9 +517,15 @@
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="p">}</span>
 
-<span class="c1">//====== readInt: прочитати ціле число із заданого діапазону з контролем введення ======</span>
+<span class="c1">//==== readShort: прочитати ціле число із заданого діапазону з контролем введення =====</span>
 <span class="cm">/*</span>
-<span class="cm">  readInt - прочитати ціле число із заданого діапазону з контролем введення.</span>
+<span class="cm">  readShort - прочитати ціле число із заданого діапазону з контролем введення.</span>
+
+<span class="cm">  Усі числа, які вводить користувач (кількість елементів до 2000, елементи</span>
+<span class="cm">  до ±1000, межі генерації, номери пунктів меню), вміщуються в short, тому</span>
+<span class="cm">  число читається одразу в змінну типу short. Число поза межами short</span>
+<span class="cm">  (наприклад, -100000) потік не прочитає і повідомить про помилку так само,</span>
+<span class="cm">  як і про нечисловий текст.</span>
 
 <span class="cm">  Параметри:</span>
 <span class="cm">      prompt [вхідний]  - текст запрошення;</span>
@@ -444,7 +537,7 @@
 <span class="cm">      isNumber - чи вдалося прочитати ціле число;</span>
 <span class="cm">      isClean  - чи немає після числа стороннього тексту (див. restOfLineOk).</span>
 <span class="cm">*/</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">readInt</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readShort</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
@@ -500,15 +593,16 @@
 <span class="cm">            Пам'ять виділяється оператором new[]; звільняти її має викличний код.</span>
 
 <span class="cm">  Локальні змінні:</span>
-<span class="cm">      array - покажчик на початок виділеної ділянки пам'яті;</span>
-<span class="cm">      p     - рухомий покажчик для заповнення елементів.</span>
+<span class="cm">      array  - покажчик на початок виділеної ділянки пам'яті;</span>
+<span class="cm">      p      - рухомий покажчик для заповнення елементів;</span>
+<span class="cm">      prompt - текст запрошення для елемента.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="nf">createArray</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">byHand</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
+<span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="nf">createArray</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">byHand</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="cm">/* Кількість елементів вводить користувач, тому виділення пам'яті може</span>
 <span class="cm">       не вдатися: new (std::nothrow) повертає nullptr замість винятку. */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">nothrow</span><span class="p">)</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="n">n</span><span class="p">];</span><span class="w"> </span><span class="c1">//виділити пам'ять під масив</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">array</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span><span class="w">                         </span><span class="c1">//якщо пам'ять не виділено</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">nothrow</span><span class="p">)</span><span class="w"> </span><span class="kt">short</span><span class="p">[</span><span class="n">n</span><span class="p">];</span><span class="w"> </span><span class="c1">//виділити пам'ять під масив</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">array</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span><span class="w">                             </span><span class="c1">//якщо пам'ять не виділено</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//повідомити про нестачу пам'яті</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Недостатньо пам'яті для масиву з "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" елементів.</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
@@ -521,15 +615,15 @@
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Уведіть цілі числа від "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" до "</span>
 <span class="w">                  </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" (усього "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"):</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">array</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">array</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span><span class="w"> </span><span class="c1">//текст запрошення для елемента</span>
+<span class="w">            </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">13</span><span class="p">];</span><span class="w"> </span><span class="c1">//запрошення: найдовше "  a[1999] = " - 12 байтів</span>
 <span class="w">            </span><span class="c1">//сформувати запрошення з індексом</span>
 <span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span>
-<span class="w">                          </span><span class="s">"  a[%ld] = "</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">long</span><span class="o">&gt;</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">array</span><span class="p">));</span>
+<span class="w">                          </span><span class="s">"  a[%hd] = "</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">short</span><span class="o">&gt;</span><span class="p">(</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">array</span><span class="p">));</span>
 
 <span class="w">            </span><span class="c1">//якщо введення перервано</span>
-<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span>
 <span class="w">            </span><span class="p">{</span>
 <span class="w">                </span><span class="k">delete</span><span class="p">[]</span><span class="w"> </span><span class="n">array</span><span class="p">;</span><span class="w"> </span><span class="c1">//звільнити пам'ять при перериванні</span>
 <span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути нульовий покажчик</span>
@@ -540,9 +634,10 @@
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="cm">/* ширина діапазону не більше 2 * MAX_ABS_VALUE + 1 = 2001, тож rand()</span>
 <span class="cm">           (від 0 до 32767) охоплює всі значення */</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">array</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">array</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">array</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="p">(</span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//число від low до high</span>
+<span class="w">            </span><span class="c1">//число від low до high</span>
+<span class="w">            </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">short</span><span class="o">&gt;</span><span class="p">(</span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="p">(</span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
@@ -553,16 +648,19 @@
 <span class="cm">/*</span>
 <span class="cm">  copyArray - створити копію масиву в новій ділянці динамічної пам'яті.</span>
 
+<span class="cm">  Шаблон: T - тип елементів (short для вхідного масиву, int для масиву</span>
+<span class="cm">  квадратів), тож копія займає стільки ж пам'яті, скільки оригінал.</span>
+
 <span class="cm">  Параметри:</span>
 <span class="cm">      source [вхідний] - покажчик на вихідний масив;</span>
 <span class="cm">      n      [вхідний] - кількість елементів.</span>
 <span class="cm">  Повертає : покажчик на новий масив-копію.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="nf">copyArray</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">copyArray</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="n">n</span><span class="p">];</span><span class="w"> </span><span class="c1">//виділити пам'ять під копію</span>
+<span class="w">    </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">T</span><span class="p">[</span><span class="n">n</span><span class="p">];</span><span class="w"> </span><span class="c1">//виділити пам'ять під копію</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">source</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"> </span><span class="c1">//скопіювати елемент</span>
 <span class="w">    </span><span class="p">}</span>
@@ -574,16 +672,18 @@
 <span class="cm">/*</span>
 <span class="cm">  printArray - вивести масив на екран через покажчик.</span>
 
+<span class="cm">  Шаблон: T - тип елементів (short або int).</span>
+
 <span class="cm">  Параметри:</span>
 <span class="cm">      title [вхідний] - заголовок;</span>
 <span class="cm">      a     [вхідний] - покажчик на масив;</span>
 <span class="cm">      n     [вхідний] - кількість елементів.</span>
 <span class="cm">*/</span>
-<span class="kt">void</span><span class="w"> </span><span class="nf">printArray</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">printArray</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">title</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести заголовок</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести елемент</span>
 <span class="w">    </span><span class="p">}</span>
@@ -610,18 +710,24 @@
 <span class="cm">  всередині функції з ним працюють як зі звичайною змінною: без операції</span>
 <span class="cm">  розіменування та без ризику отримати неініціалізовану адресу.</span>
 
-<span class="cm">  Квадрат обчислюється в типі int, тому має вміщатися в його межі. Для цього</span>
-<span class="cm">  значення елементів обмежено за модулем числом 30000 під час створення</span>
-<span class="cm">  масиву: 30000^2 = 9*10^8 менше за межу int (близько 2,1*10^9).</span>
+<span class="cm">  Вихідний масив має тип short (елементи до ±1000), а масив-результат - int:</span>
+<span class="cm">  квадрат сягає 1000^2 = 10^6 і в short (до 32 767) не вміщується. Добуток</span>
+<span class="cm">  value * value обчислюється в int, бо операнди short перед множенням</span>
+<span class="cm">  перетворюються на int.</span>
+<span class="cm">  Кількість замін не більша за кількість елементів (до 2000) - тип short.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      result - покажчик на новий масив;</span>
+<span class="cm">      value  - поточний елемент вихідного масиву.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="nf">squareNegatives</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">changed</span><span class="p">)</span>
+<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">squareNegatives</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">&amp;</span><span class="n">changed</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="kt">int</span><span class="p">[</span><span class="n">n</span><span class="p">];</span><span class="w"> </span><span class="c1">//виділити пам'ять під результат</span>
 <span class="w">    </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                    </span><span class="c1">//обнулити лічильник замін</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">source</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"> </span><span class="c1">//поточний елемент масиву</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">source</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w"> </span><span class="c1">//поточний елемент масиву</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо елемент від'ємний</span>
 <span class="w">        </span><span class="p">{</span>
@@ -646,6 +752,10 @@
 <span class="cm">  початок невпорядкованої частини. Бібліотечні методи сортування заборонені</span>
 <span class="cm">  умовою, тому алгоритм реалізовано власними засобами.</span>
 
+<span class="cm">  Шаблон: T - тип елементів. Функція впорядковує і вхідний масив (short),</span>
+<span class="cm">  і масив квадратів (int), не збільшуючи розмір елементів.</span>
+<span class="cm">  Кількість обмінів менша за кількість елементів (до 2000) - тип short.</span>
+
 <span class="cm">  Параметри:</span>
 <span class="cm">      source [вхідний]  - покажчик на вихідний масив;</span>
 <span class="cm">      n      [вхідний]  - кількість елементів;</span>
@@ -657,16 +767,16 @@
 <span class="cm">      maxPos  - індекс найбільшого елемента невпорядкованої частини;</span>
 <span class="cm">      temp    - проміжне значення для обміну.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="nf">sortDescending</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">swaps</span><span class="p">)</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">sortDescending</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">&amp;</span><span class="n">swaps</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">copyArray</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//створити копію вихідного масиву</span>
-<span class="w">    </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                </span><span class="c1">//обнулити лічильник обмінів</span>
+<span class="w">    </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">copyArray</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//створити копію вихідного масиву</span>
+<span class="w">    </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                              </span><span class="c1">//обнулити лічильник обмінів</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати невпорядковану частину</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати невпорядковану частину</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">maxPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"> </span><span class="c1">//індекс найбільшого елемента</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">maxPos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"> </span><span class="c1">//індекс найбільшого елемента</span>
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати решту елементів</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати решту елементів</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPos</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо знайдено більший елемент</span>
 <span class="w">            </span><span class="p">{</span>
@@ -676,7 +786,7 @@
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">maxPos</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо найбільший не на місці</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w">     </span><span class="c1">//допоміжна змінна для обміну</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">);</span><span class="w">       </span><span class="c1">//допоміжна змінна для обміну</span>
 <span class="w">            </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPos</span><span class="p">);</span><span class="w"> </span><span class="c1">//перенести найбільший на початок</span>
 <span class="w">            </span><span class="o">*</span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">maxPos</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span><span class="w">          </span><span class="c1">//завершити обмін елементів</span>
 <span class="w">            </span><span class="o">++</span><span class="n">swaps</span><span class="p">;</span><span class="w">                            </span><span class="c1">//збільшити лічильник обмінів</span>
@@ -694,23 +804,32 @@
 <span class="cm">  операція % у мові C++ може дати остачу -1, тому перевіряється рівність</span>
 <span class="cm">  остачі нулю, а не одиниці - цей запис однаково правильний для обох знаків.</span>
 
+<span class="cm">  Шаблон: T - тип елементів (short для вхідного масиву, int для масиву</span>
+<span class="cm">  квадратів). Сума має тип int незалежно від T: для масиву квадратів вона</span>
+<span class="cm">  сягає 2000 * 10^6 = 2 * 10^9, що вміщується в int. Кількість парних чисел</span>
+<span class="cm">  не більша за кількість елементів (до 2000) - тип short.</span>
+
 <span class="cm">  Параметри:</span>
 <span class="cm">      a     [вхідний]  - покажчик на масив;</span>
 <span class="cm">      n     [вхідний]  - кількість елементів;</span>
 <span class="cm">      count [вихідний] - ПОСИЛАННЯ на лічильник парних чисел.</span>
 <span class="cm">  Повертає : сума парних чисел.</span>
 
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      sum - сума парних чисел;</span>
+<span class="cm">      p   - рухомий покажчик для перебору елементів.</span>
+
 <span class="cm">  Функція повертає ДВА значення: суму - як результат, кількість - через</span>
 <span class="cm">  параметр-посилання. Це і є те застосування посилальних типів, про яке</span>
 <span class="cm">  йдеться в теоретичних відомостях: "щоб повертати з функцій більше одного</span>
 <span class="cm">  значення, слід передати функції аргументи-посилання або аргументи-покажчики".</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">sumOfEven</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">count</span><span class="p">)</span>
+<span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sumOfEven</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">&amp;</span><span class="n">count</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//сума парних чисел</span>
 <span class="w">    </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//обнулити лічильник парних</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати елементи масиву</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо елемент парний</span>
 <span class="w">        </span><span class="p">{</span>
@@ -733,23 +852,30 @@
 <span class="cm">/* Поточний масив та його довжина. Оголошені глобально, щоб усі команди меню</span>
 <span class="cm">   мали однаковий заголовок і могли зберігатися в спільному масиві покажчиків</span>
 <span class="cm">   на функції. */</span>
-<span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">g_array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">//покажчик на поточний масив</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">g_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//кількість елементів масиву</span>
+<span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">g_array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span><span class="w"> </span><span class="c1">//покажчик на поточний масив (елементи до ±1000)</span>
+<span class="kt">short</span><span class="w"> </span><span class="n">g_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//кількість елементів масиву (до 2000)</span>
 
 <span class="c1">//============================== cmdCreate: команда меню ===============================</span>
 <span class="cm">/*</span>
 <span class="cm">  cmdCreate - команда меню: створити масив.</span>
 <span class="cm">  Параметри: немає. Змінює глобальний стан g_array, g_size.</span>
+
+<span class="cm">  Локальні змінні:</span>
+<span class="cm">      prompt    - текст запрошення (найдовше - 79 байтів у UTF-8);</span>
+<span class="cm">      n         - кількість елементів масиву;</span>
+<span class="cm">      choice    - обраний спосіб створення;</span>
+<span class="cm">      low, high - межі генерації;</span>
+<span class="cm">      created   - покажчик на створений масив.</span>
 <span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">cmdCreate</span><span class="p">()</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">96</span><span class="p">];</span><span class="w"> </span><span class="c1">//текст запрошення</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">       </span><span class="c1">//кількість елементів масиву</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">80</span><span class="p">];</span><span class="w"> </span><span class="c1">//текст запрошення: до 79 байтів і завершальний нуль</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//кількість елементів масиву</span>
 
 <span class="w">    </span><span class="c1">//сформувати запрошення</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span>
-<span class="w">                  </span><span class="s">"Уведіть кількість елементів масиву (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести кількість елементів</span>
+<span class="w">                  </span><span class="s">"Уведіть кількість елементів масиву (1..%hd): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COUNT</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести кількість елементів</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
@@ -758,34 +884,35 @@
 <span class="w">                 </span><span class="s">"  1 - введення з клавіатури</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">                 </span><span class="s">"  2 - генерація псевдовипадкових чисел</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести способи створення</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                         </span><span class="c1">//обраний спосіб створення</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="s">"Оберіть спосіб (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести спосіб створення</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                         </span><span class="c1">//обраний спосіб створення</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="s">"Оберіть спосіб (1..2): "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести спосіб створення</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">;</span><span class="w"> </span><span class="c1">//нижня межа генерації</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">;</span><span class="w"> </span><span class="c1">//верхня межа генерації</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">          </span><span class="c1">//якщо обрано генерацію</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">;</span><span class="w"> </span><span class="c1">//нижня межа генерації</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">;</span><span class="w"> </span><span class="c1">//верхня межа генерації</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">            </span><span class="c1">//якщо обрано генерацію</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//сформувати запрошення</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span>
-<span class="w">                      </span><span class="s">"Уведіть нижню межу (від'ємну, не менше %d): "</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести нижню межу</span>
+<span class="w">                      </span><span class="s">"Уведіть нижню межу (від'ємну, не менше %hd): "</span><span class="p">,</span>
+<span class="w">                      </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">short</span><span class="o">&gt;</span><span class="p">(</span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">));</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">MAX_ABS_VALUE</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести нижню межу</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="c1">//сформувати запрошення</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span>
-<span class="w">                      </span><span class="s">"Уведіть верхню межу (додатну, не більше %d): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести верхню межу</span>
+<span class="w">                      </span><span class="s">"Уведіть верхню межу (додатну, не більше %hd): "</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_ABS_VALUE</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести верхню межу</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">createArray</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//створити масив</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">created</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">createArray</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//створити масив</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">created</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо масив не створено</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
@@ -840,7 +967,7 @@
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість замінених елементів</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість замінених елементів</span>
 <span class="w">    </span><span class="c1">//замінити від'ємні квадратами</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">squareNegatives</span><span class="p">(</span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">,</span><span class="w"> </span><span class="n">changed</span><span class="p">);</span>
 
@@ -864,9 +991,9 @@
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість обмінів</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість обмінів</span>
 <span class="w">    </span><span class="c1">//упорядкувати масив за спаданням</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sortDescending</span><span class="p">(</span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">,</span><span class="w"> </span><span class="n">swaps</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sortDescending</span><span class="p">(</span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">,</span><span class="w"> </span><span class="n">swaps</span><span class="p">);</span>
 
 <span class="w">    </span><span class="n">printArray</span><span class="p">(</span><span class="s">"Вхідний масив:            "</span><span class="p">,</span><span class="w"> </span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести вхідний масив</span>
 <span class="w">    </span><span class="c1">//вивести впорядкований масив</span>
@@ -887,7 +1014,7 @@
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                     </span><span class="c1">//кількість парних чисел</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                                   </span><span class="c1">//кількість парних чисел</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sumOfEven</span><span class="p">(</span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити суму парних чисел</span>
 
 <span class="w">    </span><span class="n">printArray</span><span class="p">(</span><span class="s">"Вхідний масив:"</span><span class="p">,</span><span class="w"> </span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">);</span><span class="w">     </span><span class="c1">//вивести вхідний масив</span>
@@ -914,9 +1041,9 @@
 <span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати команду</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість замінених елементів</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//кількість обмінів</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//кількість парних чисел</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість замінених елементів</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">swaps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//кількість обмінів</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//кількість парних чисел</span>
 
 <span class="w">    </span><span class="c1">//замінити від'ємні квадратами</span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="k">const</span><span class="w"> </span><span class="n">squared</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">squareNegatives</span><span class="p">(</span><span class="n">g_array</span><span class="p">,</span><span class="w"> </span><span class="n">g_size</span><span class="p">,</span><span class="w"> </span><span class="n">changed</span><span class="p">);</span>
@@ -976,7 +1103,7 @@
 <span class="w">    </span><span class="p">{</span><span class="s">"вихід"</span><span class="p">,</span><span class="w"> </span><span class="n">cmdExit</span><span class="p">}};</span><span class="w"> </span><span class="c1">//таблиця команд меню</span>
 
 <span class="c1">//кількість пунктів меню</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">g_menu</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">g_menu</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">short</span><span class="o">&gt;</span><span class="p">(</span><span class="k">sizeof</span><span class="w"> </span><span class="n">g_menu</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">g_menu</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
 
 <span class="c1">//================================ головна функція main ================================</span>
 <span class="cm">/*</span>
@@ -984,6 +1111,8 @@
 <span class="cm">  покажчик на функцію.</span>
 
 <span class="cm">  Локальні змінні:</span>
+<span class="cm">      prompt - текст запрошення (38 байтів у UTF-8 і завершальний нуль);</span>
+<span class="cm">      i      - номер пункту меню під час виведення;</span>
 <span class="cm">      choice - номер обраного пункту меню.</span>
 <span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
@@ -998,9 +1127,9 @@
 <span class="w">    </span><span class="c1">//ініціалізувати генератор чисел</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">srand</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">time</span><span class="p">(</span><span class="nb">nullptr</span><span class="p">)));</span>
 
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span><span class="w"> </span><span class="c1">//текст запрошення</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">prompt</span><span class="p">[</span><span class="mi">39</span><span class="p">];</span><span class="w"> </span><span class="c1">//текст запрошення: 38 байтів і завершальний нуль</span>
 <span class="w">    </span><span class="c1">//сформувати запрошення</span>
-<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"Оберіть команду (1..%d): "</span><span class="p">,</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">);</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">snprintf</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="s">"Оберіть команду (1..%hd): "</span><span class="p">,</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до виходу</span>
 <span class="w">    </span><span class="p">{</span>
@@ -1008,14 +1137,14 @@
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>
 <span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Меню команд:</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести заголовок меню</span>
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати пункти меню</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати пункти меню</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="c1">//вивести пункт меню</span>
 <span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"  "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">" - "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">g_menu</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">title</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">'\n'</span><span class="p">;</span>
 <span class="w">        </span><span class="p">}</span>
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                              </span><span class="c1">//номер обраного пункту</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInt</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести номер команди</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">choice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                              </span><span class="c1">//номер обраного пункту</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readShort</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">MENU_SIZE</span><span class="p">))</span><span class="w"> </span><span class="c1">//увести номер команди</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="c1">//повідомити про завершення</span>
 <span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано. Завершення роботи.</span><span class="se">\n</span><span class="s">"</span><span class="p">;</span>

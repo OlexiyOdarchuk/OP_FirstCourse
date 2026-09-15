@@ -50,11 +50,11 @@ const int RC_INPUT_EXHAUSTED = 1; //код завершення при EOF
       a - цифра десятків числа n;
       b - цифра одиниць числа n.
 */
-int reverseTwoDigit(int n)
+short reverseTwoDigit(short n)
 {
-    const int a = n / 10; //цифра десятків
-    const int b = n % 10; //цифра одиниць
-    return 10 * b + a;    //повернути число ba
+    const short a = n / 10; //цифра десятків
+    const short b = n % 10; //цифра одиниць
+    return 10 * b + a;      //повернути число ba
 }
 
 //======= proveForAll: вичерпна перевірка тотожності ab + ba = 11*(a+b) для всіх =======
@@ -72,13 +72,13 @@ int reverseTwoDigit(int n)
 */
 bool proveForAll()
 {
-    for (int a = 1; a <= 9; ++a) //перебрати цифри десятків
+    for (short a = 1; a <= 9; ++a) //перебрати цифри десятків
     {
-        for (int b = 0; b <= 9; ++b) //перебрати цифри одиниць
+        for (short b = 0; b <= 9; ++b) //перебрати цифри одиниць
         {
-            const int ab = 10 * a + b; //двоцифрове число ab
-            const int ba = 10 * b + a; //число ba з переставленими цифрами
-            const int sum = ab + ba;   //сума ab + ba
+            const short ab = 10 * a + b; //двоцифрове число ab
+            const short ba = 10 * b + a; //число ba з переставленими цифрами
+            const short sum = ab + ba;   //сума ab + ba
 
             if (sum % 11 != 0 || sum / 11 != a + b) //якщо тотожність порушено
             {
@@ -149,7 +149,7 @@ bool restOfLineOk()
   Параметри: n [вихідний] - змінна для введеного числа.
   Повертає : true - число прочитано; false - вхідні дані вичерпано.
 */
-bool readTwoDigit(int &n)
+bool readTwoDigit(short &n)
 {
     std::cout << "Уведіть двоцифрове число ab (10..99): "; //вивести запрошення
 
@@ -195,7 +195,7 @@ int main()
                  "Доведення: ab + ba ділиться на 11\n"
               << std::endl; //вивести назву роботи
 
-    int n = 0;            //двоцифрове число ab
+    short n = 0;          //двоцифрове число ab
     if (!readTwoDigit(n)) //якщо не вдалося ввести число
     {
         //повідомити про кінець даних
@@ -203,10 +203,10 @@ int main()
         return RC_INPUT_EXHAUSTED; //завершити з кодом помилки
     }
 
-    const int a = n / 10;              //цифра десятків a
-    const int b = n % 10;              //цифра одиниць b
-    const int ba = reverseTwoDigit(n); //число ba
-    const int sum = n + ba;            //сума ab + ba
+    const short a = n / 10;              //цифра десятків a
+    const short b = n % 10;              //цифра одиниць b
+    const short ba = reverseTwoDigit(n); //число ba
+    const short sum = n + ba;            //сума ab + ba
 
     //вивести цифри числа
     std::cout << "\nЦифри числа: a = " << a << ", b = " << b << std::endl;

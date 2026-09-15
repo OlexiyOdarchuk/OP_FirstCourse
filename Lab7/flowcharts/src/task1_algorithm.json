@@ -22,7 +22,6 @@
         { "kind": "process", "text": "Ініціалізувати генератор випадкових чисел" },
         { "kind": "for", "cond": "i := 0, m − 1", "body": { "stmts": [
           { "kind": "for", "cond": "j := 0, m − 1", "body": { "stmts": [
-            { "kind": "process", "text": "Розмах range = high − low + 1" },
             { "kind": "process", "text": "Елемент рядка i, стовпця j = випадкове від low до high" }
           ] } }
         ] } }

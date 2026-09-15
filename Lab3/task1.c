@@ -38,8 +38,8 @@
 #include <math.h>
 
 /* Межі контролю переповнення комірки пам'яті, задані умовою варіанта. */
-const double OVERFLOW_LIMIT = 1e+38;  //поріг переповнення
-const double UNDERFLOW_LIMIT = 1e-38; //поріг машинного нуля
+const float OVERFLOW_LIMIT = 1e+38f;  //поріг переповнення
+const float UNDERFLOW_LIMIT = 1e-38f; //поріг машинного нуля
 
 /* Причина припинення внутрішнього циклу. У мові C ім'я переліку саме по собі
    не є іменем типу, тому оголошення загорнуто в typedef. */
@@ -113,8 +113,10 @@ void printTableHeader(void)
   Локальні змінні:
       kd - номер елемента у дійсному вигляді (для формул).
 */
-double nextTerm(int x, int k, double term)
+double nextTerm(short x, int k, double term)
 {
+    /* double: відношення множиться на кожному з сотень кроків, і похибка float
+       (~1e-7 на крок) зсуває суму для x = 1 на 1.5e-11 і члени ряду в 7-й цифрі. */
     const double kd = (double)k; //номер елемента як дійсне число
     //чисельник відношення a(k+1)/a(k)
     const double numerator = (kd + 2.0) * (kd + 2.0) * (kd + 2.0) * sqrt(kd);
@@ -137,7 +139,7 @@ double nextTerm(int x, int k, double term)
       eps  [вхідний] - задана точність.
   Повертає : причину припинення або STOP_NONE, якщо підсумовування триває.
 */
-StopReason checkStop(double term, double eps)
+StopReason checkStop(double term, float eps)
 {
     if (fabs(term) < eps) //якщо досягнуто заданої точності
     {
@@ -177,14 +179,16 @@ StopReason checkStop(double term, double eps)
       term - значення поточного елемента ряду a(k);
       k    - номер поточного елемента ряду.
 */
-double innerSum(int x, double eps, int *terms, StopReason *reason)
+double innerSum(short x, float eps, int *terms, StopReason *reason)
 {
-    double sum = 0.0; //накопичувана сума ряду
-    int k = 1;        //номер поточного елемента
+    double sum = 0.0; //double: float не дає точності суми для eps < 1e-7
+    int k = 1;        //номер елемента: при eps < 1e-16 перевищує 32767
     /* a(1) = -x / ((1+2)^3 * sqrt(1)) = -x / 27: перший знаменник обчислено явно. */
     //знаменник першого елемента
-    const double firstDenominator = (1.0 + 2.0) * (1.0 + 2.0) * (1.0 + 2.0) * sqrt(1.0);
-    double term = -(double)x / firstDenominator; //поточний елемент ряду a(k)
+    const float firstDenominator =
+        (1.0f + 2.0f) * (1.0f + 2.0f) * (1.0f + 2.0f) * sqrtf(1.0f);
+    //поточний елемент ряду a(k); double: |a(k)| сягає 3.6e+38 > FLT_MAX
+    double term = -(double)x / firstDenominator;
 
     *terms = 0; //обнулити лічильник доданків
 
@@ -198,7 +202,7 @@ double innerSum(int x, double eps, int *terms, StopReason *reason)
         ++(*terms);  //збільшити лічильник доданків
 
         //вивести рядок таблиці
-        printf("  %6d | %6d | %22.12e | %22.12e\n", x, k, term, sum);
+        printf("  %6hd | %6d | %22.12e | %22.12e\n", x, k, term, sum);
 
         /* Умова припинення перевіряється до обчислення наступного елемента,
            щоб не втратити причину зупинки. */
@@ -276,12 +280,12 @@ bool restOfLineOk(void)
       scanned - результат scanf(): 1 - число прочитано, 0 - не число,
                 EOF - вхідні дані вичерпано.
 */
-bool readPrecision(const char *prompt, double *value)
+bool readPrecision(const char *prompt, float *value)
 {
     for (;;) //повторювати до коректного введення
     {
-        printf("%s", prompt);                    //вивести запрошення
-        const int scanned = scanf("%lf", value); //результат введення числа
+        printf("%s", prompt);                   //вивести запрошення
+        const int scanned = scanf("%f", value); //результат введення числа
 
         if (scanned == EOF) //якщо вхідні дані вичерпано
         {
@@ -289,7 +293,7 @@ bool readPrecision(const char *prompt, double *value)
         }
 
         //якщо введено коректне додатне число
-        if (scanned == 1 && restOfLineOk() && isfinite(*value) && *value > 0.0)
+        if (scanned == 1 && restOfLineOk() && isfinite(*value) && *value > 0.0f)
         {
             return true; //повернути ознаку успіху
         }
@@ -326,7 +330,7 @@ int main(void)
     printf("Увага: при k = 0 елемент ряду не визначено (sqrt(0) = 0 у знаменнику),\n"
            "       тому внутрішнє підсумовування починається з k = 1.\n\n");
 
-    double eps = 0.0; //точність обчислення елемента
+    float eps = 0.0f; //точність обчислення елемента
     //якщо не вдалося ввести точність
     if (!readPrecision("Уведіть точність обчислення елемента ряду (наприклад 1e-6): ",
                        &eps))
@@ -337,23 +341,24 @@ int main(void)
 
     printf("\nЗадана точність: %.3e\n", eps); //вивести задану точність
 
-    double total = 0.0;     //загальна сума ряду
+    double total = 0.0;     //double: проміжна сума сягає -3.8e+38 < -FLT_MAX
     bool divergent = false; //ознака розбіжності ряду
 
     /* Зовнішня сума - цикл з лічильником (for), параметр x = 1..5 за умовою. */
-    for (int x = 1; x <= 5; ++x) //перебрати значення параметра x
+    for (short x = 1; x <= 5; ++x) //перебрати значення параметра x
     {
         //вивести заголовок блоку для x
-        printf("\n=== Зовнішній параметр x = %d ===\n", x);
+        printf("\n=== Зовнішній параметр x = %hd ===\n", x);
 
-        int terms = 0;                 //кількість доданків внутрішньої суми
+        int terms = 0;                 //кількість доданків: при малій eps > 32767
         StopReason reason = STOP_NONE; //причина припинення циклу
-        const double inner = innerSum(x, eps, &terms, &reason); //внутрішня сума для x
+        //внутрішня сума для x; double: float не дає точності для eps < 1e-7
+        const double inner = innerSum(x, eps, &terms, &reason);
 
         printf("  Доданків обчислено: %d; зупинка: %s\n", terms,
                stopReasonText(reason)); //вивести кількість доданків і причину
         //вивести внутрішню суму
-        printf("  Внутрішня сума при x = %d: %.12e\n", x, inner);
+        printf("  Внутрішня сума при x = %hd: %.12e\n", x, inner);
 
         if (reason == STOP_OVERFLOW) //якщо ряд розбігся
         {

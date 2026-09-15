@@ -31,16 +31,16 @@
 #include <math.h>
 
 /* Межі області визначення функції за умовою варіанта. */
-const double X_MIN = -2.0; //ліва межа області визначення
-const double X_MAX = 1.0;  //права межа області визначення
+const float X_MIN = -2.0f; //ліва межа області визначення
+const float X_MAX = 1.0f;  //права межа області визначення
 
 /* Межі припустимої точності розвинення за умовою варіанта. */
-const double EPS_MIN = 1e-6; //найменша припустима точність
-const double EPS_MAX = 1e-2; //найбільша припустима точність
+const float EPS_MIN = 1e-6f; //найменша припустима точність
+const double EPS_MAX = 1e-2; //double: у float 1e-2f < 0.01, уведене 1e-2 відхилялося б
 
 /* Допуск порівняння аргументу з межами, щоб точки на межі не відкидались
    через похибку округлення. */
-const double ARG_TOLERANCE = 1e-12; //допуск порівняння з межами
+const double ARG_TOLERANCE = 1e-12; //double: у float -2 - 1e-12 = -2, допуск зникає
 
 //=============== sinTaylor: обчислити sin(t) розвиненням у ряд Тейлора ================
 /*
@@ -74,13 +74,13 @@ const double ARG_TOLERANCE = 1e-12; //допуск порівняння з ме�
       n    - номер поточного доданка; кількість доданків дорівнює n + 1;
       t2   - квадрат аргументу (обчислюється один раз).
 */
-double sinTaylor(double t, double eps, int *terms)
+double sinTaylor(double t, double eps, short *terms)
 {
-    const double t2 = t * t; //обчислити квадрат аргументу
+    const double t2 = t * t; //double: похибка float ~1e-7 перевищує точність 1e-6
 
-    double sum = t;  //a(0) = t
-    double term = t; //поточний доданок ряду
-    int n = 0;       //номер поточного доданка
+    double sum = t;  //double: похибка float ~1e-7 перевищує точність 1e-6
+    double term = t; //double: похибка float ~1e-7 перевищує точність 1e-6
+    short n = 0;     //номер поточного доданка (не більше 20)
 
     while (fabs(term) >= eps) //повторювати, доки доданок не менший eps
     {
@@ -114,25 +114,23 @@ double sinTaylor(double t, double eps, int *terms)
   Локальні змінні:
       s   - наближене значення sin(x);
       s2x - наближене значення sin(2x);
-      n1, n2 - кількість доданків у відповідних розвиненнях.
+      n2  - кількість доданків розвинення sin(2x).
 */
-double yApprox(double x, double eps, int *terms)
+double yApprox(double x, double eps, short *terms)
 {
-    int n1 = 0; //кількість доданків розвинення sin(x)
-    int n2 = 0; //кількість доданків розвинення sin(2x)
-
     if (x > 0.0) //якщо аргумент додатний
     {
         /* Гілка 0 < x <= 1:  y = sin^2(x) - sin(x) */
-        const double s = sinTaylor(x, eps, &n1); //обчислити sin(x) рядом Тейлора
-        *terms = n1;                             //зберегти кількість доданків
-        return s * s - s;                        //повернути значення першої гілки
+        const double s = sinTaylor(x, eps, terms); //double: точність до 1e-6
+        return s * s - s;                          //повернути значення першої гілки
     }
 
     /* Гілка -2 <= x <= 0:  y = sin^3(x) + sin(2x) */
-    const double s = sinTaylor(x, eps, &n1);         //обчислити sin(x) рядом Тейлора
-    const double s2x = sinTaylor(2.0 * x, eps, &n2); //обчислити sin(2x) рядом Тейлора
-    *terms = n1 + n2;                                //підсумувати кількість доданків
+    short n2 = 0; //кількість доданків розвинення sin(2x)
+
+    const double s = sinTaylor(x, eps, terms);       //double: точність до 1e-6
+    const double s2x = sinTaylor(2.0 * x, eps, &n2); //double: точність до 1e-6
+    *terms += n2;                                    //додати доданки розвинення sin(2x)
     return s * s * s + s2x;                          //повернути значення другої гілки
 }
 
@@ -148,10 +146,10 @@ double yExact(double x)
 {
     if (x > 0.0) //якщо аргумент додатний
     {
-        const double s = sin(x); //обчислити стандартне значення sin(x)
+        const double s = sin(x); //double: еталон має бути точнішим за 1e-6
         return s * s - s;        //повернути значення першої гілки
     }
-    const double s = sin(x);         //обчислити стандартне значення sin(x)
+    const double s = sin(x);         //double: еталон має бути точнішим за 1e-6
     return s * s * s + sin(2.0 * x); //повернути значення другої гілки
 }
 
@@ -177,7 +175,7 @@ bool inDomain(double x)
 */
 void skipLine(void)
 {
-    int c = getchar(); //прочитати перший символ
+    short c = getchar(); //прочитати перший символ (символ або EOF)
 
     while (c != '\n' && c != EOF) //повторювати до кінця рядка
     {
@@ -199,7 +197,7 @@ void skipLine(void)
 */
 bool restOfLineOk(void)
 {
-    int c = getchar(); //прочитати перший символ
+    short c = getchar(); //прочитати перший символ (символ або EOF)
 
     while (c == ' ' || c == '\t' || c == '\r') //пропускати пробільні символи
     {
@@ -237,8 +235,8 @@ bool readDouble(const char *prompt, double *value)
 {
     for (;;) //повторювати до коректного введення
     {
-        printf("%s", prompt);                    //вивести запрошення
-        const int scanned = scanf("%lf", value); //увести число
+        printf("%s", prompt);                      //вивести запрошення
+        const short scanned = scanf("%lf", value); //увести число (1, 0 або EOF)
 
         if (scanned == EOF) //якщо вхідні дані вичерпано
         {
@@ -300,10 +298,10 @@ int main(void)
     printf("    y = sin^3(x) + sin(2x),   якщо -2 <= x <= 0\n\n");
     printf("Область визначення: [-2; 1].\n\n"); //вивести область визначення
 
-    double xStart = 0.0; //початкове значення аргументу
-    double xEnd = 0.0;   //кінцеве значення аргументу
-    double step = 0.0;   //крок зміни аргументу
-    double eps = 0.0;    //точність розвинення в ряд
+    double xStart = 0.0; //double: у float остання точка діапазону губиться
+    double xEnd = 0.0;   //double: у float остання точка діапазону губиться
+    double step = 0.0;   //double: у float остання точка діапазону губиться
+    double eps = 0.0;    //double: точність до 1e-6
 
     //якщо межі аргументу не прочитано
     if (!readDouble("Уведіть початкове значення аргументу: ", &xStart) ||
@@ -352,9 +350,9 @@ int main(void)
     printf("\nТочність розвинення: %.1e\n\n", eps); //вивести задану точність
     printTableHeader();                             //вивести заголовок таблиці
 
-    double maxError = 0.0; //найбільша похибка за таблицею
-    int steps = 0;         //номер поточного кроку
-    double x = xStart;     //поточне значення аргументу
+    double maxError = 0.0; //double: похибки порядку 1e-9 у float губляться
+    int steps = 0;         //номер поточного кроку (кількість кроків не обмежена)
+    double x = xStart;     //double: у float остання точка діапазону губиться
 
     /* Цикл табулювання. Аргумент обчислюється через лічильник кроків замість
        накопичення x += step, щоб похибка додавання не накопичувалась від кроку
@@ -369,21 +367,22 @@ int main(void)
         }
         else //інакше обчислити значення функції
         {
-            int terms = 0; //кількість доданків ряду
-            //обчислити наближене значення
+            short terms = 0; //кількість доданків ряду
+            //double: похибка float ~1e-7 перевищує саму похибку ряду
             const double approx = yApprox(x, eps, &terms);
-            const double exact = yExact(x); //обчислити стандартне значення
+            const double exact = yExact(x); //double: еталон має бути точнішим за 1e-6
 
             /* Похибка за умовою варіанта - різниця абсолютних значень
                наближеного та стандартного обчислення функції. */
-            const double error = fabs(fabs(approx) - fabs(exact)); //обчислити похибку
+            //double: похибки порядку 1e-9 у float губляться
+            const double error = fabs(fabs(approx) - fabs(exact));
 
             if (error > maxError) //якщо похибка більша за найбільшу
             {
                 maxError = error; //запам'ятати найбільшу похибку
             }
 
-            printf("  %10.4f | %18.12f | %18.12f | %14.3e | %8d\n", x, approx, exact,
+            printf("  %10.4f | %18.12f | %18.12f | %14.3e | %8hd\n", x, approx, exact,
                    error, terms); //вивести рядок таблиці
         }
 

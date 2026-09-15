@@ -43,16 +43,17 @@ enum
       base [вхідний] - основа степеня (цифра числа, 0..9);
       exp  [вхідний] - показник степеня (кількість цифр числа, 2..4).
 
-  Повертає: значення base у степені exp.
+  Повертає: значення base у степені exp (не більше 9^4 = 6561).
 
   Локальні змінні:
-      result - накопичуване значення степеня.
+      result - накопичуване значення степеня;
+      i      - лічильник множень.
 */
-int intPower(int base, int exp)
+short intPower(short base, short exp)
 {
-    int result = 1; //накопичуване значення степеня
+    short result = 1; //накопичуване значення степеня (не більше 6561)
 
-    for (int i = 0; i < exp; ++i) //повторити множення exp разів
+    for (short i = 0; i < exp; ++i) //повторити множення exp разів
     {
         result *= base; //помножити на основу
     }
@@ -64,23 +65,22 @@ int intPower(int base, int exp)
 /*
   digitCount - кількість цифр у десятковому записі числа.
 
-  Параметри: n [вхідний] - натуральне число.
+  Параметри: n [вхідний] - натуральне число (не більше 9999); у процесі
+                           підрахунку від нього відкидаються цифри.
   Повертає : кількість цифр (для n = 0 повертає 1).
 
   Локальні змінні:
-      count - лічильник цифр;
-      rest  - залишок числа, що ще не оброблено.
+      count - лічильник цифр.
 */
-int digitCount(int n)
+short digitCount(short n)
 {
-    int count = 0; //лічильник цифр
-    int rest = n;  //залишок необробленого числа
+    short count = 0; //лічильник цифр
 
     do //повторювати відкидання цифр
     {
-        ++count;    //збільшити лічильник цифр
-        rest /= 10; //відкинути молодшу цифру
-    } while (rest > 0); //повторювати, доки лишились цифри
+        ++count; //збільшити лічильник цифр
+        n /= 10; //відкинути молодшу цифру
+    } while (n > 0); //повторювати, доки лишились цифри
 
     return count; //повернути кількість цифр
 }
@@ -100,16 +100,16 @@ int digitCount(int n)
       rest   - залишок числа, що ще не оброблено;
       digit  - чергова цифра числа.
 */
-bool isArmstrong(int n)
+bool isArmstrong(short n)
 {
-    const int digits = digitCount(n); //обчислити кількість цифр
+    const short digits = digitCount(n); //обчислити кількість цифр
 
-    int sum = 0;  //сума степенів цифр
-    int rest = n; //залишок необробленого числа
+    short sum = 0;  //сума степенів цифр (не більше 4 * 6561 = 26244)
+    short rest = n; //залишок необробленого числа
 
     while (rest > 0) //перебрати цифри числа
     {
-        const int digit = rest % 10;    //виділити молодшу цифру
+        const short digit = rest % 10;  //виділити молодшу цифру
         sum += intPower(digit, digits); //накопичити степінь цифри
         rest /= 10;                     //відкинути молодшу цифру
     }
@@ -124,42 +124,42 @@ bool isArmstrong(int n)
                     або їх значеннями (1 + 125 + 27).
 
   Параметри:
-      n        [вхідний] - число;
+      n        [вхідний] - число (не більше 9999); у процесі виведення від
+                           нього відкидаються старші цифри;
       asPowers [вхідний] - true: степені; false: значення степенів.
 
   Локальні змінні:
       digits  - кількість цифр числа;
       divisor - дільник для виділення старшої цифри;
-      rest    - залишок числа, що ще не оброблено;
+      i       - номер розряду;
       digit   - чергова цифра.
 */
-void printDigitTerms(int n, bool asPowers)
+void printDigitTerms(short n, bool asPowers)
 {
-    const int digits = digitCount(n); //обчислити кількість цифр
+    const short digits = digitCount(n); //обчислити кількість цифр
 
     /* Найстарший розряд: 10^(digits-1). */
-    int divisor = intPower(10, digits - 1); //обчислити дільник старшого розряду
+    short divisor = intPower(10, digits - 1); //обчислити дільник старшого розряду
 
-    int rest = n;                    //залишок необробленого числа
-    for (int i = 0; i < digits; ++i) //перебрати розряди від старшого
+    for (short i = 0; i < digits; ++i) //перебрати розряди від старшого
     {
-        const int digit = rest / divisor; //виділити старшу цифру
+        const short digit = n / divisor; //виділити старшу цифру
 
         if (asPowers) //якщо потрібні степені
         {
-            printf("%d^%d", digit, digits); //вивести цифру у степені
+            printf("%hd^%hd", digit, digits); //вивести цифру у степені
         }
         else //інакше вивести значення степенів
         {
-            printf("%d", intPower(digit, digits)); //вивести значення степеня
+            printf("%hd", intPower(digit, digits)); //вивести значення степеня
         }
 
         if (i < digits - 1) //якщо розряд не останній
         {
             printf(" + "); //вивести знак плюс
         }
-        rest %= divisor; //відкинути старшу цифру
-        divisor /= 10;   //перейти до молодшого розряду
+        n %= divisor;  //відкинути старшу цифру
+        divisor /= 10; //перейти до молодшого розряду
     }
 }
 
@@ -171,9 +171,9 @@ void printDigitTerms(int n, bool asPowers)
 
   Параметри: n [вхідний] - число Армстронга.
 */
-void printExpansion(int n)
+void printExpansion(short n)
 {
-    printf("  %d = ", n);      //вивести число
+    printf("  %hd = ", n);     //вивести число
     printDigitTerms(n, true);  //вивести суму степенів
     printf(" = ");             //вивести знак рівності
     printDigitTerms(n, false); //вивести значення степенів
@@ -190,7 +190,7 @@ void printExpansion(int n)
       low    [вихідний] - адреса для найменшого числа (10, 100, 1000);
       high   [вихідний] - адреса для найбільшого числа (99, 999, 9999).
 */
-void digitRange(int digits, int *low, int *high)
+void digitRange(short digits, short *low, short *high)
 {
     *low = intPower(10, digits - 1); //обчислити найменше число
     *high = *low * 10 - 1;           //обчислити найбільше число
@@ -209,17 +209,18 @@ void digitRange(int digits, int *low, int *high)
 
   Локальні змінні:
       low, high - межі діапазону чисел заданої розрядності;
-      count     - лічильник знайдених чисел.
+      count     - лічильник знайдених чисел;
+      n         - число, що перевіряється.
 */
-int scanRange(int digits, int found[], int capacity)
+short scanRange(short digits, short found[], short capacity)
 {
-    int low = 0;   //нижня межа діапазону
-    int high = 0;  //верхня межа діапазону
-    int count = 0; //лічильник знайдених чисел
+    short low = 0;   //нижня межа діапазону
+    short high = 0;  //верхня межа діапазону
+    short count = 0; //лічильник знайдених чисел
 
     digitRange(digits, &low, &high); //визначити межі діапазону
 
-    for (int n = low; n <= high && count < capacity; ++n) //перебрати числа діапазону
+    for (short n = low; n <= high && count < capacity; ++n) //перебрати числа діапазону
     {
         if (isArmstrong(n)) //якщо число Армстронга
         {
@@ -241,7 +242,8 @@ int scanRange(int digits, int found[], int capacity)
       digits    - поточна розрядність;
       low, high - межі діапазону чисел поточної розрядності;
       found     - знайдені числа поточної розрядності;
-      count     - їх кількість.
+      count     - їх кількість;
+      i         - номер знайденого числа.
 */
 int main(void)
 {
@@ -253,24 +255,25 @@ int main(void)
     printf("Число з n цифр є числом Армстронга, якщо сума його цифр,\n"
            "піднесених до n-го степеня, дорівнює самому числу.\n");
 
-    int total = 0; //загальна кількість знайдених чисел
+    short total = 0; //загальна кількість знайдених чисел
 
     /* За умовою перевіряються числа з двох, трьох та чотирьох цифр. */
-    for (int digits = 2; digits <= 4; ++digits) //перебрати розрядності від 2 до 4
+    for (short digits = 2; digits <= 4; ++digits) //перебрати розрядності від 2 до 4
     {
-        int low = 0;  //нижня межа діапазону
-        int high = 0; //верхня межа діапазону
+        short low = 0;  //нижня межа діапазону
+        short high = 0; //верхня межа діапазону
 
         digitRange(digits, &low, &high); //визначити межі діапазону
 
-        printf("\n=== Числа Армстронга з %d цифр (діапазон %d..%d) ===\n", digits, low,
+        printf("\n=== Числа Армстронга з %hd цифр (діапазон %hd..%hd) ===\n", digits,
+               low,
                high); //вивести заголовок розрядності
 
-        int found[MAX_FOUND]; //знайдені числа поточної розрядності
+        short found[MAX_FOUND]; //знайдені числа поточної розрядності
         //знайти числа Армстронга
-        const int count = scanRange(digits, found, MAX_FOUND);
+        const short count = scanRange(digits, found, MAX_FOUND);
 
-        for (int i = 0; i < count; ++i) //перебрати знайдені числа
+        for (short i = 0; i < count; ++i) //перебрати знайдені числа
         {
             printExpansion(found[i]); //вивести розклад числа
         }
@@ -282,14 +285,14 @@ int main(void)
         }
 
         //вивести кількість перевірених і знайдених
-        printf("  Перевірено чисел: %d, знайдено: %d\n", high - low + 1, count);
+        printf("  Перевірено чисел: %d, знайдено: %hd\n", high - low + 1, count);
         total += count; //накопичити загальну кількість
     }
 
     //вивести роздільну лінію
     printf("\n============================================================\n");
     //вивести загальну кількість
-    printf("Усього знайдено чисел Армстронга: %d\n", total);
+    printf("Усього знайдено чисел Армстронга: %hd\n", total);
 
     return 0; //завершити програму успішно
 }

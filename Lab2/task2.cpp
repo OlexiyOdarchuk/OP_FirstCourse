@@ -31,14 +31,15 @@
 #include <cmath>
 
 /* Півдіагоналі ромба та радіуси кільця - константи умови варіанта. */
-const double R_INNER = 0.5; //внутрішній радіус кільця
-const double R_OUTER = 1.0; //зовнішній радіус кільця
-const double RHOMB_A = 0.5; //півдіагональ ромба по осі Ox
-const double RHOMB_B = 1.0; //півдіагональ ромба по осі Oy
+const float R_INNER = 0.5f; //внутрішній радіус кільця
+const float R_OUTER = 1.0f; //зовнішній радіус кільця
+const float RHOMB_A = 0.5f; //півдіагональ ромба по осі Ox
+const float RHOMB_B = 1.0f; //півдіагональ ромба по осі Oy
 
 /* Допуск для порівняння дійсних чисел: точка на самій межі фігури має
-   зараховуватись як така, що належить фігурі, попри похибку округлення. */
-const double EPS = 1e-9; //допуск порівняння дійсних чисел
+   зараховуватись як така, що належить фігурі, попри похибку округлення.
+   Тип float зберігає 6-7 значущих цифр, тому допуск узято 1e-6. */
+const float EPS = 1e-6f; //допуск порівняння дійсних чисел
 
 /* Код завершення: вхідні дані вичерпано (EOF). */
 const int RC_INPUT_EXHAUSTED = 1; //код завершення при EOF
@@ -54,7 +55,7 @@ const int RC_INPUT_EXHAUSTED = 1; //код завершення при EOF
 
   Повертає : true - точка належить кільцю (разом з межами).
 */
-bool inRing(double x, double y, double *r)
+bool inRing(float x, float y, float *r)
 {
     *r = std::sqrt(x * x + y * y); //обчислити відстань до початку координат
     //повернути ознаку належності кільцю
@@ -71,11 +72,11 @@ bool inRing(double x, double y, double *r)
 
   Повертає : true - точка належить ромбу (разом з межами).
 */
-bool inRhombus(double x, double y, double *measure)
+bool inRhombus(float x, float y, float *measure)
 {
     //обчислити |x|/a + |y|/b
     *measure = std::fabs(x) / RHOMB_A + std::fabs(y) / RHOMB_B;
-    return *measure <= 1.0 + EPS; //повернути ознаку належності ромбу
+    return *measure <= 1.0f + EPS; //повернути ознаку належності ромбу
 }
 
 //========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========
@@ -133,7 +134,7 @@ bool restOfLineOk()
   Параметри: choice [вихідний] - адреса змінної для номера пункту.
   Повертає : true - номер прочитано; false - вхідні дані вичерпано.
 */
-bool readChoice(int *choice)
+bool readChoice(short *choice)
 {
     std::cout << "Оберіть фігуру (1..3): "; //вивести запрошення
 
@@ -172,7 +173,7 @@ bool readChoice(int *choice)
   Параметри: x, y [вихідні] - адреси змінних для координат точки.
   Повертає : true - координати прочитано; false - вхідні дані вичерпано.
 */
-bool readPoint(double *x, double *y)
+bool readPoint(float *x, float *y)
 {
     std::cout << "Уведіть координати точки x та y: "; //вивести запрошення
 
@@ -249,7 +250,7 @@ int main()
                  "  3 - об'єднання обох фігур\n"
               << std::endl; //вивести меню фігур
 
-    int choice = 0;           //номер пункту меню
+    short choice = 0;         //номер пункту меню
     if (!readChoice(&choice)) //якщо не вдалося ввести номер
     {
         //повідомити про кінець даних
@@ -257,8 +258,8 @@ int main()
         return RC_INPUT_EXHAUSTED; //завершити з кодом помилки
     }
 
-    double x = 0.0;         //абсциса точки
-    double y = 0.0;         //ордината точки
+    float x = 0.0f;         //абсциса точки
+    float y = 0.0f;         //ордината точки
     if (!readPoint(&x, &y)) //якщо не вдалося ввести точку
     {
         //повідомити про кінець даних
@@ -266,8 +267,8 @@ int main()
         return RC_INPUT_EXHAUSTED; //завершити з кодом помилки
     }
 
-    double r = 0.0;                               //відстань до початку координат
-    double measure = 0.0;                         //значення |x|/0,5 + |y|/1
+    float r = 0.0f;                               //відстань до початку координат
+    float measure = 0.0f;                         //значення |x|/0,5 + |y|/1
     const bool ring = inRing(x, y, &r);           //ознака належності кільцю
     const bool rhomb = inRhombus(x, y, &measure); //ознака належності ромбу
 

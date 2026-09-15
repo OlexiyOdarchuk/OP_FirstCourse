@@ -49,14 +49,14 @@
 /* Обмеження на розміри даних. Межа масиву в мові C має бути сталим виразом
    часу компіляції, а змінна з модифікатором const ним не є, тому розміри
    задано директивами препроцесора. */
-#define MAX_RECORDS 200 //записів у масиві структур
+#define MAX_RECORDS 200 //записів у масиві: кількість та індекси - short
 #define MAX_NAME 32     //довжина текстового поля
-#define MAX_YEAR 9999   //найбільший рік: число РРРРММДД вміщується в int
+#define MAX_YEAR 9999   //найбільший рік: рік - short, число РРРРММДД - int
 
 /* Допуск при порівнянні сум продажів. Суми накопичуються в типі double,
    тож дві математично рівні суми можуть відрізнятися похибкою округлення;
    половина копійки - межа, за якою суми вважаються рівними. */
-const double PRICE_TOLERANCE = 0.005; //допуск порівняння сум продажів
+const double PRICE_TOLERANCE = 0.005; //double: порівнюється із сумами типу double
 
 /* Розмір текстового буфера для числа або дати в комірці таблиці. */
 enum
@@ -104,12 +104,13 @@ typedef enum
 /*
   Date - термін постачання. Окрема структура, вкладена в основну: це дозволяє
   порівнювати терміни як єдине ціле, а не трьома окремими полями.
+  Усі поля вміщуються в short: день 1..31, місяць 1..12, рік 1..MAX_YEAR.
 */
 typedef struct
 {
-    int day;   //день постачання
-    int month; //місяць постачання
-    int year;  //рік постачання
+    short day;   //день постачання (1..31)
+    short month; //місяць постачання (1..12)
+    short year;  //рік постачання (1..MAX_YEAR)
 } Date;
 
 //=============================== Sale: запис про продаж ===============================
@@ -122,14 +123,19 @@ typedef struct
       price    - вартість продажу;
       delivery - термін постачання.
 
-  Поля розміщено за спаданням вирівнювання (double, потім int, потім масиви
-  символів), щоб компілятор не вставляв між ними байти-заповнювачі.
+  Поля розміщено за спаданням вирівнювання (double, переліковий тип, дата
+  з полів short, масиви символів), щоб між ними не було байтів-заповнювачів.
+
+  Вартість має тип double: вона вводиться з копійками без верхньої межі,
+  а в float (близько 7 значущих цифр) уже суми понад 100 000 грн втрачають
+  копійки; крім того, похибки float-значень, накопичені за сотні записів,
+  зсувають копійки в підсумках запитів.
 */
 typedef struct
 {
-    double price;           //вартість продажу
-    Date delivery;          //термін постачання
+    double price;           //вартість продажу (double: копійки в сумах до мільйонів)
     ProductKind kind;       //вид продукту
+    Date delivery;          //термін постачання
     char firm[MAX_NAME];    //назва фірми
     char product[MAX_NAME]; //назва продукту
     char region[MAX_NAME];  //регіон збуту
@@ -140,14 +146,14 @@ typedef struct
   FirmTotal - підсумок продажів однієї фірми (результат групування записів
   для запиту 3):
       firm  - назва фірми;
-      sales - кількість продажів;
+      sales - кількість продажів (не більше MAX_RECORDS, тому short);
       total - сумарна вартість продажів.
 */
 typedef struct
 {
+    double total;        //сумарна вартість (double: до 200 записів, сума з копійками)
+    short sales;         //кількість продажів (0..MAX_RECORDS)
     char firm[MAX_NAME]; //назва фірми
-    int sales;           //кількість продажів
-    double total;        //сумарна вартість продажів
 } FirmTotal;
 
 /*==============================================================================
@@ -162,11 +168,11 @@ typedef struct
   літера займає два байти, тому таблиці з українськими даними "розповзаються".
 
   Параметри: s [вхідний] - рядок.
-  Повертає : кількість символів рядка.
+  Повертає : кількість символів рядка (рядки таблиць коротші за MAX_NAME).
 */
-int utf8Width(const char *s)
+short utf8Width(const char *s)
 {
-    int width = 0; //ширина рядка в символах
+    short width = 0; //ширина рядка в символах
 
     //перебрати байти рядка
     for (const unsigned char *p = (const unsigned char *)s; *p != '\0'; ++p)
@@ -191,11 +197,11 @@ int utf8Width(const char *s)
       s     [вхідний] - рядок;
       width [вхідний] - ширина поля в символах.
 */
-void printPadded(const char *s, int width)
+void printPadded(const char *s, short width)
 {
     printf("%s", s); //вивести рядок
 
-    for (int i = utf8Width(s); i < width; ++i) //перебрати позиції доповнення
+    for (short i = utf8Width(s); i < width; ++i) //перебрати позиції доповнення
     {
         putchar(' '); //вивести пропуск
     }
@@ -207,10 +213,10 @@ void printPadded(const char *s, int width)
 
   Параметри: width [вхідний] - довжина лінії в символах.
 */
-void printLine(int width)
+void printLine(short width)
 {
-    printf("  ");                   //вивести відступ лінії
-    for (int i = 0; i < width; ++i) //перебрати позиції лінії
+    printf("  ");                     //вивести відступ лінії
+    for (short i = 0; i < width; ++i) //перебрати позиції лінії
     {
         putchar('-'); //вивести дефіс
     }
@@ -237,7 +243,8 @@ const char *kindName(ProductKind kind)
   хронологічний порядок дат збігається з числовим порядком цих чисел.
 
   Рік не перевищує MAX_YEAR = 9999, тому найбільше таке число 99 991 231
-  вміщується в int.
+  вміщується в int, але не в short (поля дати перед множенням перетворюються
+  на int).
 
   Параметри: d [вхідний] - покажчик на дату.
   Повертає : число виду РРРРММДД.
@@ -259,7 +266,7 @@ int dateToNumber(const Date *d)
 void formatDate(const Date *d, char *buffer, size_t size)
 {
     //записати дату до буфера
-    snprintf(buffer, size, "%02d.%02d.%d", d->day, d->month, d->year);
+    snprintf(buffer, size, "%02hd.%02hd.%hd", d->day, d->month, d->year);
 }
 
 //======== daysInMonth: кількість днів у місяці з урахуванням високосного року =========
@@ -267,9 +274,9 @@ void formatDate(const Date *d, char *buffer, size_t size)
   daysInMonth - кількість днів у місяці з урахуванням високосного року.
 
   Параметри: month, year [вхідні] - місяць і рік.
-  Повертає : кількість днів у місяці.
+  Повертає : кількість днів у місяці (28..31).
 */
-int daysInMonth(int month, int year)
+short daysInMonth(short month, short year)
 {
     if (month == 2) //якщо місяць лютий
     {
@@ -331,19 +338,29 @@ bool restOfLineOk(void)
     return false; //повернути ознаку помилки
 }
 
-//====== readInt: прочитати ціле число із заданого діапазону з контролем введення ======
+//===== readShort: прочитати ціле число із заданого діапазону з контролем введення =====
 /*
-  readInt - прочитати ціле число із заданого діапазону з контролем введення.
+  readShort - прочитати ціле число із заданого діапазону з контролем введення.
+
+  Усі числа, що вводяться в програмі (кількість записів, пункти меню, вид
+  продукту, день, місяць, рік), мають межі в діапазоні short.
 
   Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
   Повертає : true - число прочитано; false - вхідні дані вичерпано.
+
+  Локальні змінні:
+      number  - прочитане число;
+      scanned - кількість прочитаних чисел.
 */
-bool readInt(const char *prompt, int *value, int low, int high)
+bool readShort(const char *prompt, short *value, short low, short high)
 {
     for (;;) //повторювати до коректного введення
     {
-        printf("%s", prompt);                   //вивести запрошення
-        const int scanned = scanf("%d", value); //кількість прочитаних чисел
+        /* Число читається в int, а не одразу через %hd: %hd мовчки обрізає
+           значення поза short (65537 стало б 1) і пропустило б хибне введення. */
+        int number = 0;                           //прочитане число
+        printf("%s", prompt);                     //вивести запрошення
+        const int scanned = scanf("%d", &number); //кількість прочитаних чисел
 
         if (scanned == EOF) //якщо вхідні дані вичерпано
         {
@@ -355,13 +372,14 @@ bool readInt(const char *prompt, int *value, int low, int high)
             skipLine(); //відкинути хибний рядок
         }
         //якщо число коректне й у діапазоні
-        else if (restOfLineOk() && *value >= low && *value <= high)
+        else if (restOfLineOk() && number >= low && number <= high)
         {
-            return true; //повернути ознаку успіху
+            *value = (short)number; //зберегти число, що вміщується в short
+            return true;            //повернути ознаку успіху
         }
 
         //вивести повідомлення про помилку
-        printf("Помилка: потрібне ціле число від %d до %d.\n", low, high);
+        printf("Помилка: потрібне ціле число від %hd до %hd.\n", low, high);
     }
 }
 
@@ -371,6 +389,7 @@ bool readInt(const char *prompt, int *value, int low, int high)
                введення. Нескінченні значення та NaN відхиляються.
 
   Параметри: prompt [вхідний], value [вихідний], low [вхідний].
+  Тип double відповідає полю price: вартість вводиться з копійками.
   Повертає : true - число прочитано; false - вхідні дані вичерпано.
 */
 bool readDouble(const char *prompt, double *value, double low)
@@ -438,13 +457,15 @@ void trimSpaces(char *s)
   Параметри:
       prompt [вхідний]  - текст запрошення;
       buffer [вихідний] - буфер для рядка;
-      size   [вхідний]  - розмір буфера.
+      size   [вхідний]  - розмір буфера (MAX_NAME).
   Повертає : true - рядок прочитано; false - вхідні дані вичерпано.
 
   Локальні змінні:
-      length - довжина прочитаного рядка в байтах.
+      length   - довжина прочитаного рядка в байтах;
+      complete - чи прочитано рядок до кінця;
+      next     - символ, що йде після заповненого буфера.
 */
-bool readLine(const char *prompt, char *buffer, int size)
+bool readLine(const char *prompt, char *buffer, short size)
 {
     for (;;) //повторювати до коректного введення
     {
@@ -509,24 +530,24 @@ bool readDate(const char *indent, Date *date)
 
     //сформувати запрошення року
     snprintf(prompt, sizeof prompt, "%sрік (1..%d): ", indent, MAX_YEAR);
-    if (!readInt(prompt, &date->year, 1, MAX_YEAR)) //увести рік
+    if (!readShort(prompt, &date->year, 1, MAX_YEAR)) //увести рік
     {
         return false; //повернути ознаку кінця даних
     }
 
     //сформувати запрошення місяця
     snprintf(prompt, sizeof prompt, "%sмісяць (1..12): ", indent);
-    if (!readInt(prompt, &date->month, 1, 12)) //увести місяць
+    if (!readShort(prompt, &date->month, 1, 12)) //увести місяць
     {
         return false; //повернути ознаку кінця даних
     }
 
     //кількість днів у місяці
-    const int lastDay = daysInMonth(date->month, date->year);
+    const short lastDay = daysInMonth(date->month, date->year);
     //сформувати запрошення дня
-    snprintf(prompt, sizeof prompt, "%sдень (1..%d): ", indent, lastDay);
+    snprintf(prompt, sizeof prompt, "%sдень (1..%hd): ", indent, lastDay);
     //увести день і повернути результат
-    return readInt(prompt, &date->day, 1, lastDay);
+    return readShort(prompt, &date->day, 1, lastDay);
 }
 
 /*==============================================================================
@@ -543,13 +564,13 @@ const char *COMPUTERS[] = {"Optima 5", "Nova Pro", "Titan X", "Bureau 300"};
 //назви програмних продуктів
 const char *SOFTWARE[] = {"OblikPro", "SklavSoft", "DocFlow", "AntiVirus U"};
 
-const int FIRMS_COUNT = (int)(sizeof FIRMS / sizeof FIRMS[0]); //кількість назв фірм
+const short FIRMS_COUNT = (short)(sizeof FIRMS / sizeof FIRMS[0]); //кількість назв фірм
 //кількість назв регіонів
-const int REGIONS_COUNT = (int)(sizeof REGIONS / sizeof REGIONS[0]);
+const short REGIONS_COUNT = (short)(sizeof REGIONS / sizeof REGIONS[0]);
 //кількість назв комп'ютерів
-const int COMPUTERS_COUNT = (int)(sizeof COMPUTERS / sizeof COMPUTERS[0]);
+const short COMPUTERS_COUNT = (short)(sizeof COMPUTERS / sizeof COMPUTERS[0]);
 //кількість назв програмних продуктів
-const int SOFTWARE_COUNT = (int)(sizeof SOFTWARE / sizeof SOFTWARE[0]);
+const short SOFTWARE_COUNT = (short)(sizeof SOFTWARE / sizeof SOFTWARE[0]);
 
 //=========== generateRecord: заповнити один запис псевдовипадковими даними ============
 /*
@@ -580,11 +601,11 @@ void generateRecord(Sale *sale)
     //згенерувати вартість продажу
     sale->price = 1000 + (rand() % 9000) + (double)(rand() % 100) / 100;
 
-    sale->delivery.year = 2025;             //задати рік постачання
-    sale->delivery.month = 1 + rand() % 12; //згенерувати місяць постачання
+    sale->delivery.year = 2025;                      //задати рік постачання
+    sale->delivery.month = (short)(1 + rand() % 12); //згенерувати місяць постачання
     sale->delivery.day =
         //згенерувати день постачання
-        1 + rand() % daysInMonth(sale->delivery.month, sale->delivery.year);
+        (short)(1 + rand() % daysInMonth(sale->delivery.month, sale->delivery.year));
 }
 
 //=============== inputRecord: заповнити один запис даними з клавіатури ================
@@ -596,7 +617,7 @@ void generateRecord(Sale *sale)
       index [вхідний]  - номер запису (для запрошень).
   Повертає : true - запис заповнено; false - вхідні дані вичерпано.
 */
-bool inputRecord(Sale *sale, int index)
+bool inputRecord(Sale *sale, short index)
 {
     printf("\n  --- запис %d ---\n", index + 1); //вивести номер запису
 
@@ -605,9 +626,9 @@ bool inputRecord(Sale *sale, int index)
         return false; //повернути ознаку кінця даних
     }
 
-    int kind = 0; //номер виду продукту
+    short kind = 0; //номер виду продукту
     //увести вид продукту
-    if (!readInt("  Вид продукту (1 - комп'ютери, 2 - ПЗ): ", &kind, 1, 2))
+    if (!readShort("  Вид продукту (1 - комп'ютери, 2 - ПЗ): ", &kind, 1, 2))
     {
         return false; //повернути ознаку кінця даних
     }
@@ -655,7 +676,7 @@ void printTableHeader(void)
       sale  [вхідний] - покажчик на структуру;
       index [вхідний] - порядковий номер рядка.
 */
-void printRecord(const Sale *sale, int index)
+void printRecord(const Sale *sale, short index)
 {
     char buffer[TEXT_BUFFER]; //текст комірки таблиці
 
@@ -683,7 +704,7 @@ void printRecord(const Sale *sale, int index)
   Параметри: count [вхідний] - кількість записів у масиві.
   Повертає : true - масив порожній (повідомлення виведено); false - є дані.
 */
-bool isEmpty(int count)
+bool isEmpty(short count)
 {
     if (count == 0) //якщо записів немає
     {
@@ -703,14 +724,14 @@ bool isEmpty(int count)
       count [вихідний] - кількість заповнених записів (не змінюється, якщо
                          введення перервано).
 */
-void cmdCreate(Sale *sales, int *count)
+void cmdCreate(Sale *sales, short *count)
 {
     char prompt[64]; //текст запрошення
-    int n = 0;       //кількість записів для створення
+    short n = 0;     //кількість записів для створення
 
     //сформувати запрошення
     snprintf(prompt, sizeof prompt, "Уведіть кількість записів (1..%d): ", MAX_RECORDS);
-    if (!readInt(prompt, &n, 1, MAX_RECORDS)) //увести кількість записів
+    if (!readShort(prompt, &n, 1, MAX_RECORDS)) //увести кількість записів
     {
         return; //перервати створення
     }
@@ -720,15 +741,15 @@ void cmdCreate(Sale *sales, int *count)
            "  1 - введення з клавіатури\n"
            "  2 - генерація псевдовипадкових даних\n");
 
-    int choice = 0;                                         //номер способу створення
-    if (!readInt("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
+    short choice = 0;                                         //номер способу створення
+    if (!readShort("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
     {
         return; //перервати створення
     }
 
     if (choice == 1) //якщо обрано введення з клавіатури
     {
-        for (int i = 0; i < n; ++i) //перебрати записи масиву
+        for (short i = 0; i < n; ++i) //перебрати записи масиву
         {
             if (!inputRecord(sales + i, i)) //якщо введення перервано
             {
@@ -738,7 +759,7 @@ void cmdCreate(Sale *sales, int *count)
     }
     else //інакше згенерувати дані
     {
-        for (int i = 0; i < n; ++i) //перебрати записи масиву
+        for (short i = 0; i < n; ++i) //перебрати записи масиву
         {
             generateRecord(sales + i); //згенерувати запис
         }
@@ -746,7 +767,7 @@ void cmdCreate(Sale *sales, int *count)
 
     *count = n; //зберегти кількість записів
     //вивести кількість створених записів
-    printf("\nМасив структур створено. Кількість записів: %d.\n", *count);
+    printf("\nМасив структур створено. Кількість записів: %hd.\n", *count);
 }
 
 //============================= cmdPrintAll: команда меню ==============================
@@ -757,17 +778,17 @@ void cmdCreate(Sale *sales, int *count)
       sales [вхідний] - масив структур;
       count [вхідний] - кількість записів.
 */
-void cmdPrintAll(const Sale *sales, int count)
+void cmdPrintAll(const Sale *sales, short count)
 {
     if (isEmpty(count)) //якщо масив порожній
     {
         return; //завершити команду
     }
 
-    printf("\nМасив структур (записів: %d)\n\n", count); //вивести заголовок масиву
-    printTableHeader();                                  //вивести заголовок таблиці
+    printf("\nМасив структур (записів: %hd)\n\n", count); //вивести заголовок масиву
+    printTableHeader();                                   //вивести заголовок таблиці
 
-    for (int i = 0; i < count; ++i) //перебрати записи масиву
+    for (short i = 0; i < count; ++i) //перебрати записи масиву
     {
         printRecord(sales + i, i); //вивести запис
     }
@@ -789,7 +810,7 @@ void cmdPrintAll(const Sale *sales, int count)
       sales [вхідний] - масив структур;
       count [вхідний] - кількість записів.
 */
-void cmdComputersByRegionAndFirm(const Sale *sales, int count)
+void cmdComputersByRegionAndFirm(const Sale *sales, short count)
 {
     if (isEmpty(count)) //якщо масив порожній
     {
@@ -810,9 +831,9 @@ void cmdComputersByRegionAndFirm(const Sale *sales, int count)
     printf("\nЗапит 1. Комп'ютери, що продаються у регіоні \"%s\" фірмою \"%s\"\n\n",
            region, firm);
 
-    int found = 0;                  //кількість знайдених записів
-    double total = 0.0;             //сумарна вартість знайдених записів
-    for (int i = 0; i < count; ++i) //перебрати записи масиву
+    short found = 0;                  //кількість знайдених записів
+    double total = 0.0;               //сумарна вартість (double, як і вартість продажу)
+    for (short i = 0; i < count; ++i) //перебрати записи масиву
     {
         const Sale *const sale = sales + i; //поточний запис
 
@@ -843,7 +864,7 @@ void cmdComputersByRegionAndFirm(const Sale *sales, int count)
     else //інакше вивести підсумок
     {
         //вивести кількість і суму
-        printf("\n  Знайдено записів: %d, сумарна вартість: %.2f\n", found, total);
+        printf("\n  Знайдено записів: %hd, сумарна вартість: %.2f\n", found, total);
     }
 }
 
@@ -859,7 +880,7 @@ void cmdComputersByRegionAndFirm(const Sale *sales, int count)
       sales [вхідний] - масив структур;
       count [вхідний] - кількість записів.
 */
-void cmdSoftwareValueByPeriod(const Sale *sales, int count)
+void cmdSoftwareValueByPeriod(const Sale *sales, short count)
 {
     if (isEmpty(count)) //якщо масив порожній
     {
@@ -900,9 +921,9 @@ void cmdSoftwareValueByPeriod(const Sale *sales, int count)
     printf("\nЗапит 2. Програмне забезпечення з терміном постачання з %s до %s\n\n",
            fromText, toText);
 
-    int found = 0;                  //кількість знайдених записів
-    double total = 0.0;             //сумарна вартість знайденого ПЗ
-    for (int i = 0; i < count; ++i) //перебрати записи масиву
+    short found = 0;    //кількість знайдених записів
+    double total = 0.0; //сумарна вартість ПЗ (double, як і вартість продажу)
+    for (short i = 0; i < count; ++i) //перебрати записи масиву
     {
         const Sale *const sale = sales + i; //поточний запис
 
@@ -937,7 +958,7 @@ void cmdSoftwareValueByPeriod(const Sale *sales, int count)
     else //інакше вивести підсумок
     {
         //вивести кількість і вартість
-        printf("\n  Знайдено записів: %d\n"
+        printf("\n  Знайдено записів: %hd\n"
                "  Вартість проданого програмного забезпечення: %.2f\n",
                found, total);
     }
@@ -971,7 +992,7 @@ void printFirmRow(const FirmTotal *firm)
     printPadded(firm->firm, COL_FIRM_NAME); //вивести назву фірми
 
     //сформувати кількість продажів
-    snprintf(buffer, sizeof buffer, "%d", firm->sales);
+    snprintf(buffer, sizeof buffer, "%hd", firm->sales);
     printPadded(buffer, COL_FIRM_SALES); //вивести кількість продажів
 
     //сформувати сумарну вартість
@@ -996,16 +1017,16 @@ void printFirmRow(const FirmTotal *firm)
       firmCount - кількість уже знайдених фірм;
       position  - індекс фірми поточного запису в масиві firms.
 */
-int groupByFirm(const Sale *sales, int count, FirmTotal *firms)
+short groupByFirm(const Sale *sales, short count, FirmTotal *firms)
 {
-    int firmCount = 0; //кількість знайдених фірм
+    short firmCount = 0; //кількість знайдених фірм
 
-    for (int i = 0; i < count; ++i) //перебрати записи масиву
+    for (short i = 0; i < count; ++i) //перебрати записи масиву
     {
         const Sale *const sale = sales + i; //поточний запис
 
-        int position = -1;                  //індекс фірми в масиві підсумків
-        for (int j = 0; j < firmCount; ++j) //перебрати знайдені фірми
+        short position = -1;                  //індекс фірми в масиві підсумків
+        for (short j = 0; j < firmCount; ++j) //перебрати знайдені фірми
         {
             if (strcmp(firms[j].firm, sale->firm) == 0) //якщо назви фірм збігаються
             {
@@ -1049,7 +1070,7 @@ int groupByFirm(const Sale *sales, int count, FirmTotal *firms)
       firmCount - кількість різних фірм (не менше 1, бо count >= 1);
       maxTotal  - найбільша сумарна вартість.
 */
-void cmdMostProfitableFirms(const Sale *sales, int count)
+void cmdMostProfitableFirms(const Sale *sales, short count)
 {
     if (isEmpty(count)) //якщо масив порожній
     {
@@ -1058,11 +1079,11 @@ void cmdMostProfitableFirms(const Sale *sales, int count)
 
     FirmTotal firms[MAX_RECORDS]; //підсумки продажів по фірмах
     //згрупувати записи за фірмами
-    const int firmCount = groupByFirm(sales, count, firms);
+    const short firmCount = groupByFirm(sales, count, firms);
 
     /* Пошук найбільшої сумарної вартості. */
-    double maxTotal = firms[0].total;   //найбільша сумарна вартість
-    for (int j = 1; j < firmCount; ++j) //перебрати решту фірм
+    double maxTotal = firms[0].total; //найбільша сумарна вартість (double, як і суми)
+    for (short j = 1; j < firmCount; ++j) //перебрати решту фірм
     {
         if (firms[j].total > maxTotal) //якщо сума більша за найбільшу
         {
@@ -1072,16 +1093,16 @@ void cmdMostProfitableFirms(const Sale *sales, int count)
 
     //вивести назву таблиці
     printf("\nЗапит 3. Сумарна вартість продажів по фірмах\n\n");
-    printFirmHeader();                  //вивести заголовок таблиці
-    for (int j = 0; j < firmCount; ++j) //перебрати фірми
+    printFirmHeader();                    //вивести заголовок таблиці
+    for (short j = 0; j < firmCount; ++j) //перебрати фірми
     {
         printFirmRow(firms + j); //вивести підсумок фірми
     }
 
     //вивести назву таблиці
     printf("\nНайрентабельніші фірми (з найбільшою вартістю продажів)\n\n");
-    printFirmHeader();                  //вивести заголовок таблиці
-    for (int j = 0; j < firmCount; ++j) //перебрати фірми
+    printFirmHeader();                    //вивести заголовок таблиці
+    for (short j = 0; j < firmCount; ++j) //перебрати фірми
     {
         if (firms[j].total >= maxTotal - PRICE_TOLERANCE) //якщо сума найбільша
         {
@@ -1103,7 +1124,7 @@ void cmdMostProfitableFirms(const Sale *sales, int count)
 int main(void)
 {
     Sale sales[MAX_RECORDS]; //масив структур
-    int count = 0;           //кількість заповнених записів
+    short count = 0;         //кількість заповнених записів
 
     printf("Лабораторна робота №10 (варіант 19)\n");           //вивести назву роботи
     printf("Виконав: студент групи ІПЗ-11 Одарчук Олексій\n"); //вивести автора
@@ -1128,8 +1149,8 @@ int main(void)
         printf("  5 - запит: найрентабельніші фірми\n"); //вивести пункт запиту 3
         printf("  6 - вихід\n");                         //вивести пункт виходу
 
-        int choice = 0; //номер обраного пункту меню
-        if (!readInt("Оберіть команду (1..6): ", &choice, 1, 6)) //увести команду меню
+        short choice = 0; //номер обраного пункту меню
+        if (!readShort("Оберіть команду (1..6): ", &choice, 1, 6)) //увести команду меню
         {
             //вивести повідомлення про завершення
             printf("\nВхідні дані вичерпано. Завершення роботи.\n");

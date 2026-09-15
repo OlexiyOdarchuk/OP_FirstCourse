@@ -56,28 +56,28 @@ const int RC_UNDEFINED = 2;       //функцію не визначено в т
   умови є діапазонними: оператор switch тут незастосовний, бо його
   вираз-селектор не може належати до дійсного типу.
 */
-Branch evaluate(double x, double *result)
+Branch evaluate(float x, float *result)
 {
     Branch branch = Branch::Undefined; //гілка функції для x
 
-    if (x < 0.0) //якщо x від'ємне
+    if (x < 0.0f) //якщо x від'ємне
     {
         *result = x * x * x;       //обчислити x^3
         branch = Branch::Negative; //запам'ятати гілку x < 0
     }
-    else if (x == 0.0) //якщо x дорівнює нулю
+    else if (x == 0.0f) //якщо x дорівнює нулю
     {
-        *result = 0.0;         //задати нульове значення
+        *result = 0.0f;        //задати нульове значення
         branch = Branch::Zero; //запам'ятати гілку x = 0
     }
-    else if (x < 4.0) //якщо 0 < x < 4
+    else if (x < 4.0f) //якщо 0 < x < 4
     {
-        *result = 4.0 - x * x;  //обчислити 4 - x^2
+        *result = 4.0f - x * x; //обчислити 4 - x^2
         branch = Branch::Inner; //запам'ятати гілку 0 < x < 4
     }
-    else if (x > 4.0) //якщо x > 4
+    else if (x > 4.0f) //якщо x > 4
     {
-        *result = 1.0;          //задати значення 1
+        *result = 1.0f;         //задати значення 1
         branch = Branch::Outer; //запам'ятати гілку x > 4
     }
     else //інакше x = 4
@@ -174,7 +174,7 @@ bool restOfLineOk()
   Параметри: x [вихідний] - адреса змінної для аргументу функції.
   Повертає : true - число прочитано; false - вхідні дані вичерпано.
 */
-bool readArgument(double *x)
+bool readArgument(float *x)
 {
     std::cout << "Уведіть аргумент x = "; //вивести запрошення
 
@@ -230,7 +230,7 @@ int main()
                  "    1,        якщо x > 4\n"
               << std::endl; //вивести визначення функції
 
-    double x = 0.0;        //аргумент функції
+    float x = 0.0f;        //аргумент функції
     if (!readArgument(&x)) //якщо не вдалося ввести x
     {
         //повідомити про кінець даних
@@ -238,12 +238,13 @@ int main()
         return RC_INPUT_EXHAUSTED; //завершити з кодом помилки
     }
 
-    double y = 0.0;                        //значення функції
+    float y = 0.0f;                        //значення функції
     const Branch branch = evaluate(x, &y); //гілка функції, задіяна для x
 
     /* Дійсні числа виводяться у фіксованому форматі з шістьма знаками. */
     std::cout.setf(std::ios::fixed); //задати фіксований формат
-    std::cout.precision(6);          //задати шість знаків після коми
+    //float гарантує 6-7 значущих цифр, тому 4 знаки після коми виводяться без шуму
+    std::cout.precision(4);
 
     std::cout << "\nАргумент:  x = " << x << std::endl; //вивести аргумент
     //вивести задіяну гілку

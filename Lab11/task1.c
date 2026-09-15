@@ -45,7 +45,7 @@ const char *const SOURCE_FILE = "numbers.txt"; //ім'я вхідного фай
 const char *const SQUARE_FILE = "squares.txt"; //ім'я файлу з квадратами
 
 /* Кількість чисел в одному рядку під час виведення файлу. */
-const int NUMBERS_PER_LINE = 10; //кількість чисел у рядку
+const short NUMBERS_PER_LINE = 10; //кількість чисел у рядку
 
 //========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========
 /*
@@ -66,8 +66,8 @@ void skipLine(void)
   restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.
 
   Припустимі лише пропуски до кінця рядка або до наступного числа (тоді
-  його прочитає наступний виклик readInt); будь-який інший символ - помилка,
-  і решта рядка відкидається.
+  його прочитає наступний виклик readInt або readShort); будь-який інший
+  символ - помилка, і решта рядка відкидається.
 
   Повертає : true - залишок рядка припустимий; false - у рядку зайві символи.
 */
@@ -126,17 +126,56 @@ bool readInt(const char *prompt, int *value, int low, int high)
     }
 }
 
+//===== readShort: прочитати коротке ціле число із заданого діапазону з контролем =====
+/*
+  readShort - прочитати коротке ціле число (short) із заданого діапазону
+              з контролем введення.
+
+  Для кількості чисел, меж діапазону та пунктів меню, межі яких уміщуються
+  в 16 біт. Число читається через readInt у змінну int, а не через
+  scanf("%hd"): за "%hd" надто велике число мовчки обрізається до 16 біт
+  (98303 стало б 32767) і пройшло б перевірку меж. Після перевірки меж
+  значення гарантовано вміщується в short.
+
+  Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
+  Повертає : true - число прочитано; false - вхідні дані вичерпано.
+
+  Локальні змінні:
+      number - прочитане число до перевірки меж.
+*/
+bool readShort(const char *prompt, short *value, short low, short high)
+{
+    int number = 0; //прочитане число до перевірки меж
+
+    if (!readInt(prompt, &number, low, high)) //увести число
+    {
+        return false; //повернути ознаку кінця даних
+    }
+
+    *value = (short)number; //записати число в межах short
+    return true;            //повернути ознаку успіху
+}
+
 //================= isPerfectSquare: чи є число квадратом цілого числа =================
 /*
   isPerfectSquare - чи є число квадратом цілого числа.
 
   Від'ємні числа квадратами не є за означенням. Для невід'ємних обчислюється
   цілий корінь як ціла частина sqrt(n), після чого перевіряється рівність
-  його квадрата вихідному числу. Порівнюються цілі числа, тому результат не
-  залежить від точності подання дійсних чисел.
+  його квадрата вихідному числу. Порівнюються цілі числа, тому хибно
+  "квадратом" число не визнається за жодної точності дійсних чисел.
 
-  Тип long, а не int: числа читаються з текстового файлу, який міг бути
-  змінений поза програмою, тож значення не обов'язково в межах INT_MAX.
+  Корінь рахується у float (sqrtf), а не в double. У float лише 24 біти
+  мантиси, тож (float)n для n > 2^24 округлюється, але для квадрата k*k
+  це зсуває корінь менше ніж на половину кроку float біля k (не більше
+  0.0007 при кроці 0.004 біля 46340), тому sqrtf повертає рівно k.
+  Це перевірено перебором усіх n від 0 до INT_MAX: результат збігається
+  з точним, тож double тут не потрібен.
+
+  Тип кореня unsigned short: для n <= INT_MAX корінь не перевищує 46340
+  (46341^2 > INT_MAX), тобто вміщується в 16 біт без знака, а у short
+  (до 32767) - ні. Добуток candidate * candidate обчислюється в int
+  і не перевищує 46340^2 = 2147395600 <= INT_MAX.
 
   Параметри:
       n    [вхідний]  - число, що перевіряється;
@@ -147,14 +186,15 @@ bool readInt(const char *prompt, int *value, int low, int high)
   Локальні змінні:
       candidate - ціла частина кореня.
 */
-bool isPerfectSquare(long n, long *root)
+bool isPerfectSquare(int n, unsigned short *root)
 {
     if (n < 0) //якщо число від'ємне
     {
         return false; //повернути ознаку неквадрата
     }
 
-    const long candidate = (long)floor(sqrt((double)n)); //обчислити цілу частину кореня
+    //ціла частина кореня: для n >= 0 відкидання дробової частини дорівнює floor
+    const unsigned short candidate = (unsigned short)sqrtf((float)n); //корінь
 
     if (candidate * candidate != n) //якщо квадрат кореня не дорівнює числу
     {
@@ -175,15 +215,16 @@ bool isPerfectSquare(long n, long *root)
 
   Параметри:
       fileName [вхідний] - ім'я файлу;
-      count    [вхідний] - кількість чисел;
-      low, high [вхідні] - межі діапазону значень.
+      count    [вхідний] - кількість чисел (1..32767);
+      low, high [вхідні] - межі діапазону значень (MIN_RANDOM..MAX_RANDOM).
   Повертає : true - файл створено; false - файл не вдалося відкрити.
 
   Локальні змінні:
       file  - покажчик на структуру FILE;
+      i     - номер чергового числа;
       value - чергове згенероване число.
 */
-bool createFileRandom(const char *fileName, int count, int low, int high)
+bool createFileRandom(const char *fileName, short count, short low, short high)
 {
     FILE *const file = fopen(fileName, "w"); //відкрити файл на запис
 
@@ -194,16 +235,16 @@ bool createFileRandom(const char *fileName, int count, int low, int high)
         return false; //повернути ознаку помилки
     }
 
-    for (int i = 0; i < count; ++i) //перебрати числа
+    for (short i = 0; i < count; ++i) //перебрати числа
     {
         const int value = low + rand() % (high - low + 1); //число від low до high
         fprintf(file, "%d\n", value);                      //записати число у файл
     }
 
     fclose(file); //закрити файл
-    printf("Файл \"%s\" створено. Кількість чисел: %d, діапазон [%d; %d].\n", fileName,
-           count, low, high); //повідомити про створення файлу
-    return true;              //повернути ознаку успіху
+    printf("Файл \"%s\" створено. Кількість чисел: %hd, діапазон [%hd; %hd].\n",
+           fileName, count, low, high); //повідомити про створення файлу
+    return true;                        //повернути ознаку успіху
 }
 
 //======= createFileKeyboard: створити текстовий файл, увівши числа з клавіатури =======
@@ -212,16 +253,17 @@ bool createFileRandom(const char *fileName, int count, int low, int high)
 
   Параметри:
       fileName [вхідний] - ім'я файлу;
-      count    [вхідний] - кількість чисел.
+      count    [вхідний] - кількість чисел (1..32767).
   Повертає : true - файл створено; false - помилка або переривання введення
              (тоді у файлі лишаються вже введені числа, про що повідомляється).
 
   Локальні змінні:
       file   - покажчик на структуру FILE;
+      i      - номер чергового числа;
       prompt - запрошення з номером чергового числа;
-      value  - чергове введене число.
+      value  - чергове введене число (увесь діапазон int).
 */
-bool createFileKeyboard(const char *fileName, int count)
+bool createFileKeyboard(const char *fileName, short count)
 {
     FILE *const file = fopen(fileName, "w"); //відкрити файл на запис
 
@@ -232,18 +274,19 @@ bool createFileKeyboard(const char *fileName, int count)
         return false; //повернути ознаку помилки
     }
 
-    printf("Уведіть цілі числа (усього %d):\n", count); //вивести запрошення
+    printf("Уведіть цілі числа (усього %hd):\n", count); //вивести запрошення
 
-    for (int i = 0; i < count; ++i) //перебрати числа
+    for (short i = 0; i < count; ++i) //перебрати числа
     {
-        char prompt[40]; //запрошення з номером числа
+        //"  число 32767: " - 20 байтів UTF-8 (літера кирилиці - 2 байти) і '\0'
+        char prompt[21]; //запрошення з номером числа
         snprintf(prompt, sizeof prompt, "  число %d: ", i + 1); //сформувати запрошення
 
         int value = 0;                                  //чергове введене число
         if (!readInt(prompt, &value, INT_MIN, INT_MAX)) //увести число
         {
             fclose(file); //закрити файл навіть при перериванні
-            printf("\nВведення перервано: до файлу \"%s\" записано чисел: %d з %d.\n",
+            printf("\nВведення перервано: до файлу \"%s\" записано чисел: %hd з %hd.\n",
                    fileName, i, count); //повідомити про переривання
             return false;               //повернути ознаку помилки
         }
@@ -253,7 +296,7 @@ bool createFileKeyboard(const char *fileName, int count)
 
     fclose(file); //закрити файл
     //повідомити про створення файлу
-    printf("Файл \"%s\" створено. Кількість чисел: %d.\n", fileName, count);
+    printf("Файл \"%s\" створено. Кількість чисел: %hd.\n", fileName, count);
     return true; //повернути ознаку успіху
 }
 
@@ -270,11 +313,11 @@ bool createFileKeyboard(const char *fileName, int count)
       fileName [вхідний] - ім'я файлу для повідомлення;
       count    [вхідний] - кількість чисел, прочитаних до зупинки.
 */
-void reportCorruption(FILE *file, const char *fileName, long count)
+void reportCorruption(FILE *file, const char *fileName, int count)
 {
     if (!feof(file)) //якщо читання зупинилось не в кінці
     {
-        printf("Увага: файл \"%s\" пошкоджено - після %ld чисел трапилось "
+        printf("Увага: файл \"%s\" пошкоджено - після %d чисел трапилось "
                "не число, решту вмісту пропущено.\n",
                fileName, count); //повідомити про пошкодження файлу
     }
@@ -286,6 +329,10 @@ void reportCorruption(FILE *file, const char *fileName, long count)
 
   Числа виводяться по десять у рядку, щоб великий файл лишався читабельним.
 
+  Числа у файлі - int (програма записує лише значення int). Лічильник - int,
+  а не short: файл міг бути доповнений поза програмою і містити більше
+  32767 чисел.
+
   Параметри: fileName [вхідний] - ім'я файлу.
   Повертає : кількість прочитаних чисел або -1, якщо файл не існує.
 
@@ -294,7 +341,7 @@ void reportCorruption(FILE *file, const char *fileName, long count)
       value - прочитане число;
       count - лічильник прочитаних чисел.
 */
-long printFile(const char *fileName)
+int printFile(const char *fileName)
 {
     FILE *const file = fopen(fileName, "r"); //відкрити файл на читання
 
@@ -307,13 +354,13 @@ long printFile(const char *fileName)
 
     printf("Вміст файлу \"%s\":\n ", fileName); //вивести заголовок вмісту
 
-    long value = 0; //прочитане число
-    long count = 0; //лічильник прочитаних чисел
+    int value = 0; //прочитане число
+    int count = 0; //лічильник прочитаних чисел
 
-    while (fscanf(file, "%ld", &value) == 1) //читати числа до кінця файлу
+    while (fscanf(file, "%d", &value) == 1) //читати числа до кінця файлу
     {
-        printf(" %8ld", value); //вивести число
-        ++count;                //збільшити лічильник чисел
+        printf(" %8d", value); //вивести число
+        ++count;               //збільшити лічильник чисел
 
         if (count % NUMBERS_PER_LINE == 0) //якщо рядок заповнено
         {
@@ -329,8 +376,8 @@ long printFile(const char *fileName)
     reportCorruption(file, fileName, count); //перевірити цілісність файлу
     fclose(file);                            //закрити файл
 
-    printf("Усього чисел: %ld\n", count); //вивести кількість чисел
-    return count;                         //повернути кількість чисел
+    printf("Усього чисел: %d\n", count); //вивести кількість чисел
+    return count;                        //повернути кількість чисел
 }
 
 //===== extractSquares: знайти у вхідному файлі числа, що є квадратами цілих чисел =====
@@ -339,7 +386,8 @@ long printFile(const char *fileName)
                    і записати їх до нового файлу.
 
   Обидва файли відкриваються та закриваються в межах цієї функції: вхідний -
-  на читання, вихідний - на запис.
+  на читання, вихідний - на запис. Лічильники - int, а не short: файл міг
+  бути доповнений поза програмою і містити більше 32767 чисел.
 
   Параметри:
       sourceName [вхідний] - ім'я вхідного файлу;
@@ -353,7 +401,7 @@ long printFile(const char *fileName)
       root  - цілий корінь знайденого квадрата;
       found - лічильник знайдених квадратів.
 */
-long extractSquares(const char *sourceName, const char *targetName, long *total)
+int extractSquares(const char *sourceName, const char *targetName, int *total)
 {
     FILE *const source = fopen(sourceName, "r"); //відкрити вхідний файл
 
@@ -374,22 +422,22 @@ long extractSquares(const char *sourceName, const char *targetName, long *total)
         return -1;      //повернути ознаку помилки
     }
 
-    long value = 0; //прочитане число
-    long found = 0; //лічильник знайдених квадратів
-    *total = 0;     //обнулити лічильник чисел
+    int value = 0; //прочитане число
+    int found = 0; //лічильник знайдених квадратів
+    *total = 0;    //обнулити лічильник чисел
 
     printf("Знайдені квадрати цілих чисел:\n"); //вивести заголовок результату
 
-    while (fscanf(source, "%ld", &value) == 1) //читати числа до кінця файлу
+    while (fscanf(source, "%d", &value) == 1) //читати числа до кінця файлу
     {
         ++(*total); //збільшити лічильник чисел
 
-        long root = 0;                     //цілий корінь числа
+        unsigned short root = 0;           //цілий корінь числа (до 46340)
         if (isPerfectSquare(value, &root)) //якщо число є квадратом
         {
-            fprintf(target, "%ld\n", value);        //записати квадрат у файл
-            printf("  %ld = %ld^2\n", value, root); //вивести квадрат і корінь
-            ++found;                                //збільшити лічильник квадратів
+            fprintf(target, "%d\n", value);        //записати квадрат у файл
+            printf("  %d = %hu^2\n", value, root); //вивести квадрат і корінь
+            ++found;                               //збільшити лічильник квадратів
         }
     }
 
@@ -408,13 +456,21 @@ long extractSquares(const char *sourceName, const char *targetName, long *total)
 //============================== cmdCreate: команда меню ===============================
 /*
   cmdCreate - команда меню: створити вхідний текстовий файл.
+
+  Кількість чисел обмежено 32767 (SHRT_MAX): її вводять вручну, а файл
+  такого розміру вже непридатний для перегляду на екрані.
+
+  Локальні змінні:
+      count     - кількість чисел;
+      choice    - обраний спосіб створення;
+      low, high - межі діапазону генерації.
 */
 void cmdCreate(void)
 {
-    int count = 0; //кількість чисел
+    short count = 0; //кількість чисел (1..32767)
 
     //увести кількість чисел
-    if (!readInt("Уведіть кількість чисел: ", &count, 1, INT_MAX))
+    if (!readShort("Уведіть кількість чисел (1..32767): ", &count, 1, SHRT_MAX))
     {
         return; //завершити команду
     }
@@ -424,8 +480,8 @@ void cmdCreate(void)
            "  1 - введення чисел з клавіатури\n"
            "  2 - генерація псевдовипадкових чисел у заданому діапазоні\n");
 
-    int choice = 0;                                         //обраний спосіб створення
-    if (!readInt("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
+    short choice = 0;                                         //обраний спосіб створення
+    if (!readShort("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
     {
         return; //завершити команду
     }
@@ -436,13 +492,13 @@ void cmdCreate(void)
         return;                                 //завершити команду
     }
 
-    int low = 0;  //нижня межа діапазону
-    int high = 0; //верхня межа діапазону
+    short low = 0;  //нижня межа діапазону (-10000..10000)
+    short high = 0; //верхня межа діапазону (low..10000)
     //увести межі діапазону
-    if (!readInt("Уведіть нижню межу діапазону (-10000..10000): ", &low, MIN_RANDOM,
-                 MAX_RANDOM) ||
-        !readInt("Уведіть верхню межу діапазону (не більше 10000): ", &high, low,
-                 MAX_RANDOM))
+    if (!readShort("Уведіть нижню межу діапазону (-10000..10000): ", &low, MIN_RANDOM,
+                   MAX_RANDOM) ||
+        !readShort("Уведіть верхню межу діапазону (не більше 10000): ", &high, low,
+                   MAX_RANDOM))
     {
         return; //завершити команду
     }
@@ -453,20 +509,24 @@ void cmdCreate(void)
 //============================== cmdExtract: команда меню ==============================
 /*
   cmdExtract - команда меню: відібрати квадрати цілих чисел у новий файл.
+
+  Локальні змінні:
+      total - кількість переглянутих чисел;
+      found - кількість знайдених квадратів.
 */
 void cmdExtract(void)
 {
-    long total = 0; //кількість переглянутих чисел
+    int total = 0; //кількість переглянутих чисел
     //відібрати квадрати у файл
-    const long found = extractSquares(SOURCE_FILE, SQUARE_FILE, &total);
+    const int found = extractSquares(SOURCE_FILE, SQUARE_FILE, &total);
 
     if (found < 0) //якщо сталася помилка
     {
         return; //завершити команду
     }
 
-    printf("\nПереглянуто чисел: %ld\n", total); //вивести кількість переглянутих
-    printf("Знайдено квадратів: %ld\n", found);  //вивести кількість квадратів
+    printf("\nПереглянуто чисел: %d\n", total); //вивести кількість переглянутих
+    printf("Знайдено квадратів: %d\n", found);  //вивести кількість квадратів
     //вивести ім'я файлу результату
     printf("Результат записано до файлу \"%s\".\n", SQUARE_FILE);
 }
@@ -501,8 +561,9 @@ int main(void)
         printf("  4 - вивести вміст файлу з квадратами\n");            //вивести пункт 4
         printf("  5 - вихід\n");                                       //вивести пункт 5
 
-        int choice = 0;                                          //обраний пункт меню
-        if (!readInt("Оберіть команду (1..5): ", &choice, 1, 5)) //увести номер команди
+        short choice = 0; //обраний пункт меню
+        if (!readShort("Оберіть команду (1..5): ", &choice, 1,
+                       5)) //увести номер команди
         {
             //повідомити про кінець даних
             printf("\nВхідні дані вичерпано. Завершення роботи.\n");

@@ -64,8 +64,9 @@
         <h3>Завдання 1</h3>
         <p>
           Вираз обчислюється стандартними математичними функціями заголовного файла
-          <code>&lt;math.h&gt;</code>: <code>cos()</code>, <code>sqrt()</code>, <code>log()</code>.
-          Піднесення до степеня 1/2 реалізовано як квадратний корінь.
+          <code>&lt;math.h&gt;</code>: <code>cosf()</code>, <code>sqrtf()</code>,
+          <code>logf()</code> для типу <code>float</code>. Піднесення до степеня 1/2 реалізовано як
+          квадратний корінь.
         </p>
         <p>Область визначення виразу обмежена трьома умовами, які перевіряються до обчислення:</p>
         <ul>
@@ -78,13 +79,13 @@
           стає від'ємним, тому третя умова потрібна. Кут <code>B</code> задається в радіанах.
         </p>
         <p>
-          Контроль введення (функція <code>readDouble()</code>): приймаються лише скінченні дійсні
+          Контроль введення (функція <code>readFloat()</code>): приймаються лише скінченні дійсні
           числа, тому <code>nan</code> та <code>inf</code> відхиляються; після числа в рядку
           допускаються тільки пропуски або наступне число (усі чотири значення можна ввести в одному
           рядку), а сторонні символи на кшталт <code>2abc</code> призводять до повторного запиту.
           При вичерпанні вхідних даних програма повідомляє про це й завершується з кодом
           <code>RC_INPUT_EXHAUSTED</code>; для невизначеного виразу, а також коли значення виразу
-          виходить за межі типу <code>double</code> (наприклад, за дуже малого D), код завершення
+          виходить за межі типу <code>float</code> (наприклад, за дуже малого D), код завершення
           <code>RC_UNDEFINED</code>.
         </p>
         <h3>Завдання 2</h3>
@@ -103,6 +104,53 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
           разом 90 чисел). Введення числа (<code>readTwoDigit()</code>) контролюється так само, як у
           завданні 1: число має лежати в межах 10...99, а після нього в рядку не повинно бути
           сторонніх символів (<code>47.9</code> або <code>47abc</code> відхиляються).
+        </p>
+        <h3>Вибір типів даних</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Змінні</th>
+              <th>Тип</th>
+              <th>Чому</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                вихідні дані <code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>;
+                проміжні <code>cosB</code>, <code>radicand</code>, <code>root</code>,
+                <code>lnC</code>; результат <code>x</code> (завдання 1)
+              </td>
+              <td><code>float</code></td>
+              <td>
+                результат виводиться з 6 знаками після коми, а <code>float</code> зберігає 6-7
+                значущих цифр; математичні функції взято у варіанті для <code>float</code>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                число <code>n</code>, цифри <code>a</code>, <code>b</code>, число <code>ba</code>,
+                сума <code>sum</code> (завдання 2)
+              </td>
+              <td><code>short</code></td>
+              <td><code>n</code> не більше 99, найбільша сума 99 + 99 = 198</td>
+            </tr>
+            <tr>
+              <td>
+                символ <code>c</code> у <code>skipLine()</code> і <code>restOfLineOk()</code>;
+                <code>scanned</code>
+              </td>
+              <td><code>int</code></td>
+              <td>
+                <code>getchar()</code>, <code>peek()</code> і <code>scanf()</code> повертають
+                <code>int</code>, зокрема значення <code>EOF</code>, яке не є символом
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Коди завершення (<code>RC_INPUT_EXHAUSTED</code>, <code>RC_UNDEFINED</code>) мають тип
+          <code>int</code>, бо це значення, яке повертає <code>main()</code>.
         </p>
         <p>
           Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
@@ -168,7 +216,8 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">         та вивести результат на екран.</span>
 
 <span class="cm">  Метод: вираз обчислюється безпосередньо за допомогою стандартних</span>
-<span class="cm">         математичних функцій cos(), sqrt(), log() з &lt;math.h&gt;.</span>
+<span class="cm">         математичних функцій cosf(), sqrtf(), logf() з &lt;math.h&gt;</span>
+<span class="cm">         над дійсними числами типу float.</span>
 <span class="cm">         Перед обчисленням перевіряються обмеження області визначення:</span>
 <span class="cm">             C &gt; 0            (аргумент натурального логарифма);</span>
 <span class="cm">             D != 0           (дільник);</span>
@@ -245,9 +294,9 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="p">}</span>
 
-<span class="c1">//==== readDouble: прочитати одне дійсне число з клавіатури з контролем коректності ====</span>
+<span class="c1">//==== readFloat: прочитати одне дійсне число з клавіатури з контролем коректності =====</span>
 <span class="cm">/*</span>
-<span class="cm">  readDouble - прочитати одне дійсне число з клавіатури з контролем коректності.</span>
+<span class="cm">  readFloat - прочитати одне дійсне число з клавіатури з контролем коректності.</span>
 
 <span class="cm">  Приймаються лише скінченні числа (nan та inf відхиляються); після числа</span>
 <span class="cm">  в рядку не повинно бути сторонніх символів.</span>
@@ -262,12 +311,12 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      scanned - результат scanf(): кількість прочитаних значень або EOF.</span>
 <span class="cm">*/</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">readDouble</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readFloat</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                    </span><span class="c1">//вивести запрошення</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//результат введення числа</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                   </span><span class="c1">//вивести запрошення</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%f"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//результат введення числа</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
 <span class="w">        </span><span class="p">{</span>
@@ -303,10 +352,10 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//коефіцієнт A виразу</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кут B у радіанах</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//аргумент логарифма C</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//дільник D</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//коефіцієнт A виразу</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//кут B у радіанах</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//аргумент логарифма C</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//дільник D</span>
 
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №1, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести дані виконавця</span>
@@ -316,8 +365,8 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кут B задається в радіанах, C &gt; 0, D != 0.</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 
 <span class="w">    </span><span class="c1">//якщо не вдалося ввести дані</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть A = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть B (радіани) = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
-<span class="w">        </span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть C = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть D = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">d</span><span class="p">))</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readFloat</span><span class="p">(</span><span class="s">"Уведіть A = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">readFloat</span><span class="p">(</span><span class="s">"Уведіть B (радіани) = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
+<span class="w">        </span><span class="o">!</span><span class="n">readFloat</span><span class="p">(</span><span class="s">"Уведіть C = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">readFloat</span><span class="p">(</span><span class="s">"Уведіть D = "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">d</span><span class="p">))</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//повідомити про кінець даних</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_INPUT_EXHAUSTED</span><span class="p">;</span><span class="w">            </span><span class="c1">//завершити з кодом помилки</span>
@@ -327,50 +376,51 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вихідні дані: A = %.6f  B = %.6f  C = %.6f  D = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">);</span>
 
 <span class="w">    </span><span class="cm">/* Перевірка області визначення виразу. */</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо C не додатне</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо C не додатне</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//повідомити про помилку</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Вираз не визначено: ln(C) існує лише при C &gt; 0.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_UNDEFINED</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити: вираз не визначено</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо дільник дорівнює нулю</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">d</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо дільник дорівнює нулю</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//повідомити про ділення на нуль</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Вираз не визначено: ділення на нуль (D = 0).</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_UNDEFINED</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити: вираз не визначено</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">                    </span><span class="c1">//обчислити cos(B)</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">radicand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//обчислити підкореневий вираз</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cosf</span><span class="p">(</span><span class="n">b</span><span class="p">);</span><span class="w">                    </span><span class="c1">//обчислити cos(B)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">radicand</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//обчислити підкореневий вираз</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">radicand</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо підкореневий вираз від'ємний</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">radicand</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.0f</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо підкореневий вираз від'ємний</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Вираз не визначено: підкореневий вираз A*cos^2(B)+1 = %.6f &lt; 0.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
 <span class="w">               </span><span class="n">radicand</span><span class="p">);</span><span class="w">    </span><span class="c1">//вивести повідомлення про помилку</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_UNDEFINED</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити: вираз не визначено</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">radicand</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити квадратний корінь</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">lnC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">);</span><span class="w">          </span><span class="c1">//обчислити ln(C)</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">lnC</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">d</span><span class="p">;</span><span class="w">    </span><span class="c1">//обчислити значення виразу X</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrtf</span><span class="p">(</span><span class="n">radicand</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити квадратний корінь</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">lnC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logf</span><span class="p">(</span><span class="n">c</span><span class="p">);</span><span class="w">          </span><span class="c1">//обчислити ln(C)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">lnC</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">d</span><span class="p">;</span><span class="w">     </span><span class="c1">//обчислити значення виразу X</span>
 
-<span class="w">    </span><span class="cm">/* Проміжні результати виводяться для перевірки достовірності обчислень. */</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Проміжні результати:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">                   </span><span class="c1">//вивести проміжні результати</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  cos(B)            = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">cosB</span><span class="p">);</span><span class="w">        </span><span class="c1">//вивести cos(B)</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  cos^2(B)          = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести cos^2(B)</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  A*cos^2(B) + 1    = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">radicand</span><span class="p">);</span><span class="w">    </span><span class="c1">//вивести підкореневий вираз</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  sqrt(...)         = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">);</span><span class="w">        </span><span class="c1">//вивести квадратний корінь</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  ln(C)             = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">lnC</span><span class="p">);</span><span class="w">         </span><span class="c1">//вивести ln(C)</span>
+<span class="w">    </span><span class="cm">/* Проміжні результати виводяться для перевірки достовірності обчислень.</span>
+<span class="cm">       Шість знаків після коми відповідають точності типу float. */</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Проміжні результати:</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">                  </span><span class="c1">//вивести проміжні результати</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  cos(B)            = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">cosB</span><span class="p">);</span><span class="w">        </span><span class="c1">//вивести cos(B)</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  cos^2(B)          = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">cosB</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">cosB</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести cos^2(B)</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  A*cos^2(B) + 1    = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">radicand</span><span class="p">);</span><span class="w">    </span><span class="c1">//вивести підкореневий вираз</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  sqrt(...)         = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">root</span><span class="p">);</span><span class="w">        </span><span class="c1">//вивести квадратний корінь</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  ln(C)             = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">lnC</span><span class="p">);</span><span class="w">         </span><span class="c1">//вивести ln(C)</span>
 
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо сталося переповнення</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//повідомити про переповнення</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Значення виразу виходить за межі типу double.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Значення виразу виходить за межі типу float.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_UNDEFINED</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результат: X = %.10f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести результат</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">RC_OK</span><span class="p">;</span><span class="w">                          </span><span class="c1">//завершити успішно</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результат: X = %.6f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести результат</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">RC_OK</span><span class="p">;</span><span class="w">                         </span><span class="c1">//завершити успішно</span>
 <span class="p">}</span>
 </code></pre>
         <h3>Завдання 2 - task2.cpp</h3>
@@ -429,11 +479,11 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">      a - цифра десятків числа n;</span>
 <span class="cm">      b - цифра одиниць числа n.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">reverseTwoDigit</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">reverseTwoDigit</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//цифра десятків</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//цифра одиниць</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w">    </span><span class="c1">//повернути число ba</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//цифра десятків</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//цифра одиниць</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути число ba</span>
 <span class="p">}</span>
 
 <span class="c1">//======= proveForAll: вичерпна перевірка тотожності ab + ba = 11*(a+b) для всіх =======</span>
@@ -451,13 +501,13 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">proveForAll</span><span class="p">()</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри десятків</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри десятків</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри одиниць</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">9</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри одиниць</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="c1">//двоцифрове число ab</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ba</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="c1">//число ba з переставленими цифрами</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ab</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ba</span><span class="p">;</span><span class="w">   </span><span class="c1">//сума ab + ba</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">ab</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">;</span><span class="w"> </span><span class="c1">//двоцифрове число ab</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">ba</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="p">;</span><span class="w"> </span><span class="c1">//число ba з переставленими цифрами</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ab</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ba</span><span class="p">;</span><span class="w">   </span><span class="c1">//сума ab + ba</span>
 
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sum</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">11</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">11</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо тотожність порушено</span>
 <span class="w">            </span><span class="p">{</span>
@@ -528,7 +578,7 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="cm">  Параметри: n [вихідний] - змінна для введеного числа.</span>
 <span class="cm">  Повертає : true - число прочитано; false - вхідні дані вичерпано.</span>
 <span class="cm">*/</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">readTwoDigit</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">readTwoDigit</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"Уведіть двоцифрове число ab (10..99): "</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести запрошення</span>
 
@@ -574,7 +624,7 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="w">                 </span><span class="s">"Доведення: ab + ba ділиться на 11</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">            </span><span class="c1">//двоцифрове число ab</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">          </span><span class="c1">//двоцифрове число ab</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readTwoDigit</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо не вдалося ввести число</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="c1">//повідомити про кінець даних</span>
@@ -582,10 +632,10 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">RC_INPUT_EXHAUSTED</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">              </span><span class="c1">//цифра десятків a</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">              </span><span class="c1">//цифра одиниць b</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ba</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reverseTwoDigit</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//число ba</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ba</span><span class="p">;</span><span class="w">            </span><span class="c1">//сума ab + ba</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">              </span><span class="c1">//цифра десятків a</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">              </span><span class="c1">//цифра одиниць b</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">ba</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reverseTwoDigit</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//число ba</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ba</span><span class="p">;</span><span class="w">            </span><span class="c1">//сума ab + ba</span>
 
 <span class="w">    </span><span class="c1">//вивести цифри числа</span>
 <span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">"</span><span class="se">\n</span><span class="s">Цифри числа: a = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">", b = "</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
@@ -722,12 +772,12 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
                 cos(π/3)=0,5; 3·0,25+1=1,75; √1,75=1,32287566; ln10=2,30258509;<br />X =
                 1,32287566·2,30258509/2 = <b>1,52301688</b>
               </td>
-              <td>1,5230168822 - збіг до всіх виведених цифр</td>
+              <td>1,523017 - збіг до всіх виведених цифр</td>
             </tr>
             <tr>
               <td>A=0, B=0, C=e, D=1</td>
               <td>√(0+1)·ln(e)/1 = 1·1/1 = <b>1,0000000</b></td>
-              <td>1,0000000000 - збіг точний</td>
+              <td>1,000000 - збіг точний</td>
             </tr>
             <tr>
               <td>A=1, B=0, C=-5, D=2</td>
@@ -737,9 +787,10 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
           </tbody>
         </table>
         <p>
-          Аргумент B уведено як наближення π/3 ≈ 1,0471975512. Похибка наближення позначається лише
-          в дванадцятому знаку після коми, тому результат програми збігається з аналітичним
-          значенням до всіх виведених цифр.
+          Аргумент B уведено як наближення π/3 ≈ 1,0471975512 і збережено в типі <code>float</code>
+          (6-7 значущих цифр). Похибка наближення та округлення не впливає на шість виведених знаків
+          після коми, тому результат програми збігається з аналітичним значенням до всіх виведених
+          цифр.
         </p>
         <h3>Завдання 2</h3>
         <table>
@@ -782,8 +833,9 @@ ab + ba = (10a + b) + (10b + a) = 11a + 11b = 11·(a + b)</pre>
         <h2>8. Висновки</h2>
         <ul>
           <li>
-            Для обчислення виразу застосовано тип <code>double</code> і стандартні математичні
-            функції <code>cos()</code>, <code>sqrt()</code>, <code>log()</code>.
+            Для обчислення виразу застосовано тип <code>float</code> і стандартні математичні
+            функції <code>cosf()</code>, <code>sqrtf()</code>, <code>logf()</code>; цілі величини
+            завдання 2 зберігаються в типі <code>short</code>.
           </li>
           <li>
             Опрацьовано два способи введення-виведення: <code>scanf()</code>/<code>printf()</code>

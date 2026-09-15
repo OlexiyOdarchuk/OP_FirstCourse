@@ -121,6 +121,124 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
           Перевіряються всі числа кожної розрядності (90 + 900 + 9000), тож знайдений перелік
           повний.
         </p>
+        <h3>Вибір типів даних</h3>
+        <p>
+          Кожна змінна має найменший тип, у який гарантовано вміщується її діапазон або якого досить
+          для потрібної точності.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Змінні</th>
+              <th>Тип</th>
+              <th>Чому</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Завдання 1: <code>X_MIN</code>, <code>X_MAX</code>, <code>EPS_MIN</code></td>
+              <td><code>float</code></td>
+              <td>
+                Межі -2 і 1 зберігаються у <code>float</code> точно; для нижньої межі точності
+                <code>float</code> досить.
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>EPS_MAX</code></td>
+              <td><code>double</code></td>
+              <td>
+                У <code>float</code> <code>1e-2f</code> трохи менше за 0,01, і введене значення 1e-2
+                відхилялося б як завелике.
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>ARG_TOLERANCE</code></td>
+              <td><code>double</code></td>
+              <td>У <code>float</code> <code>-2 - 1e-12</code> дорівнює -2: допуск зникає.</td>
+            </tr>
+            <tr>
+              <td>
+                Завдання 1: <code>sum</code>, <code>term</code>, <code>t2</code>, <code>s</code>,
+                <code>s2x</code>, <code>approx</code>, <code>exact</code>, <code>eps</code>
+              </td>
+              <td><code>double</code></td>
+              <td>
+                Сума ряду у <code>float</code> має похибку округлення порядку 10⁻⁷, сумірну із
+                точністю 10⁻⁶. Перевірка з <code>float</code> на сітці з кроком 0,25 при eps = 10⁻⁶:
+                при x = -2 похибка 2,45·10⁻⁷ замість 1,75·10⁻⁹, тобто в колонці похибки був би шум
+                округлення, а не похибка ряду.
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>error</code>, <code>maxError</code></td>
+              <td><code>double</code></td>
+              <td>Похибки порядку 10⁻⁹ у <code>float</code> губляться.</td>
+            </tr>
+            <tr>
+              <td>
+                Завдання 1: <code>xStart</code>, <code>xEnd</code>, <code>step</code>,
+                <code>x</code>
+              </td>
+              <td><code>double</code></td>
+              <td>
+                Перевірка з <code>float</code>: для проміжку [-2; -0,8] з кроком 0,2 остання точка
+                -0,8 губиться (6 точок замість 7), бо похибка <code>float</code> більша за допуск
+                10⁻¹².
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>steps</code></td>
+              <td><code>int</code></td>
+              <td>
+                Кількість кроків залежить від введених меж і кроку й нічим не обмежена, тому 16 біт
+                не гарантовано вистачить.
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>n</code>, <code>terms</code>, <code>n2</code></td>
+              <td><code>short</code></td>
+              <td>
+                Номер доданка не перевищує 20, тож і кількість доданків за обидва розвинення
+                вміщується в 16 біт.
+              </td>
+            </tr>
+            <tr>
+              <td>Завдання 1: <code>c</code>, <code>scanned</code></td>
+              <td><code>short</code></td>
+              <td>
+                Символ або <code>EOF</code> та результат <code>scanf()</code> (1, 0 або
+                <code>EOF</code>).
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Завдання 2: числа <code>n</code>, <code>low</code>, <code>high</code>,
+                <code>rest</code>, <code>divisor</code>
+              </td>
+              <td><code>short</code></td>
+              <td>Числа не більші за 9999.</td>
+            </tr>
+            <tr>
+              <td>Завдання 2: <code>sum</code>, <code>result</code> у <code>intPower()</code></td>
+              <td><code>short</code></td>
+              <td>
+                Степінь цифри не більший за 9⁴ = 6561, сума степенів - за 4·6561 = 26244 &lt; 32767.
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Завдання 2: <code>digits</code>, <code>digit</code>, <code>count</code>,
+                <code>total</code>, <code>found[]</code>, <code>i</code>
+              </td>
+              <td><code>short</code></td>
+              <td>Малі лічильники, цифри й знайдені числа (до 9999).</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          <code>long</code> у програмах не використовується. Бібліотечна <code>sin()</code> працює з
+          <code>double</code>, тож еталонні значення завдання 1 теж мають тип <code>double</code>.
+        </p>
         <p>
           Література: Ковалюк Т.В. Алгоритмізація та програмування. - Львів.: "Магнолія 2006", 2024.
           - 400 с.; Deitel P., Deitel H. C++ How to Program. Pearson Education, Inc. Hoboken, New
@@ -234,16 +352,16 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
 
 <span class="cm">/* Межі області визначення функції за умовою варіанта. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">X_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-2.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//ліва межа області визначення</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">X_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span><span class="w">  </span><span class="c1">//права межа області визначення</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">X_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-2.0f</span><span class="p">;</span><span class="w"> </span><span class="c1">//ліва межа області визначення</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">X_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0f</span><span class="p">;</span><span class="w">  </span><span class="c1">//права межа області визначення</span>
 
 <span class="cm">/* Межі припустимої точності розвинення за умовою варіанта. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6</span><span class="p">;</span><span class="w"> </span><span class="c1">//найменша припустима точність</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">EPS_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-2</span><span class="p">;</span><span class="w"> </span><span class="c1">//найбільша припустима точність</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">EPS_MIN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-6f</span><span class="p">;</span><span class="w"> </span><span class="c1">//найменша припустима точність</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">EPS_MAX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-2</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float 1e-2f &lt; 0.01, уведене 1e-2 відхилялося б</span>
 
 <span class="cm">/* Допуск порівняння аргументу з межами, щоб точки на межі не відкидались</span>
 <span class="cm">   через похибку округлення. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span><span class="w"> </span><span class="c1">//допуск порівняння з межами</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">ARG_TOLERANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-12</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float -2 - 1e-12 = -2, допуск зникає</span>
 
 <span class="c1">//=============== sinTaylor: обчислити sin(t) розвиненням у ряд Тейлора ================</span>
 <span class="cm">/*</span>
@@ -277,13 +395,13 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">      n    - номер поточного доданка; кількість доданків дорівнює n + 1;</span>
 <span class="cm">      t2   - квадрат аргументу (обчислюється один раз).</span>
 <span class="cm">*/</span>
-<span class="kt">double</span><span class="w"> </span><span class="nf">sinTaylor</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">sinTaylor</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//обчислити квадрат аргументу</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">t2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">  </span><span class="c1">//a(0) = t</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//поточний доданок ряду</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">       </span><span class="c1">//номер поточного доданка</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w">  </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибка float ~1e-7 перевищує точність 1e-6</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//номер поточного доданка (не більше 20)</span>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати, доки доданок не менший eps</span>
 <span class="w">    </span><span class="p">{</span>
@@ -317,25 +435,23 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      s   - наближене значення sin(x);</span>
 <span class="cm">      s2x - наближене значення sin(2x);</span>
-<span class="cm">      n1, n2 - кількість доданків у відповідних розвиненнях.</span>
+<span class="cm">      n2  - кількість доданків розвинення sin(2x).</span>
 <span class="cm">*/</span>
-<span class="kt">double</span><span class="w"> </span><span class="nf">yApprox</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">yApprox</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків розвинення sin(x)</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків розвинення sin(2x)</span>
-
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо аргумент додатний</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="cm">/* Гілка 0 &lt; x &lt;= 1:  y = sin^2(x) - sin(x) */</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити sin(x) рядом Тейлора</span>
-<span class="w">        </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n1</span><span class="p">;</span><span class="w">                             </span><span class="c1">//зберегти кількість доданків</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w">                        </span><span class="c1">//повернути значення першої гілки</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w">                          </span><span class="c1">//повернути значення першої гілки</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="cm">/* Гілка -2 &lt;= x &lt;= 0:  y = sin^3(x) + sin(2x) */</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n1</span><span class="p">);</span><span class="w">         </span><span class="c1">//обчислити sin(x) рядом Тейлора</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s2x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n2</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити sin(2x) рядом Тейлора</span>
-<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">n2</span><span class="p">;</span><span class="w">                                </span><span class="c1">//підсумувати кількість доданків</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">n2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків розвинення sin(2x)</span>
+
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w">       </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s2x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sinTaylor</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n2</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: точність до 1e-6</span>
+<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">n2</span><span class="p">;</span><span class="w">                                    </span><span class="c1">//додати доданки розвинення sin(2x)</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">s2x</span><span class="p">;</span><span class="w">                          </span><span class="c1">//повернути значення другої гілки</span>
 <span class="p">}</span>
 
@@ -351,10 +467,10 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="p">{</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо аргумент додатний</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити стандартне значення sin(x)</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">s</span><span class="p">;</span><span class="w">        </span><span class="c1">//повернути значення першої гілки</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">         </span><span class="c1">//обчислити стандартне значення sin(x)</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w">         </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути значення другої гілки</span>
 <span class="p">}</span>
 
@@ -380,7 +496,7 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ (символ або EOF)</span>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати до кінця рядка</span>
 <span class="w">    </span><span class="p">{</span>
@@ -402,7 +518,7 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ (символ або EOF)</span>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span><span class="w"> </span><span class="c1">//пропускати пробільні символи</span>
 <span class="w">    </span><span class="p">{</span>
@@ -440,8 +556,8 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="p">{</span>
 <span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                    </span><span class="c1">//вивести запрошення</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//увести число</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                      </span><span class="c1">//вивести запрошення</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//увести число (1, 0 або EOF)</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
 <span class="w">        </span><span class="p">{</span>
@@ -503,10 +619,10 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    y = sin^3(x) + sin(2x),   якщо -2 &lt;= x &lt;= 0</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Область визначення: [-2; 1].</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести область визначення</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xStart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//початкове значення аргументу</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xEnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//кінцеве значення аргументу</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//крок зміни аргументу</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">    </span><span class="c1">//точність розвинення в ряд</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xStart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">xEnd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">   </span><span class="c1">//double: у float остання точка діапазону губиться</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">    </span><span class="c1">//double: точність до 1e-6</span>
 
 <span class="w">    </span><span class="c1">//якщо межі аргументу не прочитано</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readDouble</span><span class="p">(</span><span class="s">"Уведіть початкове значення аргументу: "</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">xStart</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
@@ -555,9 +671,9 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Точність розвинення: %.1e</span><span class="se">\n\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести задану точність</span>
 <span class="w">    </span><span class="n">printTableHeader</span><span class="p">();</span><span class="w">                             </span><span class="c1">//вивести заголовок таблиці</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">maxError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//найбільша похибка за таблицею</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//номер поточного кроку</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xStart</span><span class="p">;</span><span class="w">     </span><span class="c1">//поточне значення аргументу</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">maxError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//double: похибки порядку 1e-9 у float губляться</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">steps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//номер поточного кроку (кількість кроків не обмежена)</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xStart</span><span class="p">;</span><span class="w">     </span><span class="c1">//double: у float остання точка діапазону губиться</span>
 
 <span class="w">    </span><span class="cm">/* Цикл табулювання. Аргумент обчислюється через лічильник кроків замість</span>
 <span class="cm">       накопичення x += step, щоб похибка додавання не накопичувалась від кроку</span>
@@ -572,21 +688,22 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="c1">//інакше обчислити значення функції</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="kt">int</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків ряду</span>
-<span class="w">            </span><span class="c1">//обчислити наближене значення</span>
+<span class="w">            </span><span class="kt">short</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість доданків ряду</span>
+<span class="w">            </span><span class="c1">//double: похибка float ~1e-7 перевищує саму похибку ряду</span>
 <span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">approx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yApprox</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">);</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">exact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yExact</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити стандартне значення</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">exact</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">yExact</span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">//double: еталон має бути точнішим за 1e-6</span>
 
 <span class="w">            </span><span class="cm">/* Похибка за умовою варіанта - різниця абсолютних значень</span>
 <span class="cm">               наближеного та стандартного обчислення функції. */</span>
-<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">approx</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">exact</span><span class="p">));</span><span class="w"> </span><span class="c1">//обчислити похибку</span>
+<span class="w">            </span><span class="c1">//double: похибки порядку 1e-9 у float губляться</span>
+<span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">approx</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">fabs</span><span class="p">(</span><span class="n">exact</span><span class="p">));</span>
 
 <span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">error</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">maxError</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо похибка більша за найбільшу</span>
 <span class="w">            </span><span class="p">{</span>
 <span class="w">                </span><span class="n">maxError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">error</span><span class="p">;</span><span class="w"> </span><span class="c1">//запам'ятати найбільшу похибку</span>
 <span class="w">            </span><span class="p">}</span>
 
-<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %10.4f | %18.12f | %18.12f | %14.3e | %8d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">approx</span><span class="p">,</span><span class="w"> </span><span class="n">exact</span><span class="p">,</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %10.4f | %18.12f | %18.12f | %14.3e | %8hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">approx</span><span class="p">,</span><span class="w"> </span><span class="n">exact</span><span class="p">,</span>
 <span class="w">                   </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести рядок таблиці</span>
 <span class="w">        </span><span class="p">}</span>
 
@@ -651,16 +768,17 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">      base [вхідний] - основа степеня (цифра числа, 0..9);</span>
 <span class="cm">      exp  [вхідний] - показник степеня (кількість цифр числа, 2..4).</span>
 
-<span class="cm">  Повертає: значення base у степені exp.</span>
+<span class="cm">  Повертає: значення base у степені exp (не більше 9^4 = 6561).</span>
 
 <span class="cm">  Локальні змінні:</span>
-<span class="cm">      result - накопичуване значення степеня.</span>
+<span class="cm">      result - накопичуване значення степеня;</span>
+<span class="cm">      i      - лічильник множень.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">intPower</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">exp</span><span class="p">)</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">intPower</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">exp</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичуване значення степеня</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичуване значення степеня (не більше 6561)</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">exp</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторити множення exp разів</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">exp</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторити множення exp разів</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">*=</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="c1">//помножити на основу</span>
 <span class="w">    </span><span class="p">}</span>
@@ -672,23 +790,22 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">/*</span>
 <span class="cm">  digitCount - кількість цифр у десятковому записі числа.</span>
 
-<span class="cm">  Параметри: n [вхідний] - натуральне число.</span>
+<span class="cm">  Параметри: n [вхідний] - натуральне число (не більше 9999); у процесі</span>
+<span class="cm">                           підрахунку від нього відкидаються цифри.</span>
 <span class="cm">  Повертає : кількість цифр (для n = 0 повертає 1).</span>
 
 <span class="cm">  Локальні змінні:</span>
-<span class="cm">      count - лічильник цифр;</span>
-<span class="cm">      rest  - залишок числа, що ще не оброблено.</span>
+<span class="cm">      count - лічильник цифр.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">digitCount</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">digitCount</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник цифр</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">  </span><span class="c1">//залишок необробленого числа</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник цифр</span>
 
 <span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="c1">//повторювати відкидання цифр</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span><span class="w">    </span><span class="c1">//збільшити лічильник цифр</span>
-<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//відкинути молодшу цифру</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">//повторювати, доки лишились цифри</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//збільшити лічильник цифр</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//відкинути молодшу цифру</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span><span class="w"> </span><span class="c1">//повторювати, доки лишились цифри</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути кількість цифр</span>
 <span class="p">}</span>
@@ -708,16 +825,16 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">      rest   - залишок числа, що ще не оброблено;</span>
 <span class="cm">      digit  - чергова цифра числа.</span>
 <span class="cm">*/</span>
-<span class="kt">bool</span><span class="w"> </span><span class="nf">isArmstrong</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">isArmstrong</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//сума степенів цифр</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//залишок необробленого числа</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//сума степенів цифр (не більше 4 * 6561 = 26244)</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//залишок необробленого числа</span>
 
 <span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати цифри числа</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">    </span><span class="c1">//виділити молодшу цифру</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">  </span><span class="c1">//виділити молодшу цифру</span>
 <span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">);</span><span class="w"> </span><span class="c1">//накопичити степінь цифри</span>
 <span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">                     </span><span class="c1">//відкинути молодшу цифру</span>
 <span class="w">    </span><span class="p">}</span>
@@ -732,42 +849,42 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">                    або їх значеннями (1 + 125 + 27).</span>
 
 <span class="cm">  Параметри:</span>
-<span class="cm">      n        [вхідний] - число;</span>
+<span class="cm">      n        [вхідний] - число (не більше 9999); у процесі виведення від</span>
+<span class="cm">                           нього відкидаються старші цифри;</span>
 <span class="cm">      asPowers [вхідний] - true: степені; false: значення степенів.</span>
 
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      digits  - кількість цифр числа;</span>
 <span class="cm">      divisor - дільник для виділення старшої цифри;</span>
-<span class="cm">      rest    - залишок числа, що ще не оброблено;</span>
+<span class="cm">      i       - номер розряду;</span>
 <span class="cm">      digit   - чергова цифра.</span>
 <span class="cm">*/</span>
-<span class="kt">void</span><span class="w"> </span><span class="nf">printDigitTerms</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">asPowers</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printDigitTerms</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">asPowers</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">digitCount</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість цифр</span>
 
 <span class="w">    </span><span class="cm">/* Найстарший розряд: 10^(digits-1). */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">divisor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити дільник старшого розряду</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">divisor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити дільник старшого розряду</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w">                    </span><span class="c1">//залишок необробленого числа</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">digits</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розряди від старшого</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">digits</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розряди від старшого</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w"> </span><span class="c1">//виділити старшу цифру</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w"> </span><span class="c1">//виділити старшу цифру</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">asPowers</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо потрібні степені</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%d^%d"</span><span class="p">,</span><span class="w"> </span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести цифру у степені</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%hd^%hd"</span><span class="p">,</span><span class="w"> </span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести цифру у степені</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="c1">//інакше вивести значення степенів</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">));</span><span class="w"> </span><span class="c1">//вивести значення степеня</span>
+<span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"%hd"</span><span class="p">,</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="n">digit</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">));</span><span class="w"> </span><span class="c1">//вивести значення степеня</span>
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо розряд не останній</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">" + "</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести знак плюс</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">%=</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w"> </span><span class="c1">//відкинути старшу цифру</span>
-<span class="w">        </span><span class="n">divisor</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w">   </span><span class="c1">//перейти до молодшого розряду</span>
+<span class="w">        </span><span class="n">n</span><span class="w"> </span><span class="o">%=</span><span class="w"> </span><span class="n">divisor</span><span class="p">;</span><span class="w">  </span><span class="c1">//відкинути старшу цифру</span>
+<span class="w">        </span><span class="n">divisor</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="c1">//перейти до молодшого розряду</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
@@ -779,9 +896,9 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 
 <span class="cm">  Параметри: n [вхідний] - число Армстронга.</span>
 <span class="cm">*/</span>
-<span class="kt">void</span><span class="w"> </span><span class="nf">printExpansion</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printExpansion</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %d = "</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">      </span><span class="c1">//вивести число</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %hd = "</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span><span class="w">     </span><span class="c1">//вивести число</span>
 <span class="w">    </span><span class="n">printDigitTerms</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести суму степенів</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">" = "</span><span class="p">);</span><span class="w">             </span><span class="c1">//вивести знак рівності</span>
 <span class="w">    </span><span class="n">printDigitTerms</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести значення степенів</span>
@@ -798,7 +915,7 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">      low    [вихідний] - адреса для найменшого числа (10, 100, 1000);</span>
 <span class="cm">      high   [вихідний] - адреса для найбільшого числа (99, 999, 9999).</span>
 <span class="cm">*/</span>
-<span class="kt">void</span><span class="w"> </span><span class="nf">digitRange</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">high</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">digitRange</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="o">*</span><span class="n">high</span><span class="p">)</span>
 <span class="p">{</span>
 <span class="w">    </span><span class="o">*</span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intPower</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити найменше число</span>
 <span class="w">    </span><span class="o">*</span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="n">low</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">           </span><span class="c1">//обчислити найбільше число</span>
@@ -817,17 +934,18 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      low, high - межі діапазону чисел заданої розрядності;</span>
-<span class="cm">      count     - лічильник знайдених чисел.</span>
+<span class="cm">      count     - лічильник знайдених чисел;</span>
+<span class="cm">      n         - число, що перевіряється.</span>
 <span class="cm">*/</span>
-<span class="kt">int</span><span class="w"> </span><span class="nf">scanRange</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="p">[],</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">capacity</span><span class="p">)</span>
+<span class="kt">short</span><span class="w"> </span><span class="nf">scanRange</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">found</span><span class="p">[],</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">capacity</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//нижня межа діапазону</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//верхня межа діапазону</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник знайдених чисел</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">   </span><span class="c1">//нижня межа діапазону</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//верхня межа діапазону</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник знайдених чисел</span>
 
 <span class="w">    </span><span class="n">digitRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//визначити межі діапазону</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="p">;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">capacity</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати числа діапазону</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">low</span><span class="p">;</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">capacity</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати числа діапазону</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isArmstrong</span><span class="p">(</span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо число Армстронга</span>
 <span class="w">        </span><span class="p">{</span>
@@ -849,7 +967,8 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="cm">      digits    - поточна розрядність;</span>
 <span class="cm">      low, high - межі діапазону чисел поточної розрядності;</span>
 <span class="cm">      found     - знайдені числа поточної розрядності;</span>
-<span class="cm">      count     - їх кількість.</span>
+<span class="cm">      count     - їх кількість;</span>
+<span class="cm">      i         - номер знайденого числа.</span>
 <span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
@@ -861,24 +980,25 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Число з n цифр є числом Армстронга, якщо сума його цифр,</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">           </span><span class="s">"піднесених до n-го степеня, дорівнює самому числу.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//загальна кількість знайдених чисел</span>
+<span class="w">    </span><span class="kt">short</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//загальна кількість знайдених чисел</span>
 
 <span class="w">    </span><span class="cm">/* За умовою перевіряються числа з двох, трьох та чотирьох цифр. */</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розрядності від 2 до 4</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"> </span><span class="n">digits</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">digits</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати розрядності від 2 до 4</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//нижня межа діапазону</span>
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//верхня межа діапазону</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">//нижня межа діапазону</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//верхня межа діапазону</span>
 
 <span class="w">        </span><span class="n">digitRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">low</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//визначити межі діапазону</span>
 
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Числа Армстронга з %d цифр (діапазон %d..%d) ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">low</span><span class="p">,</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Числа Армстронга з %hd цифр (діапазон %hd..%hd) ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">digits</span><span class="p">,</span>
+<span class="w">               </span><span class="n">low</span><span class="p">,</span>
 <span class="w">               </span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести заголовок розрядності</span>
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">found</span><span class="p">[</span><span class="n">MAX_FOUND</span><span class="p">];</span><span class="w"> </span><span class="c1">//знайдені числа поточної розрядності</span>
+<span class="w">        </span><span class="kt">short</span><span class="w"> </span><span class="n">found</span><span class="p">[</span><span class="n">MAX_FOUND</span><span class="p">];</span><span class="w"> </span><span class="c1">//знайдені числа поточної розрядності</span>
 <span class="w">        </span><span class="c1">//знайти числа Армстронга</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_FOUND</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">short</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanRange</span><span class="p">(</span><span class="n">digits</span><span class="p">,</span><span class="w"> </span><span class="n">found</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_FOUND</span><span class="p">);</span>
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати знайдені числа</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати знайдені числа</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">            </span><span class="n">printExpansion</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"> </span><span class="c1">//вивести розклад числа</span>
 <span class="w">        </span><span class="p">}</span>
@@ -890,14 +1010,14 @@ n-цифрове число N = d₁ⁿ + d₂ⁿ + ... + dₙⁿ,   де dᵢ -
 <span class="w">        </span><span class="p">}</span>
 
 <span class="w">        </span><span class="c1">//вивести кількість перевірених і знайдених</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Перевірено чисел: %d, знайдено: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Перевірено чисел: %d, знайдено: %hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">low</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
 <span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичити загальну кількість</span>
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="c1">//вивести роздільну лінію</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">    </span><span class="c1">//вивести загальну кількість</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Усього знайдено чисел Армстронга: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Усього знайдено чисел Армстронга: %hd</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити програму успішно</span>
 <span class="p">}</span>
