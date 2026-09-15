@@ -257,6 +257,25 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
           <figcaption>Рисунок 5 - Рекурсивна функція підрахунку способів оплати</figcaption>
         </figure>
         <p>
+          HIPO-діаграма показує ієрархію викликів функцій: зверху головна функція main(), стрілки
+          ведуть до функцій, які вона викликає, нижче - функції, що викликаються з них; петля біля
+          функції означає рекурсивний виклик. Діаграму побудовано за текстом програми.
+        </p>
+        <figure>
+          <img
+            src="flowcharts/hipo_task1.png"
+            alt="Рисунок 6 - HIPO-діаграма завдання 1: ієрархія викликів функцій"
+          />
+          <figcaption>Рисунок 6 - HIPO-діаграма завдання 1: ієрархія викликів функцій</figcaption>
+        </figure>
+        <figure>
+          <img
+            src="flowcharts/hipo_task2.png"
+            alt="Рисунок 7 - HIPO-діаграма завдання 2: ієрархія викликів функцій"
+          />
+          <figcaption>Рисунок 7 - HIPO-діаграма завдання 2: ієрархія викликів функцій</figcaption>
+        </figure>
+        <p>
           Схеми побудовано за текстами програм у rombik (<a href="https://rombik.app">rombik.app</a
           >) відповідно до ДСТУ 19.701-90 (ISO 5807). Структура кожної схеми точно відповідає коду
           функції, а блоки описують дії словами, як у методичних вказівках, без фрагментів коду.
@@ -270,7 +289,7 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
         <pre
           class="code"
         ><code><span class="cm">/*==============================================================================</span>
-<span class="cm">  Лабораторна робота №5. Завдання 1. Варіант 19.</span>
+<span class="cm">  task1.c. Лабораторна робота №5. Завдання 1. Варіант 19.</span>
 <span class="cm">  Тема: рекурсивні функції.</span>
 
 <span class="cm">  Умова (таблиця 5.1, варіант 19): увести ціле число n в десятковій системі</span>
@@ -302,10 +321,11 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">   параметрів-лічильників вона не має, а лічильники оголошено глобально.</span>
 <span class="cm">   Кількість викликів окремо не рахується: рекурсія лінійна (кожен виклик</span>
 <span class="cm">   робить не більше одного вкладеного), тому вона дорівнює глибині. */</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* поточна глибина вкладеності викликів  */</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="cm">/* максимальна досягнута глибина рекурсії */</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//поточна глибина вкладеності викликів</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//максимальна досягнута глибина рекурсії</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= countBitsRecursive: кількість одиничних бітів числа за рекурентним =========</span>
+<span class="cm">/*</span>
 <span class="cm">  countBitsRecursive - кількість одиничних бітів числа за рекурентним</span>
 <span class="cm">                       означенням f(n) з умови варіанта.</span>
 
@@ -322,30 +342,31 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">  Умова завершення рекурсії: n = 0 - одиничних бітів не лишилось.</span>
 <span class="cm">  Глибина рекурсії дорівнює кількості одиниць у двійковому записі плюс один</span>
 <span class="cm">  (завершальний виклик з n = 0).</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">countBitsRecursive</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w">                </span><span class="c1">//збільшити поточну глибину</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо досягнуто нової глибини</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w"> </span><span class="c1">//запам'ятати максимальну глибину</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість одиничних бітів</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">     </span><span class="c1">//базовий випадок</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* умова завершення рекурсії */</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//умова завершення рекурсії</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">else</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span><span class="w"> </span><span class="c1">//рекурсивний виклик</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w"> </span><span class="c1">//зменшити поточну глибину</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w">    </span><span class="c1">//повернути кількість одиниць</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//=================== countBitsIterative: те саме обчислення циклом ====================</span>
+<span class="cm">/*</span>
 <span class="cm">  countBitsIterative - те саме обчислення циклом.</span>
 
 <span class="cm">  Параметри:</span>
@@ -358,25 +379,26 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      count - накопичувана кількість одиниць;</span>
 <span class="cm">      rest  - залишок числа з ще не погашеними одиничними бітами.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">countBitsIterative</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">iterations</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">         </span><span class="c1">//кількість одиничних бітів</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="c1">//залишок з непогашеними бітами</span>
 
-<span class="w">    </span><span class="o">*</span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//обнулити лічильник ітерацій</span>
 
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">rest</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати, доки є одиниці</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* погасити наймолодший одиничний біт */</span>
-<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span>
-<span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">iterations</span><span class="p">);</span>
+<span class="w">        </span><span class="n">rest</span><span class="w"> </span><span class="o">&amp;=</span><span class="w"> </span><span class="n">rest</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//погасити наймолодший одиничний біт</span>
+<span class="w">        </span><span class="o">++</span><span class="n">count</span><span class="p">;</span><span class="w">          </span><span class="c1">//збільшити кількість одиниць</span>
+<span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">iterations</span><span class="p">);</span><span class="w">  </span><span class="c1">//збільшити лічильник ітерацій</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути кількість одиниць</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//============= printBinaryRecursive: вивести двійкове представлення числа =============</span>
+<span class="cm">/*</span>
 <span class="cm">  printBinaryRecursive - вивести двійкове представлення числа.</span>
 
 <span class="cm">  Молодший розряд обчислюється першим (n % 2), а виводитись має останнім,</span>
@@ -386,61 +408,64 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">  Параметри: n [вхідний] - число, що виводиться у двійковій системі.</span>
 
 <span class="cm">  Умова завершення рекурсії: n = 0 - старших розрядів більше немає.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">printBinaryRecursive</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//базовий випадок</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити без виведення</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%u"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"> </span><span class="c1">//рекурсивний виклик</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%u"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span><span class="w">          </span><span class="c1">//вивести молодший розряд</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ</span>
 
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//повторювати до кінця рядка</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======= restOfLineOk: перевірити залишок рядка після успішно прочитаного числа =======</span>
+<span class="cm">/*</span>
 <span class="cm">  restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.</span>
 
 <span class="cm">  Припустимі лише пропуски до кінця рядка або до наступного числа;</span>
 <span class="cm">  інший символ - помилка, і решта рядка відкидається.</span>
 
 <span class="cm">  Повертає: true - залишок рядка коректний; false - у рядку є зайві символи.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати перший символ</span>
 
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span><span class="w"> </span><span class="c1">//пропускати пробільні символи</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо рядок закінчився</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку коректного рядка</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо далі починається число</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути символ у потік</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути ознаку коректного рядка</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span><span class="w">   </span><span class="c1">//відкинути решту рядка</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======= parseUnsigned: перетворити рядок десяткових цифр на число unsigned int =======</span>
+<span class="cm">/*</span>
 <span class="cm">  parseUnsigned - перетворити рядок десяткових цифр на число unsigned int.</span>
 
 <span class="cm">  Число читається як рядок, а не через scanf("%u"): scanf приймає знак мінус,</span>
@@ -457,38 +482,39 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      result - накопичуване значення;</span>
 <span class="cm">      digit  - значення чергової цифри.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">parseUnsigned</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">text</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">text</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">text</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо є знак плюс</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="o">++</span><span class="n">text</span><span class="p">;</span><span class="w"> </span><span class="cm">/* необов'язковий знак плюс */</span>
+<span class="w">        </span><span class="o">++</span><span class="n">text</span><span class="p">;</span><span class="w"> </span><span class="c1">//необов'язковий знак плюс</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">text</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">text</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо рядок порожній</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isdigit</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">))</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="p">)(</span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'0'</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">UINT_MAX</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">digit</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="cm">/* число більше за UINT_MAX */</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">digit</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                    </span><span class="c1">//накопичуване значення числа</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">text</span><span class="p">;</span><span class="w"> </span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\0'</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">p</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати символи рядка</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isdigit</span><span class="p">((</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо символ не цифра</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">digit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="p">)(</span><span class="o">*</span><span class="n">p</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="sc">'0'</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити значення цифри</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">UINT_MAX</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">digit</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w">                </span><span class="c1">//якщо буде переповнення</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//число більше за UINT_MAX</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">digit</span><span class="p">;</span><span class="w"> </span><span class="c1">//дописати цифру до числа</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"> </span><span class="c1">//зберегти прочитане число</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">     </span><span class="c1">//повернути ознаку успіху</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//================================ головна функція main ================================</span>
+<span class="cm">/*</span>
 <span class="cm">  Головна функція. Читає число, виводить його двійкове представлення,</span>
 <span class="cm">  обчислює кількість одиниць двома способами та порівнює їх ефективність.</span>
 
@@ -499,71 +525,81 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">      recResult    - результат рекурсивного обчислення;</span>
 <span class="cm">      iterResult   - результат ітеративного обчислення;</span>
 <span class="cm">      iterations   - кількість ітерацій циклу.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 1 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести виконавця</span>
+<span class="w">    </span><span class="c1">//вивести назву завдання</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кількість одиниць у двійковому записі числа за означенням</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести базовий випадок означення</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    f(n) = 0,                  якщо n = 0</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести рекурентну формулу</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"    f(n) = 1 + f(n &amp; (n-1)),   якщо n != 0</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">token</span><span class="p">[</span><span class="mi">12</span><span class="p">];</span>
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть ціле невід'ємне число n: "</span><span class="p">);</span>
+<span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="n">token</span><span class="p">[</span><span class="mi">12</span><span class="p">];</span><span class="w">                              </span><span class="c1">//введене слово</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                          </span><span class="c1">//введене число</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Уведіть ціле невід'ємне число n: "</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести запрошення до введення</span>
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%11s"</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">);</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%11s"</span><span class="p">,</span><span class="w"> </span><span class="n">token</span><span class="p">);</span><span class="w"> </span><span class="c1">//увести слово</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
 <span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">//вивести повідомлення про кінець даних</span>
 <span class="w">            </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strlen</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strlen</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо слово задовге</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="cm">/* слово довше за найбільше допустиме число */</span>
+<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="c1">//слово довше за найбільше допустиме число</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">parseUnsigned</span><span class="p">(</span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">))</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">parseUnsigned</span><span class="p">(</span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо число коректне</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span><span class="w"> </span><span class="c1">//перервати цикл введення</span>
 <span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="c1">//вивести повідомлення про помилку</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне ціле число від 0 до %u. Повторіть: "</span><span class="p">,</span><span class="w"> </span><span class="n">UINT_MAX</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">//вивести число в десятковій системі</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Число у десятковій системі: %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Число у двійковій системі:  "</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Число у двійковій системі:  "</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести підпис двійкового запису</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                             </span><span class="c1">//якщо число нуль</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"0"</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"0"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести нуль</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">else</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printBinaryRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести двійковий запис рекурсивно</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//завершити рядок</span>
 
 <span class="w">    </span><span class="cm">/* Рекурсивний варіант. */</span>
-<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">recResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                          </span><span class="c1">//обнулити поточну глибину</span>
+<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                              </span><span class="c1">//обнулити максимальну глибину</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">recResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countBitsRecursive</span><span class="p">(</span><span class="n">n</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість рекурсивно</span>
 
 <span class="w">    </span><span class="cm">/* Ітеративний варіант. */</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">iterations</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість ітерацій циклу</span>
+<span class="w">    </span><span class="c1">//обчислити кількість циклом</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">iterResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countBitsIterative</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">iterations</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результат</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Результат</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести заголовок результатів</span>
+<span class="w">    </span><span class="c1">//вивести рекурсивний результат</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Кількість одиниць (рекурсія):  %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">recResult</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести ітеративний результат</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Кількість одиниць (ітерація):  %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">iterResult</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести результат порівняння</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Результати %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
 <span class="w">           </span><span class="n">recResult</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">iterResult</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s">"збігаються"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s">"РОЗБІГАЮТЬСЯ - помилка"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Порівняння ефективності</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Глибина рекурсії: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Ітерацій циклу:   %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">iterations</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Порівняння ефективності</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">          </span><span class="c1">//вивести заголовок порівняння</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Глибина рекурсії: %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести глибину рекурсії</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Ітерацій циклу:   %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">iterations</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести кількість ітерацій</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити програму успішно</span>
 <span class="p">}</span>
 </code></pre>
         <h3>Завдання 2 - task2.c</h3>
@@ -571,7 +607,7 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
         <pre
           class="code"
         ><code><span class="cm">/*==============================================================================</span>
-<span class="cm">  Лабораторна робота №5. Завдання 2. Варіант 19.</span>
+<span class="cm">  task2.c. Лабораторна робота №5. Завдання 2. Варіант 19.</span>
 <span class="cm">  Тема: рекурсивна обробка послідовностей.</span>
 
 <span class="cm">  Умова (таблиця 5.2, варіант 19): потрібно сплатити поштове відправлення,</span>
@@ -605,18 +641,19 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">   UINT_MAX = 4 294 967 295. Тому з цією межею і кількість способів, і</span>
 <span class="cm">   лічильник викликів гарантовано вміщуються в unsigned int, а більшу суму</span>
 <span class="cm">   така рекурсія однаково не обчислила б за прийнятний час. */</span>
-<span class="cp">#define MAX_COST 35</span>
+<span class="cp">#define MAX_COST 35 </span><span class="c1">//найбільша вартість відправлення</span>
 
 <span class="cm">/* Лічильник викликів рекурсивної функції - характеристика трудомісткості.</span>
 <span class="cm">   Оголошений глобально, щоб не додавати службовий параметр до функції,</span>
 <span class="cm">   яка має відповідати рекурентному означенню з умови. */</span>
-<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//лічильник викликів рекурсії</span>
 
 <span class="cm">/* Поточна та максимальна глибина вкладеності рекурсивних викликів. */</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//поточна глибина рекурсії</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//максимальна глибина рекурсії</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======= countWays: кількість різних способів набрати суму m марками номіналом ========</span>
+<span class="cm">/*</span>
 <span class="cm">  countWays - кількість різних способів набрати суму m марками номіналом</span>
 <span class="cm">              x, y, z копійок.</span>
 
@@ -650,88 +687,91 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 
 <span class="cm">  Однакові номінали враховуються лише один раз: інакше один і той самий</span>
 <span class="cm">  спосіб було б підраховано двічі.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">countWays</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="o">++</span><span class="n">g_calls</span><span class="p">;</span>
-<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_calls</span><span class="p">;</span><span class="w">                       </span><span class="c1">//збільшити лічильник викликів</span>
+<span class="w">    </span><span class="o">++</span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w">                </span><span class="c1">//збільшити поточну глибину</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо досягнуто нової глибини</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span>
+<span class="w">        </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w"> </span><span class="c1">//запам'ятати максимальну глибину</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//кількість способів оплати</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//базовий випадок: сума набрана</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="cm">/* сума набрана точно */</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//сума набрана точно</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//базовий випадок: перевитрата</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="cm">/* перевитрата - глухий кут */</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//перевитрата - глухий кут</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="k">else</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">        </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span><span class="w"> </span><span class="c1">//рекурсивний виклик для марки x</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо номінал y відмінний від x</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span><span class="w"> </span><span class="c1">//рекурсивний виклик для марки y</span>
 <span class="w">        </span><span class="p">}</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">y</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">y</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо номінал z новий</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">            </span><span class="n">ways</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span><span class="w"> </span><span class="c1">//рекурсивний виклик для марки z</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ways</span><span class="p">;</span>
+<span class="w">    </span><span class="o">--</span><span class="n">g_currentDepth</span><span class="p">;</span><span class="w"> </span><span class="c1">//зменшити поточну глибину</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ways</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути кількість способів</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати черговий символ</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо не кінець рядка (базовий випадок)</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="c1">//рекурсивний виклик</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======= restOfLineOk: перевірити залишок рядка після успішно прочитаного числа =======</span>
+<span class="cm">/*</span>
 <span class="cm">  restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.</span>
 
 <span class="cm">  Припустимі лише пропуски до кінця рядка або до наступного числа;</span>
 <span class="cm">  інший символ - помилка, і решта рядка відкидається.</span>
 
 <span class="cm">  Повертає: true - залишок рядка коректний; false - у рядку є зайві символи.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати черговий символ</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо пробільний символ</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">();</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">();</span><span class="w"> </span><span class="c1">//рекурсивний виклик</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//базовий випадок: кінець рядка</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку коректного рядка</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо далі починається число</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути символ у потік</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути ознаку коректного рядка</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span><span class="w">   </span><span class="c1">//відкинути решту рядка</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= readNatural: прочитати натуральне число, не більше за задану межу ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  readNatural - прочитати натуральне число, не більше за задану межу,</span>
 <span class="cm">                з контролем коректності введення.</span>
 
@@ -744,31 +784,34 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">      high   [вхідний]  - найбільше допустиме значення.</span>
 
 <span class="cm">  Повертає: true - число прочитано; false - вхідні дані вичерпано.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">readNatural</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s: "</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s: "</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                 </span><span class="c1">//вивести запрошення</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%d"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//увести число</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//базовий випадок: дані вичерпано</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку вичерпання</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо введено не число</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">        </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="c1">//відкинути некоректний рядок</span>
 <span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">//базовий випадок: число коректне</span>
 <span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">high</span><span class="p">)</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку успіху</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">//вивести повідомлення про помилку</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне натуральне число від 1 до %d.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">readNatural</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">readNatural</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">high</span><span class="p">);</span><span class="w"> </span><span class="c1">//рекурсивний виклик</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= readInput: прочитати вартість відправлення та номінали трьох марок =========</span>
+<span class="cm">/*</span>
 <span class="cm">  readInput - прочитати вартість відправлення та номінали трьох марок.</span>
 
 <span class="cm">  Оператор &amp;&amp; обчислюється зліва направо і скорочено: якщо якесь число</span>
@@ -778,16 +821,18 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">      m       [вихідний] - адреса змінної для вартості відправлення;</span>
 <span class="cm">      x, y, z [вихідні]  - адреси змінних для номіналів марок.</span>
 <span class="cm">  Повертає : true - усі числа прочитано; false - вхідні дані вичерпано.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">readInput</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
 <span class="p">{</span>
+<span class="w">    </span><span class="c1">//прочитати всі числа по черзі</span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">readNatural</span><span class="p">(</span><span class="s">"Уведіть вартість відправлення m (1..35)"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">MAX_COST</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
 <span class="w">           </span><span class="n">readNatural</span><span class="p">(</span><span class="s">"Уведіть номінал першої марки x"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
 <span class="w">           </span><span class="n">readNatural</span><span class="p">(</span><span class="s">"Уведіть номінал другої марки y"</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
 <span class="w">           </span><span class="n">readNatural</span><span class="p">(</span><span class="s">"Уведіть номінал третьої марки z"</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">INT_MAX</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//================================ головна функція main ================================</span>
+<span class="cm">/*</span>
 <span class="cm">  Головна функція. Читає вартість відправлення та номінали марок,</span>
 <span class="cm">  обчислює кількість способів оплати й виводить характеристики рекурсії.</span>
 
@@ -795,51 +840,58 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
 <span class="cm">      m       - вартість поштового відправлення, копійок;</span>
 <span class="cm">      x, y, z - номінали марок, копійок;</span>
 <span class="cm">      ways    - кількість способів оплати.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №5, завдання 2 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести назву роботи</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">  </span><span class="c1">//вивести виконавця</span>
+<span class="w">    </span><span class="c1">//вивести назву завдання</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Кількість способів сплатити m копійок марками номіналом x, y, z</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести пояснення щодо різних способів</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Способи вважаються різними, якщо відрізняється послідовність</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">           </span><span class="s">"наклеювання марок (1+2 і 2+1 - два різних способи).</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//вартість відправлення</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//номінал першої марки</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//номінал другої марки</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//номінал третьої марки</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInput</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">z</span><span class="p">))</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readInput</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">z</span><span class="p">))</span><span class="w"> </span><span class="c1">//якщо дані не прочитано</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити з кодом помилки</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">z</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо є однакові номінали</span>
 <span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//вивести попередження про однакові номінали</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Увага: серед номіналів є однакові - повторні враховуються</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">               </span><span class="s">"один раз, інакше однакові способи рахувалися б двічі.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">g_calls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">        </span><span class="c1">//обнулити лічильник викликів</span>
+<span class="w">    </span><span class="n">g_currentDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//обнулити поточну глибину</span>
+<span class="w">    </span><span class="n">g_maxDepth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">     </span><span class="c1">//обнулити максимальну глибину</span>
 
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ways</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">countWays</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити кількість способів</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вартість відправлення: %d коп.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вартість відправлення: %d коп.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести вартість відправлення</span>
+<span class="w">    </span><span class="c1">//вивести номінали марок</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Номінали марок:        %d, %d, %d коп.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Кількість способів оплати: %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ways</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Кількість способів оплати: %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">ways</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести кількість способів</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ways</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ways</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо способів немає</span>
 <span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//вивести повідомлення про неможливість оплати</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Сплатити цю суму наявними номіналами неможливо.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Характеристики рекурсії</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Характеристики рекурсії</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести заголовок характеристик</span>
+<span class="w">    </span><span class="c1">//вивести кількість викликів</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Викликів рекурсивної функції: %u</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_calls</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести глибину рекурсії</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Глибина рекурсії:             %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_maxDepth</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити програму успішно</span>
 <span class="p">}</span>
 </code></pre>
       </section>
@@ -870,6 +922,31 @@ w(m) = 0     при m &lt; 0: перевитрата, спосіб не існу
         <p class="files">
           <a href="results/task1.txt">Повний протокол виконання (task1.txt)</a>
           <span class="muted">(повний протокол, 125 рядків)</span>
+        </p>
+        <p>
+          <b>Трасування рекурсії.</b> Програму завдання 1 зібрано з налагоджувальною інформацією та
+          виконано в налагоджувачі gdb для n = 1000 (двійковий запис 1111101000, шість одиниць).
+          Точку зупинки поставлено у функції <code>countBitsRecursive()</code> на базовому випадку n
+          = 0. У цей момент у стеку лежать кадри всіх незавершених викликів: команда
+          <code>backtrace</code> показує шість рекурсивних кадрів з аргументами 1000, 992, 960, 896,
+          768, 512 і кадр базового випадку n = 0 над кадром <code>main()</code>. Команда
+          <code>info frame</code> показує, що кожен наступний кадр розміщено на 48 байт нижче за
+          попередній: стек росте в бік менших адрес, і на кожен рівень рекурсії припадає окремий
+          кадр з аргументом, збереженими регістрами та адресою повернення. Глибина рекурсії в цей
+          момент <code>g_currentDepth = 6</code> збігається з кількістю одиниць у числі.
+        </p>
+        <figure>
+          <img
+            src="results/debug_stack.png"
+            alt="Стан стеку викликів у налагоджувачі gdb на базовому випадку рекурсії (n = 1000)"
+          />
+          <figcaption>
+            Стан стеку викликів у налагоджувачі gdb на базовому випадку рекурсії (n = 1000)
+          </figcaption>
+        </figure>
+        <p class="files">
+          <a href="results/debug_stack.txt">Протокол сеансу налагодження (debug_stack.txt)</a>
+          <span class="muted">(повний протокол, 40 рядків)</span>
         </p>
         <figure>
           <img

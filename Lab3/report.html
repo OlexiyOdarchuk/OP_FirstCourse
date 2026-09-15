@@ -152,6 +152,18 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
           </figcaption>
         </figure>
         <p>
+          HIPO-діаграма показує ієрархію викликів функцій: зверху головна функція main(), стрілки
+          ведуть до функцій, які вона викликає, нижче - функції, що викликаються з них; петля біля
+          функції означає рекурсивний виклик. Діаграму побудовано за текстом програми.
+        </p>
+        <figure>
+          <img
+            src="flowcharts/hipo_task1.png"
+            alt="Рисунок 3 - HIPO-діаграма програми: ієрархія викликів функцій"
+          />
+          <figcaption>Рисунок 3 - HIPO-діаграма програми: ієрархія викликів функцій</figcaption>
+        </figure>
+        <p>
           Схеми побудовано за текстами програм у rombik (<a href="https://rombik.app">rombik.app</a
           >) відповідно до ДСТУ 19.701-90 (ISO 5807). Структура кожної схеми точно відповідає коду
           функції, а блоки описують дії словами, як у методичних вказівках, без фрагментів коду.
@@ -165,7 +177,7 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
         <pre
           class="code"
         ><code><span class="cm">/*==============================================================================</span>
-<span class="cm">  Лабораторна робота №3. Варіант 19.</span>
+<span class="cm">  task1.c. Лабораторна робота №3. Варіант 19.</span>
 <span class="cm">  Тема: циклічні обчислювальні процеси.</span>
 
 <span class="cm">  Умова (таблиця 3.1, варіант 19): обчислити суму ряду</span>
@@ -204,52 +216,61 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;math.h&gt;</span>
 
 <span class="cm">/* Межі контролю переповнення комірки пам'яті, задані умовою варіанта. */</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e+38</span><span class="p">;</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-38</span><span class="p">;</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e+38</span><span class="p">;</span><span class="w">  </span><span class="c1">//поріг переповнення</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-38</span><span class="p">;</span><span class="w"> </span><span class="c1">//поріг машинного нуля</span>
 
 <span class="cm">/* Причина припинення внутрішнього циклу. У мові C ім'я переліку саме по собі</span>
 <span class="cm">   не є іменем типу, тому оголошення загорнуто в typedef. */</span>
 <span class="k">typedef</span><span class="w"> </span><span class="k">enum</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">STOP_NONE</span><span class="p">,</span><span class="w">      </span><span class="cm">/* підсумовування триває                     */</span>
-<span class="w">    </span><span class="n">STOP_PRECISION</span><span class="p">,</span><span class="w"> </span><span class="cm">/* елемент став меншим за задану точність    */</span>
-<span class="w">    </span><span class="n">STOP_OVERFLOW</span><span class="p">,</span><span class="w">  </span><span class="cm">/* елемент перевищив 1e+38 - ряд розбігається */</span>
-<span class="w">    </span><span class="n">STOP_UNDERFLOW</span><span class="w">  </span><span class="cm">/* елемент став меншим за 1e-38 - машинний нуль */</span>
+<span class="w">    </span><span class="n">STOP_NONE</span><span class="p">,</span><span class="w">      </span><span class="c1">//підсумовування триває</span>
+<span class="w">    </span><span class="n">STOP_PRECISION</span><span class="p">,</span><span class="w"> </span><span class="c1">//елемент став меншим за задану точність</span>
+<span class="w">    </span><span class="n">STOP_OVERFLOW</span><span class="p">,</span><span class="w">  </span><span class="c1">//елемент перевищив 1e+38 - ряд розбігається</span>
+<span class="w">    </span><span class="n">STOP_UNDERFLOW</span><span class="w">  </span><span class="c1">//елемент став меншим за 1e-38 - машинний нуль</span>
 <span class="p">}</span><span class="w"> </span><span class="n">StopReason</span><span class="p">;</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========== stopReasonText: текстовий опис причини припинення підсумовування ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  stopReasonText - текстовий опис причини припинення підсумовування.</span>
 
 <span class="cm">  Параметри: reason [вхідний] - код причини.</span>
 <span class="cm">  Повертає : рядок-константу з поясненням.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="nf">stopReasonText</span><span class="p">(</span><span class="n">StopReason</span><span class="w"> </span><span class="n">reason</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">reason</span><span class="p">)</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">reason</span><span class="p">)</span><span class="w"> </span><span class="c1">//вибрати опис за кодом причини</span>
 <span class="w">    </span><span class="p">{</span>
 <span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">STOP_NONE</span><span class="p">:</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"підсумовування не завершено"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"підсумовування не завершено"</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути опис причини</span>
 <span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">STOP_PRECISION</span><span class="p">:</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"досягнуто заданої точності"</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"досягнуто заданої точності"</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути опис причини</span>
 <span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">STOP_OVERFLOW</span><span class="p">:</span>
+<span class="w">        </span><span class="c1">//повернути опис причини</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"елемент ряду перевищив поріг переповнення (ряд розбігається)"</span><span class="p">;</span>
 <span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">STOP_UNDERFLOW</span><span class="p">:</span>
+<span class="w">        </span><span class="c1">//повернути опис причини</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">"елемент ряду став меншим за поріг машинного нуля"</span><span class="p">;</span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span><span class="w"> </span><span class="c1">//вийти з перемикача</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">"невідома причина"</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s">"невідома причина"</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути опис невідомої причини</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//=========== printTableHeader: вивести заголовок таблиці з чотирьох колонок ===========</span>
+<span class="cm">/*</span>
 <span class="cm">  printTableHeader - вивести заголовок таблиці з чотирьох колонок: параметри</span>
 <span class="cm">                     зовнішньої та внутрішньої сум, член ряду, накопичена сума.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">printTableHeader</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
+<span class="w">    </span><span class="c1">//вивести назви колонок</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"       x |      k |      елемент ряду a(k) |        накопичена сума</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//вивести роздільник</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"  -------+--------+------------------------+------------------------</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======== nextTerm: обчислити наступний елемент ряду a(k+1) за попереднім a(k) ========</span>
+<span class="cm">/*</span>
 <span class="cm">  nextTerm - обчислити наступний елемент ряду a(k+1) за попереднім a(k).</span>
 
 <span class="cm">  Використане рекурентне співвідношення. Елемент ряду</span>
@@ -269,17 +290,20 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      kd - номер елемента у дійсному вигляді (для формул).</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">double</span><span class="w"> </span><span class="nf">nextTerm</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">kd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">k</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">kd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">k</span><span class="p">;</span><span class="w"> </span><span class="c1">//номер елемента як дійсне число</span>
+<span class="w">    </span><span class="c1">//чисельник відношення a(k+1)/a(k)</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">numerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">kd</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//знаменник відношення a(k+1)/a(k)</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">denominator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">3.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">kd</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">1.0</span><span class="p">);</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">numerator</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">denominator</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">numerator</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">denominator</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути елемент a(k+1)</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//==== checkStop: визначити, чи треба припинити підсумовування після елемента term =====</span>
+<span class="cm">/*</span>
 <span class="cm">  checkStop - визначити, чи треба припинити підсумовування після елемента term.</span>
 
 <span class="cm">  Точність перевіряється першою: елемент, менший за поріг машинного нуля,</span>
@@ -290,25 +314,26 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      term [вхідний] - значення останнього доданого елемента;</span>
 <span class="cm">      eps  [вхідний] - задана точність.</span>
 <span class="cm">  Повертає : причину припинення або STOP_NONE, якщо підсумовування триває.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="n">StopReason</span><span class="w"> </span><span class="nf">checkStop</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">eps</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо досягнуто заданої точності</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_PRECISION</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_PRECISION</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути причину: точність</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">OVERFLOW_LIMIT</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо елемент перевищив поріг</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_OVERFLOW</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_OVERFLOW</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути причину: переповнення</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">UNDERFLOW_LIMIT</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо елемент менший за 1e-38</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_UNDERFLOW</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_UNDERFLOW</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути причину: машинний нуль</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">;</span><span class="w"> </span><span class="c1">//продовжити підсумовування</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//===== innerSum: обчислити внутрішню суму ряду для заданого параметра x і вивести =====</span>
+<span class="cm">/*</span>
 <span class="cm">  innerSum - обчислити внутрішню суму ряду для заданого параметра x і вивести</span>
 <span class="cm">             таблицю її елементів.</span>
 
@@ -329,55 +354,59 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      sum  - накопичувана сума ряду;</span>
 <span class="cm">      term - значення поточного елемента ряду a(k);</span>
 <span class="cm">      k    - номер поточного елемента ряду.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">double</span><span class="w"> </span><span class="nf">innerSum</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="n">StopReason</span><span class="w"> </span><span class="o">*</span><span class="n">reason</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичувана сума ряду</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">        </span><span class="c1">//номер поточного елемента</span>
 <span class="w">    </span><span class="cm">/* a(1) = -x / ((1+2)^3 * sqrt(1)) = -x / 27: перший знаменник обчислено явно. */</span>
+<span class="w">    </span><span class="c1">//знаменник першого елемента</span>
 <span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">firstDenominator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span><span class="p">);</span>
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">firstDenominator</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">x</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">firstDenominator</span><span class="p">;</span><span class="w"> </span><span class="c1">//поточний елемент ряду a(k)</span>
 
-<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="o">*</span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//обнулити лічильник доданків</span>
 
-<span class="w">    </span><span class="n">printTableHeader</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printTableHeader</span><span class="p">();</span><span class="w"> </span><span class="c1">//вивести заголовок таблиці</span>
 
 <span class="w">    </span><span class="cm">/* Цикл з постумовою: перший доданок додається обов'язково, а кількість</span>
 <span class="cm">       доданків наперед невідома. */</span>
-<span class="w">    </span><span class="k">do</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="c1">//повторювати підсумовування</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">term</span><span class="p">;</span>
-<span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">);</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">term</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичити суму ряду</span>
+<span class="w">        </span><span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">);</span><span class="w">  </span><span class="c1">//збільшити лічильник доданків</span>
 
+<span class="w">        </span><span class="c1">//вивести рядок таблиці</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  %6d | %6d | %22.12e | %22.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
 
 <span class="w">        </span><span class="cm">/* Умова припинення перевіряється до обчислення наступного елемента,</span>
 <span class="cm">           щоб не втратити причину зупинки. */</span>
-<span class="w">        </span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">checkStop</span><span class="p">(</span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">)</span>
+<span class="w">        </span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">checkStop</span><span class="p">(</span><span class="n">term</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//перевірити умову припинення</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">)</span><span class="w">       </span><span class="c1">//якщо підсумовування триває</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nextTerm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">term</span><span class="p">);</span>
-<span class="w">            </span><span class="o">++</span><span class="n">k</span><span class="p">;</span>
+<span class="w">            </span><span class="n">term</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nextTerm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">term</span><span class="p">);</span><span class="w"> </span><span class="c1">//обчислити наступний елемент</span>
+<span class="w">            </span><span class="o">++</span><span class="n">k</span><span class="p">;</span><span class="w">                         </span><span class="c1">//перейти до наступного номера</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">);</span><span class="w"> </span><span class="c1">//повторювати, доки немає причини зупинки</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">sum</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути внутрішню суму</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  skipLine - відкинути залишок рядка введення разом із символом '\n'.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">void</span><span class="w"> </span><span class="nf">skipLine</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//поточний символ введення</span>
 
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//пропускати символи до кінця рядка</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//======= restOfLineOk: перевірити залишок рядка після успішно прочитаного числа =======</span>
+<span class="cm">/*</span>
 <span class="cm">  restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.</span>
 
 <span class="cm">  Припустимі лише пропуски до кінця рядка або до наступного числа; інший</span>
@@ -387,29 +416,30 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      c - черговий прочитаний символ.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">restOfLineOk</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//черговий символ рядка</span>
 
-<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">' '</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\t'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\r'</span><span class="p">)</span><span class="w"> </span><span class="c1">//пропускати пропуски в рядку</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span>
+<span class="w">        </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getchar</span><span class="p">();</span><span class="w"> </span><span class="c1">//прочитати наступний символ</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'\n'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо рядок закінчився</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку коректності</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">isdigit</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'-'</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">'+'</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо почалося наступне число</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">        </span><span class="n">ungetc</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">stdin</span><span class="p">);</span><span class="w"> </span><span class="c1">//повернути символ у буфер</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w">      </span><span class="c1">//повернути ознаку коректності</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="n">skipLine</span><span class="p">();</span><span class="w">   </span><span class="c1">//відкинути решту рядка</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку помилки</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//========= readPrecision: прочитати точність обчислення з контролем введення ==========</span>
+<span class="cm">/*</span>
 <span class="cm">  readPrecision - прочитати точність обчислення з контролем введення.</span>
 
 <span class="cm">  Приймається лише скінченне додатне число; сторонні символи після числа</span>
@@ -423,33 +453,36 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">  Локальні змінні:</span>
 <span class="cm">      scanned - результат scanf(): 1 - число прочитано, 0 - не число,</span>
 <span class="cm">                EOF - вхідні дані вичерпано.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">bool</span><span class="w"> </span><span class="nf">readPrecision</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">prompt</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(;;)</span><span class="w"> </span><span class="c1">//повторювати до коректного введення</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="w"> </span><span class="n">prompt</span><span class="p">);</span><span class="w">                    </span><span class="c1">//вивести запрошення</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">scanned</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">"%lf"</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="p">);</span><span class="w"> </span><span class="c1">//результат введення числа</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">EOF</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо вхідні дані вичерпано</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку кінця даних</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">//якщо введено коректне додатне число</span>
 <span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">restOfLineOk</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">isfinite</span><span class="p">(</span><span class="o">*</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//повернути ознаку успіху</span>
 <span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">scanned</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо введено не число</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span>
+<span class="w">            </span><span class="n">skipLine</span><span class="p">();</span><span class="w"> </span><span class="c1">//відкинути помилковий рядок</span>
 <span class="w">        </span><span class="p">}</span>
 
+<span class="w">        </span><span class="c1">//вивести повідомлення про помилку</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"Помилка: потрібне додатне дійсне число.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 
-<span class="cm">/*------------------------------------------------------------------------------</span>
+<span class="c1">//================================ головна функція main ================================</span>
+<span class="cm">/*</span>
 <span class="cm">  Головна функція. Читає точність обчислень, обчислює зовнішню суму</span>
 <span class="cm">  циклом for та виводить підсумкову таблицю.</span>
 
@@ -460,63 +493,69 @@ a(k) = (-1)^k · x^k / ((k+2)³ · √k)
 <span class="cm">      terms     - кількість доданків внутрішньої суми;</span>
 <span class="cm">      reason    - причина припинення внутрішнього циклу;</span>
 <span class="cm">      divergent - ознака того, що хоча б одна внутрішня сума розбіглася.</span>
-<span class="cm">------------------------------------------------------------------------------*/</span>
+<span class="cm">*/</span>
 <span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №3 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Лабораторна робота №3 (варіант 19)</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w">            </span><span class="c1">//вивести назву роботи</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Виконав: студент групи ІПЗ-11 Одарчук Олексій</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести дані виконавця</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Обчислення суми ряду  SUM(x=1..5) SUM(k=1..inf) (-1)^k*x^k / "</span>
-<span class="w">           </span><span class="s">"((k+2)^3*sqrt(k))</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
+<span class="w">           </span><span class="s">"((k+2)^3*sqrt(k))</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести формулу ряду</span>
+<span class="w">    </span><span class="c1">//вивести примітку про k = 0</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Увага: при k = 0 елемент ряду не визначено (sqrt(0) = 0 у знаменнику),</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">           </span><span class="s">"       тому внутрішнє підсумовування починається з k = 1.</span><span class="se">\n\n</span><span class="s">"</span><span class="p">);</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w"> </span><span class="c1">//точність обчислення елемента</span>
+<span class="w">    </span><span class="c1">//якщо не вдалося ввести точність</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">readPrecision</span><span class="p">(</span><span class="s">"Уведіть точність обчислення елемента ряду (наприклад 1e-6): "</span><span class="p">,</span>
 <span class="w">                       </span><span class="o">&amp;</span><span class="n">eps</span><span class="p">))</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Вхідні дані вичерпано.</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span><span class="w"> </span><span class="c1">//повідомити про кінець даних</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w">                             </span><span class="c1">//завершити з кодом помилки</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Задана точність: %.3e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">Задана точність: %.3e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести задану точність</span>
 
-<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">divergent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">     </span><span class="c1">//загальна сума ряду</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">divergent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span><span class="w"> </span><span class="c1">//ознака розбіжності ряду</span>
 
 <span class="w">    </span><span class="cm">/* Зовнішня сума - цикл з лічильником (for), параметр x = 1..5 за умовою. */</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="c1">//перебрати значення параметра x</span>
 <span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//вивести заголовок блоку для x</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">=== Зовнішній параметр x = %d ===</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
 
-<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="n">StopReason</span><span class="w"> </span><span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">;</span>
-<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">innerSum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reason</span><span class="p">);</span>
+<span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">terms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">                 </span><span class="c1">//кількість доданків внутрішньої суми</span>
+<span class="w">        </span><span class="n">StopReason</span><span class="w"> </span><span class="n">reason</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STOP_NONE</span><span class="p">;</span><span class="w"> </span><span class="c1">//причина припинення циклу</span>
+<span class="w">        </span><span class="k">const</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">innerSum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">eps</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">terms</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">reason</span><span class="p">);</span><span class="w"> </span><span class="c1">//внутрішня сума для x</span>
 
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Доданків обчислено: %d; зупинка: %s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">terms</span><span class="p">,</span>
-<span class="w">               </span><span class="n">stopReasonText</span><span class="p">(</span><span class="n">reason</span><span class="p">));</span>
+<span class="w">               </span><span class="n">stopReasonText</span><span class="p">(</span><span class="n">reason</span><span class="p">));</span><span class="w"> </span><span class="c1">//вивести кількість доданків і причину</span>
+<span class="w">        </span><span class="c1">//вивести внутрішню суму</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"  Внутрішня сума при x = %d: %.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">inner</span><span class="p">);</span>
 
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_OVERFLOW</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">reason</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STOP_OVERFLOW</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо ряд розбігся</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">            </span><span class="n">divergent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="w">            </span><span class="n">divergent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span><span class="w"> </span><span class="c1">//встановити ознаку розбіжності</span>
 <span class="w">        </span><span class="p">}</span>
 
-<span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">inner</span><span class="p">;</span>
+<span class="w">        </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">inner</span><span class="p">;</span><span class="w"> </span><span class="c1">//накопичити загальну суму</span>
 <span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="c1">//вивести роздільник</span>
 <span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">============================================================</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
-<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Загальна сума ряду: %.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Загальна сума ряду: %.12e</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">total</span><span class="p">);</span><span class="w"> </span><span class="c1">//вивести загальну суму</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">divergent</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">divergent</span><span class="p">)</span><span class="w"> </span><span class="c1">//якщо хоч один ряд розбігся</span>
 <span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//вивести попередження про розбіжність</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\n</span><span class="s">УВАГА: для деяких значень x внутрішній ряд розбігається</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">               </span><span class="s">"(|a(k)| ~ x^k / k^3.5 необмежено зростає при x &gt; 1),</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
 <span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"тому підсумовування припинено за порогом переповнення %g.</span><span class="se">\n</span><span class="s">"</span>
 <span class="w">               </span><span class="s">"Загальна сума в цьому разі не має скінченного значення.</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
-<span class="w">               </span><span class="n">OVERFLOW_LIMIT</span><span class="p">);</span>
+<span class="w">               </span><span class="n">OVERFLOW_LIMIT</span><span class="p">);</span><span class="w"> </span><span class="c1">//пояснити відсутність суми</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">//завершити успішно</span>
 <span class="p">}</span>
 </code></pre>
       </section>

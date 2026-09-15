@@ -1,5 +1,5 @@
 /*==============================================================================
-  Лабораторна робота №11. Завдання 2. Варіант 19.
+  task2.cpp. Лабораторна робота №11. Завдання 2. Варіант 19.
   Тема: обробка бінарних файлів.
 
   Умова (таблиця 11.2, завдання 19.2): створити масив структур. Кожна
@@ -46,45 +46,52 @@
 #include <cmath>
 
 /* Обмеження на розміри даних та імена бінарних файлів. */
-const int MAX_RECORDS = 200; /* найбільша кількість записів у файлі даних */
-const int MAX_NAME = 32;
-const int MAX_YEAR = 9999; /* найбільший рік: число РРРРММДД вміщується в int */
-const char *const DATA_FILE = "sales.dat";
-const char *const COMPUTERS_FILE = "computers.dat"; /* результат запиту 1 */
-const char *const SOFTWARE_FILE = "software.dat";   /* результат запиту 2 */
-const char *const FIRMS_FILE = "firms.dat";         /* результат запиту 3 */
+const int MAX_RECORDS = 200; //найбільша кількість записів у файлі даних
+const int MAX_NAME = 32;     //найбільша довжина назви
+const int MAX_YEAR = 9999;   //найбільший рік: число РРРРММДД вміщується в int
+const char *const DATA_FILE = "sales.dat";          //ім'я файлу даних
+const char *const COMPUTERS_FILE = "computers.dat"; //результат запиту 1
+const char *const SOFTWARE_FILE = "software.dat";   //результат запиту 2
+const char *const FIRMS_FILE = "firms.dat";         //результат запиту 3
 
 /* Половина копійки: суми продажів накопичуються в double, тож дві математично
    рівні суми можуть відрізнятися похибкою округлення. */
-const double PRICE_TOLERANCE = 0.005;
+const double PRICE_TOLERANCE = 0.005; //допустима похибка порівняння сум
 
 /* Набори назв для генерації псевдовипадкових записів. */
+//назви фірм
 const char *const FIRMS[] = {"Everest", "Kvazar", "Sokil", "Dnipro-IT", "Karpaty"};
 const char *const REGIONS[] = {"Київський", "Львівський", "Одеський", "Харківський",
-                               "Дніпровський"};
+                               "Дніпровський"}; //назви регіонів збуту
+//назви моделей комп'ютерів
 const char *const COMPUTERS[] = {"Optima 5", "Nova Pro", "Titan X", "Bureau 300"};
+//назви програмних продуктів
 const char *const SOFTWARE[] = {"OblikPro", "SklavSoft", "DocFlow", "AntiVirus U"};
 
-const int FIRMS_COUNT = sizeof FIRMS / sizeof FIRMS[0];
-const int REGIONS_COUNT = sizeof REGIONS / sizeof REGIONS[0];
+const int FIRMS_COUNT = sizeof FIRMS / sizeof FIRMS[0];       //кількість назв фірм
+const int REGIONS_COUNT = sizeof REGIONS / sizeof REGIONS[0]; //кількість назв регіонів
+//кількість назв комп'ютерів
 const int COMPUTERS_COUNT = sizeof COMPUTERS / sizeof COMPUTERS[0];
+//кількість назв програм
 const int SOFTWARE_COUNT = sizeof SOFTWARE / sizeof SOFTWARE[0];
 
 /* Ширини стовпців таблиці записів (у символах). */
-const int COL_NUMBER = 4;
-const int COL_FIRM = 14;
-const int COL_PRODUCT = 16;
-const int COL_KIND = 12;
-const int COL_REGION = 16;
-const int COL_PRICE = 17;
-const int COL_DATE = 18;
+const int COL_NUMBER = 4;   //ширина стовпця номера
+const int COL_FIRM = 14;    //ширина стовпця фірми
+const int COL_PRODUCT = 16; //ширина стовпця продукту
+const int COL_KIND = 12;    //ширина стовпця виду
+const int COL_REGION = 16;  //ширина стовпця регіону
+const int COL_PRICE = 17;   //ширина стовпця вартості
+const int COL_DATE = 18;    //ширина стовпця терміну
+//загальна ширина таблиці
 const int TABLE_WIDTH =
     COL_NUMBER + COL_FIRM + COL_PRODUCT + COL_KIND + COL_REGION + COL_PRICE + COL_DATE;
 
 /* Ширини стовпців таблиці сум продажів по фірмах. */
-const int COL_FIRM_NAME = 16;
-const int COL_FIRM_SALES = 12;
-const int COL_FIRM_TOTAL = 20;
+const int COL_FIRM_NAME = 16;  //ширина стовпця назви фірми
+const int COL_FIRM_SALES = 12; //ширина стовпця кількості продажів
+const int COL_FIRM_TOTAL = 20; //ширина стовпця сумарної вартості
+//загальна ширина таблиці фірм
 const int FIRM_TABLE_WIDTH = COL_FIRM_NAME + COL_FIRM_SALES + COL_FIRM_TOTAL;
 
 /* Вид продукту: умова прямо називає два види. */
@@ -97,12 +104,13 @@ enum class ProductKind
 /* Термін постачання. */
 struct Date
 {
-    int day;
-    int month;
-    int year;
+    int day;   //день
+    int month; //місяць
+    int year;  //рік
 };
 
-/*------------------------------------------------------------------------------
+//=============================== Sale: запис про продаж ===============================
+/*
   Sale - запис про продаж. Структура має сталий розмір (масиви символів
   замість рядків змінної довжини), що є обов'язковою умовою для запису
   в бінарний файл із прямим доступом: лише за сталого розміру запису
@@ -111,122 +119,133 @@ struct Date
   Поля розміщено за спаданням вирівнювання (double, потім int, потім масиви
   символів), щоб компілятор не вставляв між ними байти-заповнювачі:
   розмір структури дорівнює сумі розмірів полів, 120 байтів.
-------------------------------------------------------------------------------*/
+*/
 struct Sale
 {
-    double price;
-    Date delivery;
-    ProductKind kind;
-    char firm[MAX_NAME];
-    char product[MAX_NAME];
-    char region[MAX_NAME];
+    double price;           //вартість продажу
+    Date delivery;          //термін постачання
+    ProductKind kind;       //вид продукту
+    char firm[MAX_NAME];    //назва фірми
+    char product[MAX_NAME]; //назва продукту
+    char region[MAX_NAME];  //регіон збуту
 };
 
 /* Сумарні продажі однієї фірми - запис файлу результатів запиту 3. */
 struct FirmTotal
 {
-    char firm[MAX_NAME];
-    long sales;
-    double total;
+    char firm[MAX_NAME]; //назва фірми
+    long sales;          //кількість продажів
+    double total;        //сумарна вартість продажів
 };
 
 /*==============================================================================
   Допоміжні функції
 ==============================================================================*/
 
-/*------------------------------------------------------------------------------
+//================= utf8Width: ширина рядка в символах, а не в байтах ==================
+/*
   utf8Width - ширина рядка в символах, а не в байтах (кирилиця в UTF-8
               займає два байти на літеру).
   Параметри: s [вхідний] - рядок.  Повертає: кількість символів.
-------------------------------------------------------------------------------*/
+*/
 int utf8Width(const char *s)
 {
-    int width = 0;
+    int width = 0; //кількість символів у рядку
 
     for (const unsigned char *p = reinterpret_cast<const unsigned char *>(s);
-         *p != '\0'; ++p)
+         *p != '\0'; ++p) //перебрати байти рядка
     {
         /* Продовжувальний байт UTF-8 має вигляд 10xxxxxx: маска 0xC0 лишає
            два старші біти, і якщо вони не дорівнюють 10, це початок символу. */
-        if ((*p & 0xC0) != 0x80)
+        if ((*p & 0xC0) != 0x80) //якщо байт починає символ
         {
-            ++width;
+            ++width; //урахувати ще один символ
         }
     }
 
-    return width;
+    return width; //повернути ширину рядка
 }
 
-/*------------------------------------------------------------------------------
+//======= printPadded: вивести рядок, доповнивши пропусками до ширини в символах =======
+/*
   printPadded - вивести рядок, доповнивши пропусками до ширини в символах.
   Параметри: s [вхідний], width [вхідний].
-------------------------------------------------------------------------------*/
+*/
 void printPadded(const char *s, int width)
 {
-    std::cout << s;
+    std::cout << s; //вивести рядок
 
-    for (int i = utf8Width(s); i < width; ++i)
+    for (int i = utf8Width(s); i < width; ++i) //доповнити до заданої ширини
     {
-        std::cout << ' ';
+        std::cout << ' '; //вивести пропуск
     }
 }
 
-/*------------------------------------------------------------------------------
+//=========================== kindName: назва виду продукту ============================
+/*
   kindName - назва виду продукту.
   Параметри: kind [вхідний].  Повертає: рядок-константу.
-------------------------------------------------------------------------------*/
+*/
 const char *kindName(ProductKind kind)
 {
-    return kind == ProductKind::Computer ? "комп'ютери" : "ПЗ";
+    return kind == ProductKind::Computer ? "комп'ютери" : "ПЗ"; //повернути назву виду
 }
 
-/*------------------------------------------------------------------------------
+//========== dateToNumber: звести дату до числа виду РРРРММДД для порівняння ===========
+/*
   dateToNumber - звести дату до числа виду РРРРММДД для порівняння.
   Рік не перевищує MAX_YEAR, тому число не більше 99 991 231 і вміщується в int.
   Параметри: d [вхідний] - покажчик на дату.  Повертає: число РРРРММДД.
-------------------------------------------------------------------------------*/
+*/
 int dateToNumber(const Date *d)
 {
-    return d->year * 10000 + d->month * 100 + d->day;
+    return d->year * 10000 + d->month * 100 + d->day; //повернути число РРРРММДД
 }
 
-/*------------------------------------------------------------------------------
+//============== formatDate: записати дату до рядка у вигляді ДД.ММ.РРРР ===============
+/*
   formatDate - записати дату до рядка у вигляді ДД.ММ.РРРР.
   Параметри: d [вхідний] - покажчик на дату; buffer [вихідний], size [вхідний].
-------------------------------------------------------------------------------*/
+*/
 void formatDate(const Date *d, char *buffer, size_t size)
 {
+    //записати дату до рядка
     std::snprintf(buffer, size, "%02d.%02d.%d", d->day, d->month, d->year);
 }
 
-/*------------------------------------------------------------------------------
+//======== daysInMonth: кількість днів у місяці з урахуванням високосного року =========
+/*
   daysInMonth - кількість днів у місяці з урахуванням високосного року.
   Параметри: month, year [вхідні].  Повертає: кількість днів.
-------------------------------------------------------------------------------*/
+*/
 int daysInMonth(int month, int year)
 {
-    if (month == 2)
+    if (month == 2) //якщо лютий
     {
+        //визначити, чи рік високосний
         const bool isLeap = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
-        return isLeap ? 29 : 28;
+        return isLeap ? 29 : 28; //повернути кількість днів лютого
     }
-    if (month == 4 || month == 6 || month == 9 || month == 11)
+    if (month == 4 || month == 6 || month == 9 || month == 11) //якщо місяць має 30 днів
     {
-        return 30;
+        return 30; //повернути 30 днів
     }
-    return 31;
+    return 31; //повернути 31 день
 }
 
-/*------------------------------------------------------------------------------
+//========= skipLine: відкинути залишок рядка введення разом із символом '\n' ==========
+/*
   skipLine - відкинути залишок рядка введення разом із символом '\n'.
-------------------------------------------------------------------------------*/
+*/
 void skipLine()
 {
-    std::cin.clear();
+    std::cin.clear(); //скинути ознаки помилки потоку
+    //відкинути символи до кінця рядка
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-/*------------------------------------------------------------------------------
+//======= restOfLineOk: перевірити залишок рядка після успішно прочитаного числа =======
+/*
   restOfLineOk - перевірити залишок рядка після успішно прочитаного числа.
 
   Припустимі лише пропуски до кінця рядка або до наступного числа (тоді
@@ -234,152 +253,165 @@ void skipLine()
   помилка, і решта рядка відкидається.
 
   Повертає : true - залишок рядка припустимий; false - у рядку зайві символи.
-------------------------------------------------------------------------------*/
+*/
 bool restOfLineOk()
 {
-    int c = std::cin.peek();
+    int c = std::cin.peek(); //наступний символ введення
 
-    while (c == ' ' || c == '\t' || c == '\r')
+    while (c == ' ' || c == '\t' || c == '\r') //пропустити пробільні символи
     {
-        std::cin.get();
-        c = std::cin.peek();
+        std::cin.get();      //відкинути пробільний символ
+        c = std::cin.peek(); //переглянути наступний символ
     }
-    if (c == '\n')
+    if (c == '\n') //якщо досягнуто кінця рядка
     {
-        std::cin.get();
-        return true;
+        std::cin.get(); //відкинути символ кінця рядка
+        return true;    //повернути ознаку припустимого залишку
     }
+    //якщо далі кінець даних або число
     if (c == std::char_traits<char>::eof() || std::isdigit(c) || c == '-' || c == '+')
     {
-        return true;
+        return true; //повернути ознаку припустимого залишку
     }
 
-    skipLine();
-    return false;
+    skipLine();   //відкинути решту рядка
+    return false; //повернути ознаку зайвих символів
 }
 
-/*------------------------------------------------------------------------------
+//================ readInt: прочитати ціле число із заданого діапазону =================
+/*
   readInt - прочитати ціле число із заданого діапазону.
   Параметри: prompt [вхідний], value [вихідний], low, high [вхідні].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
-------------------------------------------------------------------------------*/
+*/
 bool readInt(const char *prompt, int *value, int low, int high)
 {
-    for (;;)
+    for (;;) //повторювати до коректного введення
     {
-        std::cout << prompt;
-        std::cin >> *value;
+        std::cout << prompt; //вивести запрошення
+        std::cin >> *value;  //увести ціле число
 
-        if (std::cin.fail() && std::cin.eof())
+        if (std::cin.fail() && std::cin.eof()) //якщо вхідні дані вичерпано
         {
-            return false;
+            return false; //повернути ознаку кінця даних
         }
 
-        if (std::cin.fail())
+        if (std::cin.fail()) //якщо введено не число
         {
-            skipLine();
+            skipLine(); //відкинути помилковий рядок
         }
+        //якщо число в межах діапазону
         else if (restOfLineOk() && *value >= low && *value <= high)
         {
-            return true;
+            return true; //повернути ознаку успішного введення
         }
 
         std::cout << "Помилка: потрібне ціле число від " << low << " до " << high
-                  << ".\n";
+                  << ".\n"; //вивести повідомлення про помилку
     }
 }
 
-/*------------------------------------------------------------------------------
+//============ readDouble: прочитати дійсне число, не менше за задану межу =============
+/*
   readDouble - прочитати дійсне число, не менше за задану межу.
   Параметри: prompt [вхідний], value [вихідний], low [вхідний].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
-------------------------------------------------------------------------------*/
+*/
 bool readDouble(const char *prompt, double *value, double low)
 {
-    for (;;)
+    for (;;) //повторювати до коректного введення
     {
-        std::cout << prompt;
-        std::cin >> *value;
+        std::cout << prompt; //вивести запрошення
+        std::cin >> *value;  //увести дійсне число
 
-        if (std::cin.fail() && std::cin.eof())
+        if (std::cin.fail() && std::cin.eof()) //якщо вхідні дані вичерпано
         {
-            return false;
+            return false; //повернути ознаку кінця даних
         }
 
-        if (std::cin.fail())
+        if (std::cin.fail()) //якщо введено не число
         {
-            skipLine();
+            skipLine(); //відкинути помилковий рядок
         }
+        //якщо число коректне
         else if (restOfLineOk() && std::isfinite(*value) && *value >= low)
         {
-            return true;
+            return true; //повернути ознаку успішного введення
         }
 
+        //вивести повідомлення про помилку
         std::cout << "Помилка: потрібне дійсне число, не менше за " << low << ".\n";
     }
 }
 
-/*------------------------------------------------------------------------------
+//====== trimSpaces: прибрати пропуски на початку й у кінці рядка, щоб випадковий ======
+/*
   trimSpaces - прибрати пропуски на початку й у кінці рядка, щоб випадковий
                пропуск не заважав порівнянню назв під час пошуку.
   Параметри: s [вхідний/вихідний] - рядок.
-------------------------------------------------------------------------------*/
+*/
 void trimSpaces(char *s)
 {
-    size_t length = std::strlen(s);
+    size_t length = std::strlen(s); //довжина рядка без кінцевих пропусків
 
+    //поки в кінці рядка пропуск
     while (length > 0 && std::isspace(static_cast<unsigned char>(s[length - 1])))
     {
-        --length;
+        --length; //відкинути кінцевий пропуск
     }
-    s[length] = '\0';
+    s[length] = '\0'; //завершити рядок нулем
 
-    size_t start = 0;
+    size_t start = 0; //індекс першого непробільного символу
+    //пропустити початкові пропуски
     while (std::isspace(static_cast<unsigned char>(s[start])))
     {
-        ++start;
+        ++start; //перейти до наступного символу
     }
 
-    std::memmove(s, s + start, length - start + 1);
+    std::memmove(s, s + start, length - start + 1); //зсунути рядок на початок буфера
 }
 
-/*------------------------------------------------------------------------------
+//============ readLine: прочитати непорожній текстовий рядок з клавіатури =============
+/*
   readLine - прочитати непорожній текстовий рядок з клавіатури.
   Рядок, що не вміщується в буфер, відкидається цілком і запит повторюється;
   порожній рядок (лише пропуски) теж не приймається.
   Пропуски на початку й у кінці рядка відкидаються.
   Параметри: prompt [вхідний], buffer [вихідний], size [вхідний].
   Повертає : true - прочитано; false - вхідні дані вичерпано.
-------------------------------------------------------------------------------*/
+*/
 bool readLine(const char *prompt, char *buffer, int size)
 {
-    for (;;)
+    for (;;) //повторювати до коректного введення
     {
-        std::cout << prompt;
-        std::cin.getline(buffer, size);
+        std::cout << prompt;            //вивести запрошення
+        std::cin.getline(buffer, size); //прочитати рядок з клавіатури
 
-        if (std::cin.eof() && std::cin.gcount() == 0)
+        if (std::cin.eof() && std::cin.gcount() == 0) //якщо вхідні дані вичерпано
         {
-            return false;
+            return false; //повернути ознаку кінця даних
         }
-        if (!std::cin.fail() || std::cin.eof())
+        if (!std::cin.fail() || std::cin.eof()) //якщо рядок прочитано повністю
         {
-            trimSpaces(buffer);
-            if (buffer[0] != '\0')
+            trimSpaces(buffer);    //прибрати крайні пропуски
+            if (buffer[0] != '\0') //якщо рядок непорожній
             {
-                return true;
+                return true; //повернути ознаку успішного введення
             }
+            //вивести повідомлення про порожній рядок
             std::cout << "Помилка: рядок порожній. Повторіть.\n";
-            continue;
+            continue; //повторити запит
         }
 
         /* Буфер заповнено, а кінця рядка не досягнуто: рядок задовгий. */
-        skipLine();
+        skipLine(); //відкинути решту задовгого рядка
+        //вивести повідомлення про задовгий рядок
         std::cout << "Помилка: рядок задовгий. Повторіть.\n";
     }
 }
 
-/*------------------------------------------------------------------------------
+//============================== readDate: прочитати дату ==============================
+/*
   readDate - прочитати дату: рік, місяць і день.
   Найбільший припустимий день залежить від місяця й року, тому
   неіснуючу дату (наприклад, 31.02) ввести неможливо.
@@ -387,33 +419,37 @@ bool readLine(const char *prompt, char *buffer, int size)
       indent [вхідний]  - відступ перед запрошеннями;
       date   [вихідний] - покажчик на дату.
   Повертає : true - прочитано; false - вхідні дані вичерпано.
-------------------------------------------------------------------------------*/
+*/
 bool readDate(const char *indent, Date *date)
 {
-    char prompt[64];
+    char prompt[64]; //текст запрошення
 
+    //сформувати запрошення для року
     std::snprintf(prompt, sizeof prompt, "%sрік (1..%d): ", indent, MAX_YEAR);
-    if (!readInt(prompt, &date->year, 1, MAX_YEAR))
+    if (!readInt(prompt, &date->year, 1, MAX_YEAR)) //увести рік
     {
-        return false;
+        return false; //повернути ознаку кінця даних
     }
 
+    //сформувати запрошення для місяця
     std::snprintf(prompt, sizeof prompt, "%sмісяць (1..12): ", indent);
-    if (!readInt(prompt, &date->month, 1, 12))
+    if (!readInt(prompt, &date->month, 1, 12)) //увести місяць
     {
-        return false;
+        return false; //повернути ознаку кінця даних
     }
 
-    const int lastDay = daysInMonth(date->month, date->year);
+    const int lastDay = daysInMonth(date->month, date->year); //найбільший день місяця
+    //сформувати запрошення для дня
     std::snprintf(prompt, sizeof prompt, "%sдень (1..%d): ", indent, lastDay);
-    return readInt(prompt, &date->day, 1, lastDay);
+    return readInt(prompt, &date->day, 1, lastDay); //увести день і повернути результат
 }
 
 /*==============================================================================
   Робота з бінарним файлом
 ==============================================================================*/
 
-/*------------------------------------------------------------------------------
+//================== recordCount: кількість записів у бінарному файлі ==================
+/*
   recordCount - кількість записів у бінарному файлі.
 
   Обчислюється як розмір файлу, поділений на розмір однієї структури.
@@ -426,119 +462,131 @@ bool readDate(const char *indent, Date *date)
   Локальні змінні:
       file - вхідний файловий потік;
       size - розмір файлу в байтах.
-------------------------------------------------------------------------------*/
-const long FILE_MISSING = -1;
-const long FILE_CORRUPTED = -2;
+*/
+const long FILE_MISSING = -1;   //ознака відсутнього файлу
+const long FILE_CORRUPTED = -2; //ознака пошкодженого файлу
 
 long recordCount(const char *fileName)
 {
+    //відкрити файл, ставши в кінець
     std::ifstream file(fileName, std::ios::binary | std::ios::ate);
 
-    if (!file)
+    if (!file) //якщо файл не відкрито
     {
-        return FILE_MISSING;
+        return FILE_MISSING; //повернути ознаку відсутнього файлу
     }
 
-    const std::streamoff size = file.tellg();
-    file.close();
+    const std::streamoff size = file.tellg(); //розмір файлу в байтах
+    file.close();                             //закрити файл
 
+    //якщо розмір не кратний розміру запису
     if (size % static_cast<std::streamoff>(sizeof(Sale)) != 0)
     {
-        return FILE_CORRUPTED;
+        return FILE_CORRUPTED; //повернути ознаку пошкодженого файлу
     }
 
+    //повернути кількість записів
     return static_cast<long>(size / static_cast<std::streamoff>(sizeof(Sale)));
 }
 
-/*------------------------------------------------------------------------------
+//================== dataFileRecords: кількість записів у файлі даних ==================
+/*
   dataFileRecords - кількість записів у файлі даних. Якщо файл не існує або
                     пошкоджений, виводиться повідомлення.
   Повертає : кількість записів або -1, якщо файл непридатний до обробки.
-------------------------------------------------------------------------------*/
+*/
 long dataFileRecords()
 {
-    const long count = recordCount(DATA_FILE);
+    const long count = recordCount(DATA_FILE); //кількість записів у файлі даних
 
-    if (count == FILE_MISSING)
+    if (count == FILE_MISSING) //якщо файл не існує
     {
+        //вивести повідомлення про відсутність файлу
         std::cout << "Файл " << DATA_FILE << " не існує. Спочатку створіть його.\n";
-        return -1;
+        return -1; //повернути ознаку непридатного файлу
     }
-    if (count == FILE_CORRUPTED)
+    if (count == FILE_CORRUPTED) //якщо файл пошкоджено
     {
+        //вивести повідомлення про пошкодження
         std::cout << "Файл " << DATA_FILE
                   << " пошкоджено: його розмір не кратний розміру запису ("
                   << sizeof(Sale) << " байтів). Створіть файл заново.\n";
-        return -1;
+        return -1; //повернути ознаку непридатного файлу
     }
 
-    return count;
+    return count; //повернути кількість записів
 }
 
-/*------------------------------------------------------------------------------
+//====== terminateStrings: гарантувати, що текстові поля щойно зчитаного з файлу =======
+/*
   terminateStrings - гарантувати, що текстові поля щойно зчитаного з файлу
                      запису завершені нулем.
   Файл міг бути змінений поза програмою; без завершального нуля strlen()
   і strcmp() читали б пам'ять за межами поля.
   Параметри: sale [вхідний/вихідний] - покажчик на запис.
-------------------------------------------------------------------------------*/
+*/
 void terminateStrings(Sale *sale)
 {
-    sale->firm[MAX_NAME - 1] = '\0';
-    sale->product[MAX_NAME - 1] = '\0';
-    sale->region[MAX_NAME - 1] = '\0';
+    sale->firm[MAX_NAME - 1] = '\0';    //завершити нулем назву фірми
+    sale->product[MAX_NAME - 1] = '\0'; //завершити нулем назву продукту
+    sale->region[MAX_NAME - 1] = '\0';  //завершити нулем назву регіону
 }
 
-/*------------------------------------------------------------------------------
+//================ printTableHeader: вивести заголовок таблиці записів =================
+/*
   printTableHeader - вивести заголовок таблиці записів.
 
   Заголовок відповідає переліку полів з умови варіанта і виводиться
   один раз перед даними.
-------------------------------------------------------------------------------*/
+*/
 void printTableHeader()
 {
-    std::cout << "  ";
-    printPadded("№", COL_NUMBER);
-    printPadded("Назва фірми", COL_FIRM);
-    printPadded("Продукт", COL_PRODUCT);
-    printPadded("Вид", COL_KIND);
-    printPadded("Регіон збуту", COL_REGION);
-    printPadded("Вартість продажу", COL_PRICE);
-    printPadded("Термін постачання", COL_DATE);
-    std::cout << "\n  ";
+    std::cout << "  ";                          //вивести відступ
+    printPadded("№", COL_NUMBER);               //вивести заголовок номера
+    printPadded("Назва фірми", COL_FIRM);       //вивести заголовок фірми
+    printPadded("Продукт", COL_PRODUCT);        //вивести заголовок продукту
+    printPadded("Вид", COL_KIND);               //вивести заголовок виду
+    printPadded("Регіон збуту", COL_REGION);    //вивести заголовок регіону
+    printPadded("Вартість продажу", COL_PRICE); //вивести заголовок вартості
+    printPadded("Термін постачання", COL_DATE); //вивести заголовок терміну
+    std::cout << "\n  ";                        //перейти на новий рядок
 
-    for (int i = 0; i < TABLE_WIDTH; ++i)
+    for (int i = 0; i < TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
     {
-        std::cout << '-';
+        std::cout << '-'; //вивести символ лінії
     }
-    std::cout << '\n';
+    std::cout << '\n'; //завершити рядок
 }
 
-/*------------------------------------------------------------------------------
+//=================== printRecord: вивести один запис рядком таблиці ===================
+/*
   printRecord - вивести один запис рядком таблиці.
   Параметри: sale [вхідний] - покажчик на структуру; index [вхідний] - номер рядка.
-------------------------------------------------------------------------------*/
+*/
 void printRecord(const Sale *sale, long index)
 {
-    char buffer[MAX_NAME];
+    char buffer[MAX_NAME]; //буфер для перетворення в текст
 
-    std::cout << "  ";
+    std::cout << "  "; //вивести відступ
+    //записати номер рядка до буфера
     std::snprintf(buffer, sizeof buffer, "%ld.", index);
-    printPadded(buffer, COL_NUMBER);
-    printPadded(sale->firm, COL_FIRM);
-    printPadded(sale->product, COL_PRODUCT);
-    printPadded(kindName(sale->kind), COL_KIND);
-    printPadded(sale->region, COL_REGION);
+    printPadded(buffer, COL_NUMBER);             //вивести номер
+    printPadded(sale->firm, COL_FIRM);           //вивести назву фірми
+    printPadded(sale->product, COL_PRODUCT);     //вивести назву продукту
+    printPadded(kindName(sale->kind), COL_KIND); //вивести вид продукту
+    printPadded(sale->region, COL_REGION);       //вивести регіон збуту
 
+    //записати вартість до буфера
     std::snprintf(buffer, sizeof buffer, "%.2f", sale->price);
-    printPadded(buffer, COL_PRICE);
+    printPadded(buffer, COL_PRICE); //вивести вартість
 
-    formatDate(&sale->delivery, buffer, sizeof buffer);
-    printPadded(buffer, COL_DATE);
-    std::cout << '\n';
+    formatDate(&sale->delivery, buffer, sizeof buffer); //записати дату до буфера
+    printPadded(buffer, COL_DATE);                      //вивести термін постачання
+    std::cout << '\n';                                  //завершити рядок таблиці
 }
 
-/*------------------------------------------------------------------------------
+//========== printSalesFile: вивести записи бінарного файлу у вигляді таблиці ==========
+/*
   printSalesFile - вивести записи бінарного файлу у вигляді таблиці.
 
   Записи зчитуються послідовно, доки не буде досягнуто кінця файлу.
@@ -548,283 +596,317 @@ void printRecord(const Sale *sale, long index)
       fileName [вхідний] - ім'я файлу;
       total    [вихідний] - сумарна вартість виведених записів.
   Повертає : кількість записів або -1, якщо файл не існує.
-------------------------------------------------------------------------------*/
+*/
 long printSalesFile(const char *fileName, double *total)
 {
-    std::ifstream file(fileName, std::ios::binary);
+    std::ifstream file(fileName, std::ios::binary); //відкрити файл для читання
 
-    if (!file)
+    if (!file) //якщо файл не відкрито
     {
-        return -1;
+        return -1; //повернути ознаку відсутнього файлу
     }
 
-    Sale sale{};
-    long count = 0;
-    *total = 0.0;
+    Sale sale{};    //поточний запис
+    long count = 0; //кількість виведених записів
+    *total = 0.0;   //обнулити сумарну вартість
 
+    //читати записи до кінця файлу
     while (file.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
-        terminateStrings(&sale);
-        if (count == 0)
+        terminateStrings(&sale); //завершити текстові поля нулем
+        if (count == 0)          //якщо це перший запис
         {
-            printTableHeader();
+            printTableHeader(); //вивести заголовок таблиці
         }
 
-        printRecord(&sale, ++count);
-        *total += sale.price;
+        printRecord(&sale, ++count); //вивести запис таблиці
+        *total += sale.price;        //накопичити сумарну вартість
     }
 
-    file.close();
-    return count;
+    file.close(); //закрити файл
+    return count; //повернути кількість записів
 }
 
-/*------------------------------------------------------------------------------
+//========= printFirmHeader: вивести заголовок таблиці сум продажів по фірмах ==========
+/*
   printFirmHeader - вивести заголовок таблиці сум продажів по фірмах.
-------------------------------------------------------------------------------*/
+*/
 void printFirmHeader()
 {
-    std::cout << "  ";
-    printPadded("Назва фірми", COL_FIRM_NAME);
-    printPadded("Продажів", COL_FIRM_SALES);
+    std::cout << "  ";                         //вивести відступ
+    printPadded("Назва фірми", COL_FIRM_NAME); //вивести заголовок назви фірми
+    printPadded("Продажів", COL_FIRM_SALES);   //вивести заголовок кількості продажів
+    //вивести заголовок сумарної вартості
     printPadded("Сумарна вартість", COL_FIRM_TOTAL);
-    std::cout << "\n  ";
+    std::cout << "\n  "; //перейти на новий рядок
 
-    for (int i = 0; i < FIRM_TABLE_WIDTH; ++i)
+    for (int i = 0; i < FIRM_TABLE_WIDTH; ++i) //перебрати позиції ширини таблиці
     {
-        std::cout << '-';
+        std::cout << '-'; //вивести символ лінії
     }
-    std::cout << '\n';
+    std::cout << '\n'; //завершити рядок
 }
 
-/*------------------------------------------------------------------------------
+//============= printFirmRow: вивести рядок таблиці сум продажів по фірмах =============
+/*
   printFirmRow - вивести рядок таблиці сум продажів по фірмах.
   Параметри: firm [вхідний] - покажчик на структуру з сумами фірми.
-------------------------------------------------------------------------------*/
+*/
 void printFirmRow(const FirmTotal *firm)
 {
-    char buffer[MAX_NAME];
+    char buffer[MAX_NAME]; //буфер для перетворення в текст
 
-    std::cout << "  ";
-    printPadded(firm->firm, COL_FIRM_NAME);
+    std::cout << "  ";                      //вивести відступ
+    printPadded(firm->firm, COL_FIRM_NAME); //вивести назву фірми
 
+    //записати кількість продажів до буфера
     std::snprintf(buffer, sizeof buffer, "%ld", firm->sales);
-    printPadded(buffer, COL_FIRM_SALES);
+    printPadded(buffer, COL_FIRM_SALES); //вивести кількість продажів
 
-    std::snprintf(buffer, sizeof buffer, "%.2f", firm->total);
-    printPadded(buffer, COL_FIRM_TOTAL);
-    std::cout << '\n';
+    std::snprintf(buffer, sizeof buffer, "%.2f", firm->total); //записати суму до буфера
+    printPadded(buffer, COL_FIRM_TOTAL); //вивести сумарну вартість
+    std::cout << '\n';                   //завершити рядок таблиці
 }
 
-/*------------------------------------------------------------------------------
+//============== generateRecord: заповнити запис псевдовипадковими даними ==============
+/*
   generateRecord - заповнити запис псевдовипадковими даними.
   Параметри: sale [вихідний] - покажчик на структуру.
-------------------------------------------------------------------------------*/
+*/
 void generateRecord(Sale *sale)
 {
-    std::strcpy(sale->firm, FIRMS[std::rand() % FIRMS_COUNT]);
+    std::strcpy(sale->firm, FIRMS[std::rand() % FIRMS_COUNT]); //вибрати назву фірми
+    //вибрати регіон збуту
     std::strcpy(sale->region, REGIONS[std::rand() % REGIONS_COUNT]);
 
+    //вибрати вид продукту
     sale->kind = (std::rand() % 2 == 0) ? ProductKind::Computer : ProductKind::Software;
 
-    if (sale->kind == ProductKind::Computer)
+    if (sale->kind == ProductKind::Computer) //якщо продукт - комп'ютер
     {
+        //вибрати модель комп'ютера
         std::strcpy(sale->product, COMPUTERS[std::rand() % COMPUTERS_COUNT]);
     }
-    else
+    else //інакше - програмне забезпечення
     {
+        //вибрати програмний продукт
         std::strcpy(sale->product, SOFTWARE[std::rand() % SOFTWARE_COUNT]);
     }
 
     /* Вартість від 1000,00 до 9999,99 грн з копійками, постачання у 2025 році. */
+    //згенерувати вартість продажу
     sale->price = 1000 + (std::rand() % 9000) + (std::rand() % 100) / 100.0;
 
-    sale->delivery.year = 2025;
-    sale->delivery.month = 1 + std::rand() % 12;
+    sale->delivery.year = 2025;                  //задати рік постачання
+    sale->delivery.month = 1 + std::rand() % 12; //згенерувати місяць постачання
+    //згенерувати день постачання
     sale->delivery.day =
         1 + std::rand() % daysInMonth(sale->delivery.month, sale->delivery.year);
 }
 
-/*------------------------------------------------------------------------------
+//================== inputRecord: заповнити запис даними з клавіатури ==================
+/*
   inputRecord - заповнити запис даними з клавіатури.
   Параметри: sale [вихідний] - покажчик на структуру.
   Повертає : true - заповнено; false - вхідні дані вичерпано.
-------------------------------------------------------------------------------*/
+*/
 bool inputRecord(Sale *sale)
 {
-    if (!readLine("  Назва фірми: ", sale->firm, MAX_NAME))
+    if (!readLine("  Назва фірми: ", sale->firm, MAX_NAME)) //увести назву фірми
     {
-        return false;
+        return false; //повернути ознаку кінця даних
     }
 
-    int kind = 0;
+    int kind = 0; //номер виду продукту
+    //увести вид продукту
     if (!readInt("  Вид продукту (1 - комп'ютери, 2 - ПЗ): ", &kind, 1, 2))
     {
-        return false;
+        return false; //повернути ознаку кінця даних
     }
+    //визначити вид продукту
     sale->kind = (kind == 1) ? ProductKind::Computer : ProductKind::Software;
 
+    //увести продукт, регіон і вартість
     if (!readLine("  Назва продукту: ", sale->product, MAX_NAME) ||
         !readLine("  Регіон збуту: ", sale->region, MAX_NAME) ||
         !readDouble("  Вартість продажу: ", &sale->price, 0.0))
     {
-        return false;
+        return false; //повернути ознаку кінця даних
     }
 
-    std::cout << "  Термін постачання:\n";
-    return readDate("    ", &sale->delivery);
+    std::cout << "  Термін постачання:\n";    //вивести запрошення терміну
+    return readDate("    ", &sale->delivery); //увести термін і повернути результат
 }
 
-/*------------------------------------------------------------------------------
+//============================ cmdCreateFile: команда меню =============================
+/*
   cmdCreateFile - команда меню: створити масив структур і записати його
                   до бінарного файлу.
 
   Файл відкривається у режимі std::ios::trunc, тобто попередній вміст
   знищується - команда створює файл заново.
-------------------------------------------------------------------------------*/
+*/
 void cmdCreateFile()
 {
-    char prompt[64];
-    int n = 0;
+    char prompt[64]; //текст запрошення
+    int n = 0;       //кількість записів
 
+    //сформувати запрошення
     std::snprintf(prompt, sizeof prompt,
                   "Уведіть кількість записів (1..%d): ", MAX_RECORDS);
-    if (!readInt(prompt, &n, 1, MAX_RECORDS))
+    if (!readInt(prompt, &n, 1, MAX_RECORDS)) //увести кількість записів
     {
-        return;
+        return; //завершити команду
     }
 
     std::cout << "Спосіб створення:\n"
                  "  1 - введення з клавіатури\n"
-                 "  2 - генерація псевдовипадкових даних\n";
+                 "  2 - генерація псевдовипадкових даних\n"; //вивести способи створення
 
-    int choice = 0;
-    if (!readInt("Оберіть спосіб (1..2): ", &choice, 1, 2))
+    int choice = 0;                                         //обраний спосіб створення
+    if (!readInt("Оберіть спосіб (1..2): ", &choice, 1, 2)) //увести спосіб створення
     {
-        return;
+        return; //завершити команду
     }
 
     /* Ініціалізація нулями: до файлу записуються всі байти структури, зокрема
        невикористана частина текстових полів після завершального нуля. */
-    Sale records[MAX_RECORDS] = {};
+    Sale records[MAX_RECORDS] = {}; //масив структур для запису
 
-    if (choice == 1)
+    if (choice == 1) //якщо введення з клавіатури
     {
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) //перебрати записи масиву
         {
-            std::cout << "\n  --- запис " << (i + 1) << " ---\n";
-            if (!inputRecord(&records[i]))
+            std::cout << "\n  --- запис " << (i + 1) << " ---\n"; //вивести номер запису
+            if (!inputRecord(&records[i]))                        //увести запис
             {
-                return;
+                return; //завершити команду
             }
         }
     }
-    else
+    else //інакше - генерація
     {
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) //перебрати записи масиву
         {
-            generateRecord(&records[i]);
+            generateRecord(&records[i]); //згенерувати запис
         }
     }
 
+    //відкрити файл для запису заново
     std::ofstream file(DATA_FILE, std::ios::binary | std::ios::trunc);
 
-    if (!file)
+    if (!file) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося створити файл " << DATA_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
+    //записати масив до файлу
     file.write(reinterpret_cast<const char *>(records), n * sizeof(Sale));
-    file.close();
+    file.close(); //закрити файл
 
+    //вивести кількість записаних записів
     std::cout << "\nМасив структур записано до бінарного файлу " << DATA_FILE
               << ". Кількість записів: " << n << ".\n";
 }
 
-/*------------------------------------------------------------------------------
+//============================= cmdPrintFile: команда меню =============================
+/*
   cmdPrintFile - команда меню: вивести вміст бінарного файлу.
 
   Записи зчитуються послідовно, доки не буде досягнуто кінця файлу.
-------------------------------------------------------------------------------*/
+*/
 void cmdPrintFile()
 {
-    if (dataFileRecords() < 0)
+    if (dataFileRecords() < 0) //якщо файл даних непридатний
     {
-        return;
+        return; //завершити команду
     }
 
+    //вивести заголовок вмісту файлу
     std::cout << "\nВміст бінарного файлу " << DATA_FILE << "\n\n";
 
-    double total = 0.0;
+    double total = 0.0; //сумарна вартість записів
+    //вивести файл і отримати кількість
     const long count = printSalesFile(DATA_FILE, &total);
 
     std::cout << "\n  Записів у файлі: " << count
               << ", сумарна вартість: " << std::fixed << std::setprecision(2) << total
-              << '\n';
+              << '\n'; //вивести кількість і суму
 }
 
-/*------------------------------------------------------------------------------
+//============================== cmdAppend: команда меню ===============================
+/*
   cmdAppend - команда меню: доповнити бінарний файл новими записами.
 
   Файл відкривається в режимі std::ios::app - записи дописуються в кінець,
   наявний вміст зберігається.
-------------------------------------------------------------------------------*/
+*/
 void cmdAppend()
 {
-    const long total = dataFileRecords();
-    if (total < 0)
+    const long total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                        //якщо файл непридатний
     {
-        return;
+        return; //завершити команду
     }
-    if (total >= MAX_RECORDS)
+    if (total >= MAX_RECORDS) //якщо файл уже заповнено
     {
         std::cout << "У файлі вже найбільша допустима кількість записів ("
-                  << MAX_RECORDS << ").\n";
-        return;
+                  << MAX_RECORDS << ").\n"; //вивести повідомлення про межу
+        return;                             //завершити команду
     }
 
     /* Кількість записів у файлі не може перевищити MAX_RECORDS: на цю межу
        розраховано масиви у функціях видалення та запиту 3. */
+    //кількість вільних місць у файлі
     const int freeSlots = MAX_RECORDS - static_cast<int>(total);
-    int n = 0;
-    char prompt[80];
+    int n = 0;       //кількість нових записів
+    char prompt[80]; //текст запрошення
+    //сформувати запрошення
     std::snprintf(prompt, sizeof prompt,
                   "Скільки записів дописати (1..%d): ", freeSlots);
 
-    if (!readInt(prompt, &n, 1, freeSlots))
+    if (!readInt(prompt, &n, 1, freeSlots)) //увести кількість нових записів
     {
-        return;
+        return; //завершити команду
     }
 
+    //відкрити файл для дописування
     std::ofstream file(DATA_FILE, std::ios::binary | std::ios::app);
 
-    if (!file)
+    if (!file) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл для дописування.\n";
-        return;
+        return; //завершити команду
     }
 
-    for (int i = 0; i < n; ++i)
+    for (int i = 0; i < n; ++i) //перебрати нові записи
     {
+        //вивести номер нового запису
         std::cout << "\n  --- новий запис " << (i + 1) << " ---\n";
 
-        Sale sale{};
-        if (!inputRecord(&sale))
+        Sale sale{};             //новий запис
+        if (!inputRecord(&sale)) //увести новий запис
         {
-            file.close();
-            return;
+            file.close(); //закрити файл
+            return;       //завершити команду
         }
 
+        //дописати запис у кінець файлу
         file.write(reinterpret_cast<const char *>(&sale), sizeof(Sale));
     }
 
-    file.close();
+    file.close(); //закрити файл
 
+    //вивести кількість записів
     std::cout << "\nДописано записів: " << n
               << ". Усього у файлі: " << recordCount(DATA_FILE) << ".\n";
 }
 
-/*------------------------------------------------------------------------------
+//============================== cmdReplace: команда меню ==============================
+/*
   cmdReplace - команда меню: замінити вибраний користувачем запис.
 
   ПРЯМИЙ ДОСТУП до компонентів бінарного файлу. Позиція запису обчислюється
@@ -832,130 +914,147 @@ void cmdAppend()
   seekp(), після чого перезаписується рівно одна структура. Решта файлу
   не переписується - саме в цьому перевага бінарного файлу зі сталим
   розміром запису перед текстовим.
-------------------------------------------------------------------------------*/
+*/
 void cmdReplace()
 {
-    const long total = dataFileRecords();
-    if (total < 0)
+    const long total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                        //якщо файл непридатний
     {
-        return;
+        return; //завершити команду
     }
-    if (total == 0)
+    if (total == 0) //якщо файл порожній
     {
+        //вивести повідомлення про порожній файл
         std::cout << "Файл порожній - замінювати нічого.\n";
-        return;
+        return; //завершити команду
     }
 
-    int number = 0;
-    char prompt[80];
+    int number = 0;  //номер запису для заміни
+    char prompt[80]; //текст запрошення
+    //сформувати запрошення
     std::snprintf(prompt, sizeof prompt, "Номер запису для заміни (1..%ld): ", total);
 
-    if (!readInt(prompt, &number, 1, static_cast<int>(total)))
+    if (!readInt(prompt, &number, 1, static_cast<int>(total))) //увести номер запису
     {
-        return;
+        return; //завершити команду
     }
 
+    //вивести номер запису
     std::cout << "\n  --- новий вміст запису " << number << " ---\n";
 
-    Sale sale{};
-    if (!inputRecord(&sale))
+    Sale sale{};             //новий вміст запису
+    if (!inputRecord(&sale)) //увести новий вміст запису
     {
-        return;
+        return; //завершити команду
     }
 
     /* Режим in|out відкриває наявний файл без знищення вмісту. */
+    //відкрити файл для читання й запису
     std::fstream file(DATA_FILE, std::ios::binary | std::ios::in | std::ios::out);
 
-    if (!file)
+    if (!file) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл для запису.\n";
-        return;
+        return; //завершити команду
     }
 
+    //встановити покажчик на запис
     file.seekp((number - 1) * sizeof(Sale), std::ios::beg);
+    //перезаписати запис
     file.write(reinterpret_cast<const char *>(&sale), sizeof(Sale));
-    file.close();
+    file.close(); //закрити файл
 
+    //вивести повідомлення про заміну
     std::cout << "\nЗапис " << number << " замінено.\n";
 }
 
-/*------------------------------------------------------------------------------
+//============================== cmdDelete: команда меню ===============================
+/*
   cmdDelete - команда меню: видалити вибраний користувачем запис.
 
   Бінарний файл не має операції вилучення частини вмісту, тому видалення
   виконується перезаписом: усі записи, крім вибраного, послідовно
   переписуються до файлу заново. Це принципова відмінність від заміни,
   яка обходиться прямим доступом.
-------------------------------------------------------------------------------*/
+*/
 void cmdDelete()
 {
-    const long total = dataFileRecords();
-    if (total < 0)
+    const long total = dataFileRecords(); //кількість записів у файлі
+    if (total < 0)                        //якщо файл непридатний
     {
-        return;
+        return; //завершити команду
     }
-    if (total == 0)
+    if (total == 0) //якщо файл порожній
     {
+        //вивести повідомлення про порожній файл
         std::cout << "Файл порожній - видаляти нічого.\n";
-        return;
+        return; //завершити команду
     }
-    if (total > MAX_RECORDS)
+    if (total > MAX_RECORDS) //якщо записів забагато
     {
+        //вивести повідомлення про межу
         std::cout << "Файл містить більше " << MAX_RECORDS
                   << " записів - видалення неможливе.\n";
-        return;
+        return; //завершити команду
     }
 
-    int number = 0;
-    char prompt[80];
+    int number = 0;  //номер запису для видалення
+    char prompt[80]; //текст запрошення
+    //сформувати запрошення
     std::snprintf(prompt, sizeof prompt,
                   "Номер запису для видалення (1..%ld): ", total);
 
-    if (!readInt(prompt, &number, 1, static_cast<int>(total)))
+    if (!readInt(prompt, &number, 1, static_cast<int>(total))) //увести номер запису
     {
-        return;
+        return; //завершити команду
     }
 
     /* Крок 1: зчитати всі записи, крім вибраного. */
-    std::ifstream input(DATA_FILE, std::ios::binary);
+    std::ifstream input(DATA_FILE, std::ios::binary); //відкрити файл даних для читання
 
-    if (!input)
+    if (!input) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл для читання.\n";
-        return;
+        return; //завершити команду
     }
 
-    Sale records[MAX_RECORDS] = {};
-    long kept = 0;
-    long index = 0;
-    Sale sale{};
+    Sale records[MAX_RECORDS] = {}; //записи, що залишаються
+    long kept = 0;                  //кількість збережених записів
+    long index = 0;                 //номер прочитаного запису
+    Sale sale{};                    //поточний запис
 
+    //прочитати записи до кінця файлу
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
-        terminateStrings(&sale);
-        ++index;
-        if (index == number)
+        terminateStrings(&sale); //завершити текстові поля нулем
+        ++index;                 //збільшити номер запису
+        if (index == number)     //якщо це вибраний запис
         {
-            continue; /* вибраний запис пропускається */
+            continue; //вибраний запис пропускається
         }
-        records[kept++] = sale;
+        records[kept++] = sale; //зберегти запис у масиві
     }
-    input.close();
+    input.close(); //закрити файл даних
 
     /* Крок 2: перезаписати файл без вилученого запису. */
+    //відкрити файл для запису заново
     std::ofstream output(DATA_FILE, std::ios::binary | std::ios::trunc);
 
-    if (!output)
+    if (!output) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл для запису.\n";
-        return;
+        return; //завершити команду
     }
 
+    //записати збережені записи
     output.write(reinterpret_cast<const char *>(records), kept * sizeof(Sale));
-    output.close();
+    output.close(); //закрити файл
 
     std::cout << "\nЗапис " << number << " видалено. Залишилось записів: " << kept
-              << ".\n";
+              << ".\n"; //вивести повідомлення про видалення
 }
 
 /*==============================================================================
@@ -963,7 +1062,8 @@ void cmdDelete()
   бінарного файлу і виводиться на екран з цього файлу.
 ==============================================================================*/
 
-/*------------------------------------------------------------------------------
+//============================= cmdQueryComputers: запит 1 =============================
+/*
   cmdQueryComputers - запит 1: список комп'ютерів, що продаються у заданому
                       регіоні конкретною фірмою.
 
@@ -974,177 +1074,198 @@ void cmdDelete()
       input, output - файл даних і файл результатів;
       region, firm  - ключі пошуку;
       found, total  - кількість і сумарна вартість знайдених записів.
-------------------------------------------------------------------------------*/
+*/
 void cmdQueryComputers()
 {
-    if (dataFileRecords() < 0)
+    if (dataFileRecords() < 0) //якщо файл даних непридатний
     {
-        return;
+        return; //завершити команду
     }
 
-    char region[MAX_NAME] = "";
-    char firm[MAX_NAME] = "";
+    char region[MAX_NAME] = ""; //регіон збуту для пошуку
+    char firm[MAX_NAME] = "";   //назва фірми для пошуку
 
     if (!readLine("Уведіть регіон збуту: ", region, MAX_NAME) ||
-        !readLine("Уведіть назву фірми:  ", firm, MAX_NAME))
+        !readLine("Уведіть назву фірми:  ", firm, MAX_NAME)) //увести регіон і фірму
     {
-        return;
+        return; //завершити команду
     }
 
-    std::ifstream input(DATA_FILE, std::ios::binary);
+    std::ifstream input(DATA_FILE, std::ios::binary); //відкрити файл даних для читання
 
-    if (!input)
+    if (!input) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл " << DATA_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
+    //створити файл результатів
     std::ofstream output(COMPUTERS_FILE, std::ios::binary | std::ios::trunc);
 
-    if (!output)
+    if (!output) //якщо файл не створено
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося створити файл " << COMPUTERS_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
-    Sale sale{};
+    Sale sale{}; //поточний запис
 
+    //прочитати записи до кінця файлу
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
-        terminateStrings(&sale);
+        terminateStrings(&sale); //завершити текстові поля нулем
+        //якщо комп'ютер заданої фірми в регіоні
         if (sale.kind == ProductKind::Computer &&
             std::strcmp(sale.region, region) == 0 && std::strcmp(sale.firm, firm) == 0)
         {
+            //записати запис до файлу результатів
             output.write(reinterpret_cast<const char *>(&sale), sizeof(Sale));
         }
     }
 
-    input.close();
-    output.close();
+    input.close();  //закрити файл даних
+    output.close(); //закрити файл результатів
 
+    //вивести заголовок запиту
     std::cout << "\nЗапит 1. Комп'ютери, що продаються у регіоні \"" << region
               << "\" фірмою \"" << firm << "\"\n"
               << "Результат записано до бінарного файлу " << COMPUTERS_FILE << "\n\n";
 
-    double total = 0.0;
+    double total = 0.0; //сумарна вартість знайденого
+    //вивести файл результатів
     const long found = printSalesFile(COMPUTERS_FILE, &total);
 
-    if (found <= 0)
+    if (found <= 0) //якщо нічого не знайдено
     {
+        //вивести повідомлення про відсутність
         std::cout << "  За заданими ключами пошуку записів не знайдено.\n";
     }
-    else
+    else //інакше - вивести підсумки
     {
         std::cout << "\n  Знайдено записів: " << found
                   << ", сумарна вартість: " << std::fixed << std::setprecision(2)
-                  << total << '\n';
+                  << total << '\n'; //вивести кількість і суму
     }
 }
 
-/*------------------------------------------------------------------------------
+//============================= cmdQuerySoftware: запит 2 ==============================
+/*
   cmdQuerySoftware - запит 2: вартість проданого програмного забезпечення
                      у задані терміни.
 
   Знайдені записи записуються до файлу SOFTWARE_FILE, після чого вміст
   цього файлу виводиться на екран.
-------------------------------------------------------------------------------*/
+*/
 void cmdQuerySoftware()
 {
-    if (dataFileRecords() < 0)
+    if (dataFileRecords() < 0) //якщо файл даних непридатний
     {
-        return;
+        return; //завершити команду
     }
 
-    Date from = {0, 0, 0};
-    Date to = {0, 0, 0};
+    Date from = {0, 0, 0}; //початок періоду постачання
+    Date to = {0, 0, 0};   //кінець періоду постачання
 
-    std::cout << "Початок періоду постачання:\n";
-    if (!readDate("  ", &from))
+    std::cout << "Початок періоду постачання:\n"; //вивести запрошення початку періоду
+    if (!readDate("  ", &from))                   //увести початок періоду
     {
-        return;
+        return; //завершити команду
     }
 
-    std::cout << "Кінець періоду постачання:\n";
-    if (!readDate("  ", &to))
+    std::cout << "Кінець періоду постачання:\n"; //вивести запрошення кінця періоду
+    if (!readDate("  ", &to))                    //увести кінець періоду
     {
-        return;
+        return; //завершити команду
     }
 
-    const int fromNumber = dateToNumber(&from);
-    const int toNumber = dateToNumber(&to);
+    const int fromNumber = dateToNumber(&from); //початок періоду як число
+    const int toNumber = dateToNumber(&to);     //кінець періоду як число
 
-    if (fromNumber > toNumber)
+    if (fromNumber > toNumber) //якщо початок пізніший за кінець
     {
         /* Файл результатів усе одно створюється заново (порожнім), щоб у ньому
            не лишався результат попереднього запиту. */
+        //очистити файл результатів
         std::ofstream empty(SOFTWARE_FILE, std::ios::binary | std::ios::trunc);
-        empty.close();
+        empty.close(); //закрити файл
 
+        //вивести повідомлення про порожній період
         std::cout << "\nПочаток періоду пізніший за його кінець - "
                      "період порожній. Файл "
                   << SOFTWARE_FILE << " очищено.\n";
-        return;
+        return; //завершити команду
     }
 
-    std::ifstream input(DATA_FILE, std::ios::binary);
+    std::ifstream input(DATA_FILE, std::ios::binary); //відкрити файл даних для читання
 
-    if (!input)
+    if (!input) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл " << DATA_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
+    //створити файл результатів
     std::ofstream output(SOFTWARE_FILE, std::ios::binary | std::ios::trunc);
 
-    if (!output)
+    if (!output) //якщо файл не створено
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося створити файл " << SOFTWARE_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
-    Sale sale{};
+    Sale sale{}; //поточний запис
 
+    //прочитати записи до кінця файлу
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
-        terminateStrings(&sale);
+        terminateStrings(&sale); //завершити текстові поля нулем
+        //термін постачання як число
         const int deliveryNumber = dateToNumber(&sale.delivery);
 
         if (sale.kind == ProductKind::Software && deliveryNumber >= fromNumber &&
-            deliveryNumber <= toNumber)
+            deliveryNumber <= toNumber) //якщо ПЗ постачено в заданий період
         {
+            //записати запис до файлу результатів
             output.write(reinterpret_cast<const char *>(&sale), sizeof(Sale));
         }
     }
 
-    input.close();
-    output.close();
+    input.close();  //закрити файл даних
+    output.close(); //закрити файл результатів
 
-    char fromText[16];
-    char toText[16];
-    formatDate(&from, fromText, sizeof fromText);
-    formatDate(&to, toText, sizeof toText);
+    char fromText[16];                            //початок періоду текстом
+    char toText[16];                              //кінець періоду текстом
+    formatDate(&from, fromText, sizeof fromText); //записати початок періоду до рядка
+    formatDate(&to, toText, sizeof toText);       //записати кінець періоду до рядка
 
+    //вивести заголовок запиту
     std::cout << "\nЗапит 2. Програмне забезпечення з терміном постачання з "
               << fromText << " до " << toText << "\n"
               << "Результат записано до бінарного файлу " << SOFTWARE_FILE << "\n\n";
 
-    double total = 0.0;
-    const long found = printSalesFile(SOFTWARE_FILE, &total);
+    double total = 0.0;                                       //вартість проданого ПЗ
+    const long found = printSalesFile(SOFTWARE_FILE, &total); //вивести файл результатів
 
-    if (found <= 0)
+    if (found <= 0) //якщо нічого не знайдено
     {
         std::cout << "  У заданий період програмне забезпечення "
-                     "не постачалося.\n";
+                     "не постачалося.\n"; //вивести повідомлення про відсутність
     }
-    else
+    else //інакше - вивести підсумки
     {
+        //вивести кількість і вартість
         std::cout << "\n  Знайдено записів: " << found
                   << "\n  Вартість проданого програмного забезпечення: " << std::fixed
                   << std::setprecision(2) << total << '\n';
     }
 }
 
-/*------------------------------------------------------------------------------
+//=============================== cmdQueryFirms: запит 3 ===============================
+/*
   cmdQueryFirms - запит 3: найрентабельніші фірми (з найбільшою вартістю
                   продажів).
 
@@ -1156,199 +1277,214 @@ void cmdQuerySoftware()
       firms     - сумарні продажі кожної фірми;
       firmCount - кількість різних фірм;
       maxTotal  - найбільша сумарна вартість.
-------------------------------------------------------------------------------*/
+*/
 void cmdQueryFirms()
 {
-    if (dataFileRecords() < 0)
+    if (dataFileRecords() < 0) //якщо файл даних непридатний
     {
-        return;
+        return; //завершити команду
     }
 
-    std::ifstream input(DATA_FILE, std::ios::binary);
+    std::ifstream input(DATA_FILE, std::ios::binary); //відкрити файл даних для читання
 
-    if (!input)
+    if (!input) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл " << DATA_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
-    FirmTotal firms[MAX_RECORDS] = {};
-    int firmCount = 0;
-    Sale sale{};
+    FirmTotal firms[MAX_RECORDS] = {}; //сумарні продажі фірм
+    int firmCount = 0;                 //кількість різних фірм
+    Sale sale{};                       //поточний запис
 
+    //прочитати записи до кінця файлу
     while (input.read(reinterpret_cast<char *>(&sale), sizeof(Sale)))
     {
-        terminateStrings(&sale);
-        int position = -1;
+        terminateStrings(&sale); //завершити текстові поля нулем
+        int position = -1;       //позиція фірми в масиві
 
-        for (int j = 0; j < firmCount; ++j)
+        for (int j = 0; j < firmCount; ++j) //перебрати знайдені фірми
         {
-            if (std::strcmp(firms[j].firm, sale.firm) == 0)
+            if (std::strcmp(firms[j].firm, sale.firm) == 0) //якщо фірма вже є в масиві
             {
-                position = j;
-                break;
+                position = j; //запам'ятати позицію фірми
+                break;        //перервати цикл пошуку
             }
         }
 
-        if (position < 0)
+        if (position < 0) //якщо фірму не знайдено
         {
-            if (firmCount == MAX_RECORDS)
+            if (firmCount == MAX_RECORDS) //якщо масив фірм заповнено
             {
-                break; /* файл містить більше записів, ніж допускає програма */
+                break; //файл містить більше записів, ніж допускає програма
             }
 
-            position = firmCount++;
-            std::strcpy(firms[position].firm, sale.firm);
-            firms[position].sales = 0;
-            firms[position].total = 0.0;
+            position = firmCount++;                       //додати нову фірму
+            std::strcpy(firms[position].firm, sale.firm); //скопіювати назву фірми
+            firms[position].sales = 0;                    //обнулити кількість продажів
+            firms[position].total = 0.0;                  //обнулити суму продажів
         }
 
-        firms[position].total += sale.price;
-        ++firms[position].sales;
+        firms[position].total += sale.price; //накопичити суму продажів фірми
+        ++firms[position].sales;             //збільшити кількість продажів
     }
 
-    input.close();
+    input.close(); //закрити файл даних
 
-    if (firmCount == 0)
+    if (firmCount == 0) //якщо фірм немає
     {
+        //вивести повідомлення про порожній файл
         std::cout << "Файл порожній - даних для запиту немає.\n";
-        return;
+        return; //завершити команду
     }
 
-    double maxTotal = firms[0].total;
-    for (int j = 1; j < firmCount; ++j)
+    double maxTotal = firms[0].total;   //найбільша сумарна вартість
+    for (int j = 1; j < firmCount; ++j) //перебрати решту фірм
     {
-        if (firms[j].total > maxTotal)
+        if (firms[j].total > maxTotal) //якщо сума фірми більша
         {
-            maxTotal = firms[j].total;
+            maxTotal = firms[j].total; //запам'ятати найбільшу суму
         }
     }
 
+    //вивести заголовок запиту
     std::cout << "\nЗапит 3. Сумарна вартість продажів по фірмах\n\n";
-    printFirmHeader();
-    for (int j = 0; j < firmCount; ++j)
+    printFirmHeader();                  //вивести заголовок таблиці
+    for (int j = 0; j < firmCount; ++j) //перебрати всі фірми
     {
-        printFirmRow(&firms[j]);
+        printFirmRow(&firms[j]); //вивести рядок фірми
     }
 
+    //створити файл результатів
     std::ofstream output(FIRMS_FILE, std::ios::binary | std::ios::trunc);
 
-    if (!output)
+    if (!output) //якщо файл не створено
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося створити файл " << FIRMS_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
-    for (int j = 0; j < firmCount; ++j)
+    for (int j = 0; j < firmCount; ++j) //перебрати всі фірми
     {
-        if (firms[j].total >= maxTotal - PRICE_TOLERANCE)
+        if (firms[j].total >= maxTotal - PRICE_TOLERANCE) //якщо сума фірми найбільша
         {
+            //записати фірму до файлу результатів
             output.write(reinterpret_cast<const char *>(&firms[j]), sizeof(FirmTotal));
         }
     }
 
-    output.close();
+    output.close(); //закрити файл результатів
 
     /* Виведення результату з файлу, до якого його щойно записано. */
+    //відкрити файл результатів для читання
     std::ifstream result(FIRMS_FILE, std::ios::binary);
 
-    if (!result)
+    if (!result) //якщо файл не відкрито
     {
+        //вивести повідомлення про помилку
         std::cout << "Помилка: не вдалося відкрити файл " << FIRMS_FILE << ".\n";
-        return;
+        return; //завершити команду
     }
 
+    //вивести заголовок результату
     std::cout << "\nНайрентабельніші фірми (з найбільшою вартістю продажів)\n"
               << "Результат записано до бінарного файлу " << FIRMS_FILE << "\n\n";
-    printFirmHeader();
+    printFirmHeader(); //вивести заголовок таблиці
 
-    FirmTotal firm{};
+    FirmTotal firm{}; //поточний запис файлу результатів
+    //прочитати записи до кінця файлу
     while (result.read(reinterpret_cast<char *>(&firm), sizeof(FirmTotal)))
     {
-        firm.firm[MAX_NAME - 1] = '\0';
-        printFirmRow(&firm);
+        firm.firm[MAX_NAME - 1] = '\0'; //завершити назву фірми нулем
+        printFirmRow(&firm);            //вивести рядок фірми
     }
 
-    result.close();
+    result.close(); //закрити файл результатів
 }
 
-/*------------------------------------------------------------------------------
+//================================ головна функція main ================================
+/*
   Головна функція. Відображає меню та викликає відповідні функції.
   Локальні змінні: choice - номер обраного пункту меню.
-------------------------------------------------------------------------------*/
+*/
 int main()
 {
     std::cout << "Лабораторна робота №11, завдання 2 (варіант 19)\n"
                  "Виконав: студент групи ІПЗ-11 Одарчук Олексій\n"
                  "Обробка бінарних файлів\n"
                  "Файл даних: "
-              << DATA_FILE << "\n";
+              << DATA_FILE << "\n"; //вивести заголовок програми
 
     /* Генератор псевдовипадкових чисел ініціалізується один раз на весь
        сеанс роботи програми. */
+    //ініціалізувати генератор випадкових чисел
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    for (;;)
+    for (;;) //повторювати до виходу
     {
         std::cout << "\n============================================================\n"
                      "Меню команд:\n"
                      "  1 - створити масив структур і записати до бінарного файлу\n"
-                     "  2 - вивести вміст бінарного файлу\n";
+                     "  2 - вивести вміст бінарного файлу\n"; //вивести пункти меню 1-2
+        //вивести пункти меню 3-4
         std::cout << "  3 - доповнити файл новими записами\n"
                      "  4 - замінити вибраний запис (прямий доступ)\n";
         std::cout << "  5 - видалити вибраний запис\n"
                      "  6 - запит: комп'ютери у заданому регіоні заданої фірми\n"
                      "  7 - запит: вартість проданого ПЗ у задані терміни\n"
                      "  8 - запит: найрентабельніші фірми\n"
-                     "  9 - вихід\n";
+                     "  9 - вихід\n"; //вивести пункти меню 5-9
 
-        int choice = 0;
-        if (!readInt("Оберіть команду (1..9): ", &choice, 1, 9))
+        int choice = 0;                                          //номер обраної команди
+        if (!readInt("Оберіть команду (1..9): ", &choice, 1, 9)) //увести номер команди
         {
+            //вивести повідомлення про кінець даних
             std::cout << "\nВхідні дані вичерпано. Завершення роботи.\n";
-            break;
+            break; //перервати цикл меню
         }
 
-        std::cout << '\n';
+        std::cout << '\n'; //вивести порожній рядок
 
-        if (choice == 1)
+        if (choice == 1) //якщо створення файлу
         {
-            cmdCreateFile();
+            cmdCreateFile(); //створити файл
         }
-        else if (choice == 2)
+        else if (choice == 2) //якщо виведення файлу
         {
-            cmdPrintFile();
+            cmdPrintFile(); //вивести вміст файлу
         }
-        else if (choice == 3)
+        else if (choice == 3) //якщо доповнення файлу
         {
-            cmdAppend();
+            cmdAppend(); //доповнити файл
         }
-        else if (choice == 4)
+        else if (choice == 4) //якщо заміна запису
         {
-            cmdReplace();
+            cmdReplace(); //замінити запис
         }
-        else if (choice == 5)
+        else if (choice == 5) //якщо видалення запису
         {
-            cmdDelete();
+            cmdDelete(); //видалити запис
         }
-        else if (choice == 6)
+        else if (choice == 6) //якщо запит 1
         {
-            cmdQueryComputers();
+            cmdQueryComputers(); //виконати запит комп'ютерів
         }
-        else if (choice == 7)
+        else if (choice == 7) //якщо запит 2
         {
-            cmdQuerySoftware();
+            cmdQuerySoftware(); //виконати запит програмного забезпечення
         }
-        else if (choice == 8)
+        else if (choice == 8) //якщо запит 3
         {
-            cmdQueryFirms();
+            cmdQueryFirms(); //виконати запит фірм
         }
-        else
+        else //інакше - вихід
         {
-            std::cout << "Завершення роботи.\n";
-            break;
+            std::cout << "Завершення роботи.\n"; //вивести повідомлення про завершення
+            break;                               //перервати цикл меню
         }
     }
 
-    return 0;
+    return 0; //повернути код завершення
 }

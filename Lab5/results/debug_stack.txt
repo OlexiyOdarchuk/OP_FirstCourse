@@ -1,0 +1,40 @@
+$ gcc -std=c17 -g -O0 -o task1 task1.c
+$ gdb ./task1
+(gdb) break countBitsRecursive if n == 0
+Breakpoint 1 at 0x11c4: file task1.c, line 58.
+(gdb) run < in.txt > /dev/null
+
+Breakpoint 1, countBitsRecursive (n=0) at task1.c:58
+58	    ++g_currentDepth;                //збільшити поточну глибину
+(gdb) backtrace
+#0  countBitsRecursive (n=0) at task1.c:58
+#1  0x0000555555555215 in countBitsRecursive (n=512) at task1.c:71
+#2  0x0000555555555215 in countBitsRecursive (n=768) at task1.c:71
+#3  0x0000555555555215 in countBitsRecursive (n=896) at task1.c:71
+#4  0x0000555555555215 in countBitsRecursive (n=960) at task1.c:71
+#5  0x0000555555555215 in countBitsRecursive (n=992) at task1.c:71
+#6  0x0000555555555215 in countBitsRecursive (n=1000) at task1.c:71
+#7  0x00005555555555dd in main () at task1.c:292
+(gdb) info frame
+Stack level 0, frame at 0x7fffffffd960:
+ rip = 0x5555555551c4 in countBitsRecursive (task1.c:58); saved rip = 0x555555555215
+ called by frame at 0x7fffffffd990
+ source language c.
+ Arglist at 0x7fffffffd950, args: n=0
+ Locals at 0x7fffffffd950, Previous frame's sp is 0x7fffffffd960
+ Saved registers:
+  rbp at 0x7fffffffd950, rip at 0x7fffffffd958
+(gdb) up
+#1  0x0000555555555215 in countBitsRecursive (n=512) at task1.c:71
+71	        result = 1 + countBitsRecursive(n & (n - 1)); //рекурсивний виклик
+(gdb) info frame
+Stack level 1, frame at 0x7fffffffd990:
+ rip = 0x555555555215 in countBitsRecursive (task1.c:71); saved rip = 0x555555555215
+ called by frame at 0x7fffffffd9c0, caller of frame at 0x7fffffffd960
+ source language c.
+ Arglist at 0x7fffffffd980, args: n=512
+ Locals at 0x7fffffffd980, Previous frame's sp is 0x7fffffffd990
+ Saved registers:
+  rbp at 0x7fffffffd980, rip at 0x7fffffffd988
+(gdb) print g_currentDepth
+$1 = 6
